@@ -1,12 +1,6 @@
 import { useState, useMemo } from 'react'
 import { Package, AlertTriangle, Users, TrendingUp } from 'lucide-react'
-import {
-  startOfMonth,
-  startOfQuarter,
-  startOfYear,
-  isAfter,
-  subDays,
-} from 'date-fns'
+import { startOfQuarter, startOfYear, isAfter, subDays } from 'date-fns'
 import {
   BarChart,
   Bar,
@@ -289,7 +283,7 @@ export default function Dashboard() {
           <CardContent>
             <ChartContainer
               config={barChartConfig}
-              className="h-[300px] w-full"
+              className="h-[300px] w-full min-w-0"
             >
               <BarChart
                 accessibilityLayer
@@ -343,7 +337,7 @@ export default function Dashboard() {
           <CardContent>
             <ChartContainer
               config={pieChartConfig}
-              className="h-[300px] w-full mx-auto"
+              className="h-[300px] w-full min-w-0 mx-auto"
             >
               <PieChart>
                 <Pie
