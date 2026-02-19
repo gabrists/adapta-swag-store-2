@@ -1,32 +1,19 @@
 import { useState, useMemo } from 'react'
 import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import useSwagStore from '@/stores/useSwagStore'
 import { ProductCard } from '@/components/ProductCard'
 import { CheckoutDialog } from '@/components/CheckoutDialog'
-import { Product, Category } from '@/types'
+import { Product } from '@/types'
 import { useToast } from '@/hooks/use-toast'
-import { cn } from '@/lib/utils'
-
-const CATEGORIES: Category[] = [
-  'Todos',
-  'Vendas',
-  'RH',
-  'Marketing',
-  'Tech',
-  'Institucional',
-]
 
 export default function Index() {
   const { products, isLoading, withdrawItem } = useSwagStore()
   const { toast } = useToast()
 
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<Category>('Todos')
   const [checkoutProduct, setCheckoutProduct] = useState<Product | null>(null)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
 
@@ -35,11 +22,9 @@ export default function Index() {
       const matchesSearch = product.name
         .toLowerCase()
         .includes(searchQuery.toLowerCase())
-      const matchesCategory =
-        selectedCategory === 'Todos' || product.category === selectedCategory
-      return matchesSearch && matchesCategory
+      return matchesSearch
     })
-  }, [products, searchQuery, selectedCategory])
+  }, [products, searchQuery])
 
   const handleSelectProduct = (product: Product) => {
     setCheckoutProduct(product)
@@ -82,7 +67,7 @@ export default function Index() {
   return (
     <div className="space-y-6 md:space-y-8">
       {/* Header Section */}
-      <section className="space-y-4 bg-white p-4 -mx-4 md:mx-0 md:rounded-xl md:shadow-sm md:border md:border-slate-100">
+      <section className="bg-white p-4 -mx-4 md:mx-0 md:rounded-xl md:shadow-sm md:border md:border-slate-100">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
@@ -92,36 +77,12 @@ export default function Index() {
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-
-        <ScrollArea className="w-full whitespace-nowrap">
-          <div className="flex space-x-2 pb-2">
-            {CATEGORIES.map((category) => (
-              <Button
-                key={category}
-                variant={selectedCategory === category ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setSelectedCategory(category)}
-                className={cn(
-                  'rounded-full px-4 text-xs font-medium border-slate-200',
-                  selectedCategory === category
-                    ? 'shadow-md shadow-primary/20'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900',
-                )}
-              >
-                {category}
-              </Button>
-            ))}
-          </div>
-          <ScrollBar orientation="horizontal" className="invisible" />
-        </ScrollArea>
       </section>
 
       {/* Products Grid */}
       <section>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-bold text-slate-800">
-            {selectedCategory === 'Todos' ? 'Todos os itens' : selectedCategory}
-          </h2>
+          <h2 className="text-lg font-bold text-slate-800">Todos os itens</h2>
           <Badge variant="secondary" className="bg-slate-100 text-slate-500">
             {filteredProducts.length} itens
           </Badge>
@@ -146,9 +107,7 @@ export default function Index() {
               <h3 className="text-lg font-medium text-slate-900">
                 Nenhum item encontrado
               </h3>
-              <p className="text-slate-500 text-sm">
-                Tente mudar o filtro ou a busca.
-              </p>
+              <p className="text-slate-500 text-sm">Tente mudar a busca.</p>
             </div>
           </div>
         )}
