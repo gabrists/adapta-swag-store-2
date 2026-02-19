@@ -18961,6 +18961,27 @@ var History = createLucideIcon("history", [
 		key: "1fdv2h"
 	}]
 ]);
+var Image = createLucideIcon("image", [
+	["rect", {
+		width: "18",
+		height: "18",
+		x: "3",
+		y: "3",
+		rx: "2",
+		ry: "2",
+		key: "1m3agn"
+	}],
+	["circle", {
+		cx: "9",
+		cy: "9",
+		r: "2",
+		key: "af1f0g"
+	}],
+	["path", {
+		d: "m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21",
+		key: "1xmnt7"
+	}]
+]);
 var LoaderCircle = createLucideIcon("loader-circle", [["path", {
 	d: "M21 12a9 9 0 1 1-6.219-8.56",
 	key: "13zald"
@@ -18977,6 +18998,49 @@ var Package2 = createLucideIcon("package-2", [
 	["path", {
 		d: "M3.054 9.013h17.893",
 		key: "grwhos"
+	}]
+]);
+var PackagePlus = createLucideIcon("package-plus", [
+	["path", {
+		d: "M16 16h6",
+		key: "100bgy"
+	}],
+	["path", {
+		d: "M19 13v6",
+		key: "85cyf1"
+	}],
+	["path", {
+		d: "M21 10V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l2-1.14",
+		key: "e7tb2h"
+	}],
+	["path", {
+		d: "m7.5 4.27 9 5.15",
+		key: "1c824w"
+	}],
+	["polyline", {
+		points: "3.29 7 12 12 20.71 7",
+		key: "ousv84"
+	}],
+	["line", {
+		x1: "12",
+		x2: "12",
+		y1: "22",
+		y2: "12",
+		key: "a4e8g8"
+	}]
+]);
+var Save = createLucideIcon("save", [
+	["path", {
+		d: "M15.2 3a2 2 0 0 1 1.4.6l3.8 3.8a2 2 0 0 1 .6 1.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z",
+		key: "1c8476"
+	}],
+	["path", {
+		d: "M17 21v-7a1 1 0 0 0-1-1H8a1 1 0 0 0-1 1v7",
+		key: "1ydtos"
+	}],
+	["path", {
+		d: "M7 3v4a1 1 0 0 0 1 1h7",
+		key: "t51u73"
 	}]
 ]);
 var Search = createLucideIcon("search", [["path", {
@@ -23759,70 +23823,80 @@ var INITIAL_PRODUCTS = [
 		name: "Kit Onboarding Deluxe",
 		category: "RH",
 		imageQuery: "welcome kit gift box",
-		stock: 12
+		stock: 12,
+		description: "Um kit completo para receber novos colaboradores com estilo."
 	},
 	{
 		id: "2",
 		name: "Garrafa Térmica Adapta",
 		category: "Institucional",
 		imageQuery: "water bottle insulated",
-		stock: 4
+		stock: 4,
+		description: "Mantém sua bebida gelada por 24h ou quente por 12h."
 	},
 	{
 		id: "3",
 		name: "Caderno Moleskine Premium",
 		category: "Vendas",
 		imageQuery: "notebook black",
-		stock: 25
+		stock: 25,
+		description: "Caderno de anotações de alta qualidade para suas ideias."
 	},
 	{
 		id: "4",
 		name: "Mochila Tech Anti-furto",
 		category: "Tech",
 		imageQuery: "backpack tech",
-		stock: 0
+		stock: 0,
+		description: "Segurança e praticidade para transportar seus gadgets."
 	},
 	{
 		id: "5",
 		name: "Camiseta Algodão Egípcio",
 		category: "Institucional",
 		imageQuery: "t-shirt black folded",
-		stock: 8
+		stock: 8,
+		description: "Conforto inigualável com algodão de fibra longa."
 	},
 	{
 		id: "6",
 		name: "Powerbank Wireless 10k",
 		category: "Tech",
 		imageQuery: "powerbank wireless",
-		stock: 3
+		stock: 3,
+		description: "Carregamento sem fio rápido para nunca ficar sem bateria."
 	},
 	{
 		id: "7",
 		name: "Copo Stanley Personalizado",
 		category: "Vendas",
 		imageQuery: "tumbler cup",
-		stock: 15
+		stock: 15,
+		description: "O copo mais desejado do momento, com a marca da empresa."
 	},
 	{
 		id: "8",
 		name: "Boné Trucker Adapta",
 		category: "Marketing",
 		imageQuery: "cap trucker hat",
-		stock: 2
+		stock: 2,
+		description: "Estilo despojado para eventos e dia a dia."
 	},
 	{
 		id: "9",
 		name: "Ecobag Sustentável",
 		category: "RH",
 		imageQuery: "tote bag canvas",
-		stock: 30
+		stock: 30,
+		description: "Sacola ecológica resistente e versátil."
 	},
 	{
 		id: "10",
 		name: "Adesivos Pack Dev",
 		category: "Tech",
 		imageQuery: "laptop stickers",
-		stock: 50
+		stock: 50,
+		description: "Pacote de adesivos variados para personalizar seu setup."
 	}
 ];
 function SwagProvider({ children }) {
@@ -23876,11 +23950,19 @@ function SwagProvider({ children }) {
 			triggerConfetti();
 		}
 	};
+	const addProduct = (product) => {
+		const newProduct = {
+			...product,
+			id: crypto.randomUUID()
+		};
+		setProducts((prev) => [newProduct, ...prev]);
+	};
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SwagContext.Provider, {
 		value: {
 			products,
 			history,
 			withdrawItem,
+			addProduct,
 			isLoading
 		},
 		children
@@ -23893,15 +23975,23 @@ function useSwagStore() {
 }
 function Layout() {
 	const location = useLocation();
-	const navItems = [{
-		path: "/",
-		label: "Vitrine",
-		icon: Store
-	}, {
-		path: "/historico",
-		label: "Histórico",
-		icon: History
-	}];
+	const navItems = [
+		{
+			path: "/",
+			label: "Vitrine",
+			icon: Store
+		},
+		{
+			path: "/historico",
+			label: "Histórico",
+			icon: History
+		},
+		{
+			path: "/gerenciar",
+			label: "Gerenciar",
+			icon: PackagePlus
+		}
+	];
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900",
 		children: [
@@ -24833,12 +24923,12 @@ function ProductCard({ product, onSelect }) {
 	const isOutOfStock = product.stock === 0;
 	const isLowStock = product.stock > 0 && product.stock <= 5;
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Card, {
-		className: "overflow-hidden border-border/50 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 group bg-white",
+		className: "overflow-hidden border-border/50 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 group bg-white flex flex-col h-full",
 		children: [
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 				className: "aspect-[4/3] relative overflow-hidden bg-muted",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
-					src: `https://img.usecurling.com/p/400/300?q=${product.imageQuery}&dpr=2`,
+					src: product.imageQuery.startsWith("http") ? product.imageQuery : `https://img.usecurling.com/p/400/300?q=${product.imageQuery}&dpr=2`,
 					alt: product.name,
 					className: cn("w-full h-full object-cover transition-transform duration-500 group-hover:scale-105", isOutOfStock && "grayscale opacity-60"),
 					loading: "lazy"
@@ -24852,7 +24942,7 @@ function ProductCard({ product, onSelect }) {
 				})]
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CardContent, {
-				className: "p-4 space-y-2",
+				className: "p-4 space-y-2 flex-grow",
 				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "flex justify-between items-start gap-2",
 					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
@@ -24873,15 +24963,19 @@ function ProductCard({ product, onSelect }) {
 							product.stock,
 							" un"
 						]
-					}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Badge, {
+					}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Badge, {
 						variant: "outline",
 						className: "bg-emerald-50 text-emerald-600 border-emerald-200",
-						children: "Disponível"
+						children: [
+							"Disponível: ",
+							product.stock,
+							" un"
+						]
 					})
 				})]
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardFooter, {
-				className: "p-4 pt-0",
+				className: "p-4 pt-0 mt-auto",
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 					className: "w-full bg-primary hover:bg-primary/90 text-white font-medium active:scale-95 transition-all",
 					onClick: () => onSelect(product),
@@ -26653,6 +26747,17 @@ function cleanRegex(source) {
 	const end = source.endsWith("$") ? source.length - 1 : source.length;
 	return source.slice(start, end);
 }
+function floatSafeRemainder(val, step) {
+	const valDecCount = (val.toString().split(".")[1] || "").length;
+	const stepString = step.toString();
+	let stepDecCount = (stepString.split(".")[1] || "").length;
+	if (stepDecCount === 0 && /\d?e-\d?/.test(stepString)) {
+		const match$2 = stepString.match(/\d?e-(\d?)/);
+		if (match$2?.[1]) stepDecCount = Number.parseInt(match$2[1]);
+	}
+	const decCount = valDecCount > stepDecCount ? valDecCount : stepDecCount;
+	return Number.parseInt(val.toFixed(decCount).replace(".", "")) % Number.parseInt(step.toFixed(decCount).replace(".", "")) / 10 ** decCount;
+}
 var EVALUATING = Symbol("evaluating");
 function defineLazy(object$1, key, getter) {
 	let value = void 0;
@@ -26754,7 +26859,13 @@ function optionalKeys(shape) {
 		return shape[k]._zod.optin === "optional" && shape[k]._zod.optout === "optional";
 	});
 }
-Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER, -Number.MAX_VALUE, Number.MAX_VALUE;
+const NUMBER_FORMAT_RANGES = {
+	safeint: [Number.MIN_SAFE_INTEGER, Number.MAX_SAFE_INTEGER],
+	int32: [-2147483648, 2147483647],
+	uint32: [0, 4294967295],
+	float32: [-34028234663852886e22, 34028234663852886e22],
+	float64: [-Number.MAX_VALUE, Number.MAX_VALUE]
+};
 function pick(schema, mask) {
 	const currDef = schema._zod.def;
 	const checks = currDef.checks;
@@ -27114,6 +27225,8 @@ const string$1 = (params) => {
 	const regex = params ? `[\\s\\S]{${params?.minimum ?? 0},${params?.maximum ?? ""}}` : `[\\s\\S]*`;
 	return /* @__PURE__ */ new RegExp(`^${regex}$`);
 };
+const integer = /^-?\d+$/;
+const number$1 = /^-?\d+(?:\.\d+)?$/;
 const lowercase = /^[^A-Z]*$/;
 const uppercase = /^[^a-z]*$/;
 const $ZodCheck = /* @__PURE__ */ $constructor("$ZodCheck", (inst, def) => {
@@ -27166,6 +27279,96 @@ const $ZodCheckGreaterThan = /* @__PURE__ */ $constructor("$ZodCheckGreaterThan"
 			minimum: typeof def.value === "object" ? def.value.getTime() : def.value,
 			input: payload.value,
 			inclusive: def.inclusive,
+			inst,
+			continue: !def.abort
+		});
+	};
+});
+const $ZodCheckMultipleOf = /* @__PURE__ */ $constructor("$ZodCheckMultipleOf", (inst, def) => {
+	$ZodCheck.init(inst, def);
+	inst._zod.onattach.push((inst$1) => {
+		var _a$1;
+		(_a$1 = inst$1._zod.bag).multipleOf ?? (_a$1.multipleOf = def.value);
+	});
+	inst._zod.check = (payload) => {
+		if (typeof payload.value !== typeof def.value) throw new Error("Cannot mix number and bigint in multiple_of check.");
+		if (typeof payload.value === "bigint" ? payload.value % def.value === BigInt(0) : floatSafeRemainder(payload.value, def.value) === 0) return;
+		payload.issues.push({
+			origin: typeof payload.value,
+			code: "not_multiple_of",
+			divisor: def.value,
+			input: payload.value,
+			inst,
+			continue: !def.abort
+		});
+	};
+});
+const $ZodCheckNumberFormat = /* @__PURE__ */ $constructor("$ZodCheckNumberFormat", (inst, def) => {
+	$ZodCheck.init(inst, def);
+	def.format = def.format || "float64";
+	const isInt = def.format?.includes("int");
+	const origin = isInt ? "int" : "number";
+	const [minimum, maximum] = NUMBER_FORMAT_RANGES[def.format];
+	inst._zod.onattach.push((inst$1) => {
+		const bag = inst$1._zod.bag;
+		bag.format = def.format;
+		bag.minimum = minimum;
+		bag.maximum = maximum;
+		if (isInt) bag.pattern = integer;
+	});
+	inst._zod.check = (payload) => {
+		const input = payload.value;
+		if (isInt) {
+			if (!Number.isInteger(input)) {
+				payload.issues.push({
+					expected: origin,
+					format: def.format,
+					code: "invalid_type",
+					continue: false,
+					input,
+					inst
+				});
+				return;
+			}
+			if (!Number.isSafeInteger(input)) {
+				if (input > 0) payload.issues.push({
+					input,
+					code: "too_big",
+					maximum: Number.MAX_SAFE_INTEGER,
+					note: "Integers must be within the safe integer range.",
+					inst,
+					origin,
+					inclusive: true,
+					continue: !def.abort
+				});
+				else payload.issues.push({
+					input,
+					code: "too_small",
+					minimum: Number.MIN_SAFE_INTEGER,
+					note: "Integers must be within the safe integer range.",
+					inst,
+					origin,
+					inclusive: true,
+					continue: !def.abort
+				});
+				return;
+			}
+		}
+		if (input < minimum) payload.issues.push({
+			origin: "number",
+			input,
+			code: "too_small",
+			minimum,
+			inclusive: true,
+			inst,
+			continue: !def.abort
+		});
+		if (input > maximum) payload.issues.push({
+			origin: "number",
+			input,
+			code: "too_big",
+			maximum,
+			inclusive: true,
 			inst,
 			continue: !def.abort
 		});
@@ -27765,6 +27968,30 @@ const $ZodJWT = /* @__PURE__ */ $constructor("$ZodJWT", (inst, def) => {
 			continue: !def.abort
 		});
 	};
+});
+const $ZodNumber = /* @__PURE__ */ $constructor("$ZodNumber", (inst, def) => {
+	$ZodType.init(inst, def);
+	inst._zod.pattern = inst._zod.bag.pattern ?? number$1;
+	inst._zod.parse = (payload, _ctx) => {
+		if (def.coerce) try {
+			payload.value = Number(payload.value);
+		} catch (_$1) {}
+		const input = payload.value;
+		if (typeof input === "number" && !Number.isNaN(input) && Number.isFinite(input)) return payload;
+		const received = typeof input === "number" ? Number.isNaN(input) ? "NaN" : !Number.isFinite(input) ? "Infinity" : void 0 : void 0;
+		payload.issues.push({
+			expected: "number",
+			code: "invalid_type",
+			input,
+			inst,
+			...received ? { received } : {}
+		});
+		return payload;
+	};
+});
+const $ZodNumberFormat = /* @__PURE__ */ $constructor("$ZodNumberFormat", (inst, def) => {
+	$ZodCheckNumberFormat.init(inst, def);
+	$ZodNumber.init(inst, def);
 });
 const $ZodUnknown = /* @__PURE__ */ $constructor("$ZodUnknown", (inst, def) => {
 	$ZodType.init(inst, def);
@@ -28740,6 +28967,25 @@ function _isoDuration(Class, params) {
 	});
 }
 /* @__NO_SIDE_EFFECTS__ */
+function _coercedNumber(Class, params) {
+	return new Class({
+		type: "number",
+		coerce: true,
+		checks: [],
+		...normalizeParams(params)
+	});
+}
+/* @__NO_SIDE_EFFECTS__ */
+function _int(Class, params) {
+	return new Class({
+		type: "number",
+		check: "number_format",
+		abort: false,
+		format: "safeint",
+		...normalizeParams(params)
+	});
+}
+/* @__NO_SIDE_EFFECTS__ */
 function _unknown(Class) {
 	return new Class({ type: "unknown" });
 }
@@ -28758,6 +29004,15 @@ function _date(Class, params) {
 	});
 }
 /* @__NO_SIDE_EFFECTS__ */
+function _lt(value, params) {
+	return new $ZodCheckLessThan({
+		check: "less_than",
+		...normalizeParams(params),
+		value,
+		inclusive: false
+	});
+}
+/* @__NO_SIDE_EFFECTS__ */
 function _lte(value, params) {
 	return new $ZodCheckLessThan({
 		check: "less_than",
@@ -28767,12 +29022,29 @@ function _lte(value, params) {
 	});
 }
 /* @__NO_SIDE_EFFECTS__ */
+function _gt(value, params) {
+	return new $ZodCheckGreaterThan({
+		check: "greater_than",
+		...normalizeParams(params),
+		value,
+		inclusive: false
+	});
+}
+/* @__NO_SIDE_EFFECTS__ */
 function _gte(value, params) {
 	return new $ZodCheckGreaterThan({
 		check: "greater_than",
 		...normalizeParams(params),
 		value,
 		inclusive: true
+	});
+}
+/* @__NO_SIDE_EFFECTS__ */
+function _multipleOf(value, params) {
+	return new $ZodCheckMultipleOf({
+		check: "multiple_of",
+		...normalizeParams(params),
+		value
 	});
 }
 /* @__NO_SIDE_EFFECTS__ */
@@ -29229,6 +29501,31 @@ const stringProcessor = (schema, ctx, _json, _params) => {
 			pattern: regex.source
 		}))];
 	}
+};
+const numberProcessor = (schema, ctx, _json, _params) => {
+	const json = _json;
+	const { minimum, maximum, format: format$1, multipleOf, exclusiveMaximum, exclusiveMinimum } = schema._zod.bag;
+	if (typeof format$1 === "string" && format$1.includes("int")) json.type = "integer";
+	else json.type = "number";
+	if (typeof exclusiveMinimum === "number") if (ctx.target === "draft-04" || ctx.target === "openapi-3.0") {
+		json.minimum = exclusiveMinimum;
+		json.exclusiveMinimum = true;
+	} else json.exclusiveMinimum = exclusiveMinimum;
+	if (typeof minimum === "number") {
+		json.minimum = minimum;
+		if (typeof exclusiveMinimum === "number" && ctx.target !== "draft-04") if (exclusiveMinimum >= minimum) delete json.minimum;
+		else delete json.exclusiveMinimum;
+	}
+	if (typeof exclusiveMaximum === "number") if (ctx.target === "draft-04" || ctx.target === "openapi-3.0") {
+		json.maximum = exclusiveMaximum;
+		json.exclusiveMaximum = true;
+	} else json.exclusiveMaximum = exclusiveMaximum;
+	if (typeof maximum === "number") {
+		json.maximum = maximum;
+		if (typeof exclusiveMaximum === "number" && ctx.target !== "draft-04") if (exclusiveMaximum <= maximum) delete json.maximum;
+		else delete json.exclusiveMaximum;
+	}
+	if (typeof multipleOf === "number") json.multipleOf = multipleOf;
 };
 const neverProcessor = (_schema, _ctx, json, _params) => {
 	json.not = {};
@@ -29772,6 +30069,39 @@ const ZodJWT = /* @__PURE__ */ $constructor("ZodJWT", (inst, def) => {
 	$ZodJWT.init(inst, def);
 	ZodStringFormat.init(inst, def);
 });
+const ZodNumber = /* @__PURE__ */ $constructor("ZodNumber", (inst, def) => {
+	$ZodNumber.init(inst, def);
+	ZodType.init(inst, def);
+	inst._zod.processJSONSchema = (ctx, json, params) => numberProcessor(inst, ctx, json, params);
+	inst.gt = (value, params) => inst.check(/* @__PURE__ */ _gt(value, params));
+	inst.gte = (value, params) => inst.check(/* @__PURE__ */ _gte(value, params));
+	inst.min = (value, params) => inst.check(/* @__PURE__ */ _gte(value, params));
+	inst.lt = (value, params) => inst.check(/* @__PURE__ */ _lt(value, params));
+	inst.lte = (value, params) => inst.check(/* @__PURE__ */ _lte(value, params));
+	inst.max = (value, params) => inst.check(/* @__PURE__ */ _lte(value, params));
+	inst.int = (params) => inst.check(int(params));
+	inst.safe = (params) => inst.check(int(params));
+	inst.positive = (params) => inst.check(/* @__PURE__ */ _gt(0, params));
+	inst.nonnegative = (params) => inst.check(/* @__PURE__ */ _gte(0, params));
+	inst.negative = (params) => inst.check(/* @__PURE__ */ _lt(0, params));
+	inst.nonpositive = (params) => inst.check(/* @__PURE__ */ _lte(0, params));
+	inst.multipleOf = (value, params) => inst.check(/* @__PURE__ */ _multipleOf(value, params));
+	inst.step = (value, params) => inst.check(/* @__PURE__ */ _multipleOf(value, params));
+	inst.finite = () => inst;
+	const bag = inst._zod.bag;
+	inst.minValue = Math.max(bag.minimum ?? Number.NEGATIVE_INFINITY, bag.exclusiveMinimum ?? Number.NEGATIVE_INFINITY) ?? null;
+	inst.maxValue = Math.min(bag.maximum ?? Number.POSITIVE_INFINITY, bag.exclusiveMaximum ?? Number.POSITIVE_INFINITY) ?? null;
+	inst.isInt = (bag.format ?? "").includes("int") || Number.isSafeInteger(bag.multipleOf ?? .5);
+	inst.isFinite = true;
+	inst.format = bag.format ?? null;
+});
+const ZodNumberFormat = /* @__PURE__ */ $constructor("ZodNumberFormat", (inst, def) => {
+	$ZodNumberFormat.init(inst, def);
+	ZodNumber.init(inst, def);
+});
+function int(params) {
+	return /* @__PURE__ */ _int(ZodNumberFormat, params);
+}
 const ZodUnknown = /* @__PURE__ */ $constructor("ZodUnknown", (inst, def) => {
 	$ZodUnknown.init(inst, def);
 	ZodType.init(inst, def);
@@ -30086,6 +30416,9 @@ function refine(fn, _params = {}) {
 }
 function superRefine(fn) {
 	return /* @__PURE__ */ _superRefine(fn);
+}
+function number(params) {
+	return /* @__PURE__ */ _coercedNumber(ZodNumber, params);
 }
 const daysInYear = 365.2425;
 Math.pow(10, 8) * 24 * 60 * 60 * 1e3;
@@ -30626,14 +30959,14 @@ var formattingDayPeriodValues$1 = {
 	}
 };
 var ordinalNumber$1 = (dirtyNumber, _options) => {
-	const number = Number(dirtyNumber);
-	const rem100 = number % 100;
+	const number$2 = Number(dirtyNumber);
+	const rem100 = number$2 % 100;
 	if (rem100 > 20 || rem100 < 10) switch (rem100 % 10) {
-		case 1: return number + "st";
-		case 2: return number + "nd";
-		case 3: return number + "rd";
+		case 1: return number$2 + "st";
+		case 2: return number$2 + "nd";
+		case 3: return number$2 + "rd";
 	}
-	return number + "th";
+	return number$2 + "th";
 };
 const localize$1 = {
 	ordinalNumber: ordinalNumber$1,
@@ -30873,8 +31206,8 @@ function getWeek(date$3, options$1) {
 	const diff = +startOfWeek(_date$1, options$1) - +startOfWeekYear(_date$1, options$1);
 	return Math.round(diff / millisecondsInWeek) + 1;
 }
-function addLeadingZeros(number, targetLength) {
-	return (number < 0 ? "-" : "") + Math.abs(number).toString().padStart(targetLength, "0");
+function addLeadingZeros(number$2, targetLength) {
+	return (number$2 < 0 ? "-" : "") + Math.abs(number$2).toString().padStart(targetLength, "0");
 }
 const lightFormatters = {
 	y(date$3, token) {
@@ -31806,9 +32139,9 @@ var formattingDayPeriodValues = {
 	}
 };
 var ordinalNumber = (dirtyNumber, options$1) => {
-	const number = Number(dirtyNumber);
-	if (options$1?.unit === "week") return number + "ª";
-	return number + "º";
+	const number$2 = Number(dirtyNumber);
+	if (options$1?.unit === "week") return number$2 + "ª";
+	return number$2 + "º";
 };
 const ptBR = {
 	code: "pt-BR",
@@ -38167,7 +38500,7 @@ var MOCK_USERS = [
 	"Gabriel Pereira",
 	"Helena Rodrigues"
 ];
-var formSchema = object({
+var formSchema$1 = object({
 	user: string().min(1, "Selecione quem está retirando"),
 	destination: string().min(3, "Informe o destino (cliente ou evento)"),
 	date: date({ required_error: "Selecione a data da retirada" })
@@ -38176,7 +38509,7 @@ function CheckoutDialog({ product, open, onOpenChange, onConfirm }) {
 	const isMobile = useIsMobile();
 	const [isSubmitting, setIsSubmitting] = (0, import_react.useState)(false);
 	const form = useForm({
-		resolver: a(formSchema),
+		resolver: a(formSchema$1),
 		defaultValues: {
 			user: "",
 			destination: "",
@@ -38524,6 +38857,187 @@ function HistoryPage() {
 		})]
 	});
 }
+var Textarea = import_react.forwardRef(({ className, ...props }, ref) => {
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)("textarea", {
+		className: cn("flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm", className),
+		ref,
+		...props
+	});
+});
+Textarea.displayName = "Textarea";
+var formSchema = object({
+	name: string().min(2, "Nome deve ter pelo menos 2 caracteres"),
+	stock: number().min(0, "Quantidade não pode ser negativa"),
+	description: string().min(10, "Descrição deve ter pelo menos 10 caracteres"),
+	category: _enum([
+		"Vendas",
+		"RH",
+		"Marketing",
+		"Tech",
+		"Institucional"
+	], { required_error: "Selecione uma categoria" }),
+	imageQuery: string().min(3, "Informe uma URL ou termo para imagem")
+});
+function ManageProducts() {
+	const { addProduct } = useSwagStore();
+	const { toast: toast$2 } = useToast();
+	const navigate = useNavigate();
+	const [isSubmitting, setIsSubmitting] = (0, import_react.useState)(false);
+	const form = useForm({
+		resolver: a(formSchema),
+		defaultValues: {
+			name: "",
+			stock: 0,
+			description: "",
+			imageQuery: ""
+		}
+	});
+	const onSubmit = async (values) => {
+		setIsSubmitting(true);
+		await new Promise((resolve) => setTimeout(resolve, 600));
+		addProduct({
+			name: values.name,
+			stock: values.stock,
+			description: values.description,
+			category: values.category,
+			imageQuery: values.imageQuery
+		});
+		toast$2({
+			title: "Brinde cadastrado!",
+			description: `${values.name} foi adicionado ao catálogo com sucesso.`,
+			className: "bg-emerald-50 border-emerald-200 text-emerald-900"
+		});
+		setIsSubmitting(false);
+		form.reset();
+		navigate("/");
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		className: "max-w-2xl mx-auto space-y-6",
+		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "space-y-1",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h1", {
+				className: "text-2xl font-bold tracking-tight text-slate-900",
+				children: "Gerenciar Brindes"
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+				className: "text-sm text-slate-500",
+				children: "Cadastre novos itens no catálogo da loja."
+			})]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Card, {
+			className: "border-slate-200 shadow-sm",
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(CardHeader, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardTitle, { children: "Novo Brinde" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardDescription, { children: "Preencha os dados abaixo para disponibilizar um novo item na vitrine." })] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardContent, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Form, {
+				...form,
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("form", {
+					onSubmit: form.handleSubmit(onSubmit),
+					className: "space-y-6",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "grid grid-cols-1 md:grid-cols-2 gap-6",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormField, {
+								control: form.control,
+								name: "name",
+								render: ({ field }) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(FormItem, { children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormLabel, { children: "Nome do Brinde" }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormControl, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+										placeholder: "Ex: Mochila Executiva",
+										...field
+									}) }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormMessage, {})
+								] })
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormField, {
+								control: form.control,
+								name: "category",
+								render: ({ field }) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(FormItem, { children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormLabel, { children: "Categoria" }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Select, {
+										onValueChange: field.onChange,
+										defaultValue: field.value,
+										children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormControl, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectTrigger, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectValue, { placeholder: "Selecione..." }) }) }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(SelectContent, { children: [
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectItem, {
+												value: "RH",
+												children: "RH"
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectItem, {
+												value: "Vendas",
+												children: "Vendas"
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectItem, {
+												value: "Marketing",
+												children: "Marketing"
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectItem, {
+												value: "Tech",
+												children: "Tech"
+											}),
+											/* @__PURE__ */ (0, import_jsx_runtime.jsx)(SelectItem, {
+												value: "Institucional",
+												children: "Institucional"
+											})
+										] })]
+									}),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormMessage, {})
+								] })
+							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormField, {
+							control: form.control,
+							name: "stock",
+							render: ({ field }) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(FormItem, { children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormLabel, { children: "Quantidade em Estoque" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormControl, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+									type: "number",
+									min: "0",
+									placeholder: "0",
+									...field
+								}) }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormDescription, { children: "Número inicial de itens disponíveis para retirada." }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormMessage, {})
+							] })
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormField, {
+							control: form.control,
+							name: "imageQuery",
+							render: ({ field }) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(FormItem, { children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormLabel, { children: "URL da Imagem ou Termo (Placeholder)" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "relative",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Image, { className: "absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Input, {
+										className: "pl-9",
+										placeholder: "Ex: 'black backpack' ou https://...",
+										...field
+									})]
+								}),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormDescription, { children: "Digite um termo em inglês (para gerar imagem automática) ou cole uma URL direta." }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormMessage, {})
+							] })
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormField, {
+							control: form.control,
+							name: "description",
+							render: ({ field }) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(FormItem, { children: [
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormLabel, { children: "Descrição" }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormControl, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Textarea, {
+									placeholder: "Descreva os detalhes do item...",
+									className: "resize-none min-h-[100px]",
+									...field
+								}) }),
+								/* @__PURE__ */ (0, import_jsx_runtime.jsx)(FormMessage, {})
+							] })
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "flex justify-end pt-2",
+							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+								type: "submit",
+								className: "min-w-[150px]",
+								disabled: isSubmitting,
+								children: isSubmitting ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(LoaderCircle, { className: "mr-2 h-4 w-4 animate-spin" }), "Salvando..."] }) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Save, { className: "mr-2 h-4 w-4" }), "Salvar Brinde"] })
+							})
+						})
+					]
+				})
+			}) })]
+		})]
+	});
+}
 var NotFound = () => {
 	const location = useLocation();
 	(0, import_react.useEffect)(() => {
@@ -38562,13 +39076,20 @@ var App = () => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BrowserRouter, {
 		/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Toaster$1, {}),
 		/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Routes, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Route, {
 			element: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Layout, {}),
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Route, {
-				path: "/",
-				element: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Index, {})
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Route, {
-				path: "/historico",
-				element: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(HistoryPage, {})
-			})]
+			children: [
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Route, {
+					path: "/",
+					element: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Index, {})
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Route, {
+					path: "/historico",
+					element: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(HistoryPage, {})
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Route, {
+					path: "/gerenciar",
+					element: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ManageProducts, {})
+				})
+			]
 		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Route, {
 			path: "*",
 			element: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(NotFound_default, {})
@@ -38578,4 +39099,4 @@ var App = () => /* @__PURE__ */ (0, import_jsx_runtime.jsx)(BrowserRouter, {
 var App_default = App;
 (0, import_client.createRoot)(document.getElementById("root")).render(/* @__PURE__ */ (0, import_jsx_runtime.jsx)(App_default, {}));
 
-//# sourceMappingURL=index-DpN4elOT.js.map
+//# sourceMappingURL=index-DFFoiPT7.js.map

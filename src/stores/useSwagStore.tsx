@@ -17,6 +17,7 @@ interface SwagContextType {
     destination: string,
     date: Date,
   ) => void
+  addProduct: (product: Omit<Product, 'id'>) => void
   isLoading: boolean
 }
 
@@ -29,6 +30,7 @@ const INITIAL_PRODUCTS: Product[] = [
     category: 'RH',
     imageQuery: 'welcome kit gift box',
     stock: 12,
+    description: 'Um kit completo para receber novos colaboradores com estilo.',
   },
   {
     id: '2',
@@ -36,6 +38,7 @@ const INITIAL_PRODUCTS: Product[] = [
     category: 'Institucional',
     imageQuery: 'water bottle insulated',
     stock: 4,
+    description: 'Mantém sua bebida gelada por 24h ou quente por 12h.',
   },
   {
     id: '3',
@@ -43,6 +46,7 @@ const INITIAL_PRODUCTS: Product[] = [
     category: 'Vendas',
     imageQuery: 'notebook black',
     stock: 25,
+    description: 'Caderno de anotações de alta qualidade para suas ideias.',
   },
   {
     id: '4',
@@ -50,6 +54,7 @@ const INITIAL_PRODUCTS: Product[] = [
     category: 'Tech',
     imageQuery: 'backpack tech',
     stock: 0,
+    description: 'Segurança e praticidade para transportar seus gadgets.',
   },
   {
     id: '5',
@@ -57,6 +62,7 @@ const INITIAL_PRODUCTS: Product[] = [
     category: 'Institucional',
     imageQuery: 't-shirt black folded',
     stock: 8,
+    description: 'Conforto inigualável com algodão de fibra longa.',
   },
   {
     id: '6',
@@ -64,6 +70,7 @@ const INITIAL_PRODUCTS: Product[] = [
     category: 'Tech',
     imageQuery: 'powerbank wireless',
     stock: 3,
+    description: 'Carregamento sem fio rápido para nunca ficar sem bateria.',
   },
   {
     id: '7',
@@ -71,6 +78,7 @@ const INITIAL_PRODUCTS: Product[] = [
     category: 'Vendas',
     imageQuery: 'tumbler cup',
     stock: 15,
+    description: 'O copo mais desejado do momento, com a marca da empresa.',
   },
   {
     id: '8',
@@ -78,6 +86,7 @@ const INITIAL_PRODUCTS: Product[] = [
     category: 'Marketing',
     imageQuery: 'cap trucker hat',
     stock: 2,
+    description: 'Estilo despojado para eventos e dia a dia.',
   },
   {
     id: '9',
@@ -85,6 +94,7 @@ const INITIAL_PRODUCTS: Product[] = [
     category: 'RH',
     imageQuery: 'tote bag canvas',
     stock: 30,
+    description: 'Sacola ecológica resistente e versátil.',
   },
   {
     id: '10',
@@ -92,6 +102,7 @@ const INITIAL_PRODUCTS: Product[] = [
     category: 'Tech',
     imageQuery: 'laptop stickers',
     stock: 50,
+    description: 'Pacote de adesivos variados para personalizar seu setup.',
   },
 ]
 
@@ -162,9 +173,17 @@ export function SwagProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const addProduct = (product: Omit<Product, 'id'>) => {
+    const newProduct: Product = {
+      ...product,
+      id: crypto.randomUUID(),
+    }
+    setProducts((prev) => [newProduct, ...prev])
+  }
+
   return (
     <SwagContext.Provider
-      value={{ products, history, withdrawItem, isLoading }}
+      value={{ products, history, withdrawItem, addProduct, isLoading }}
     >
       {children}
     </SwagContext.Provider>

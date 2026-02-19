@@ -13,11 +13,15 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
   const isOutOfStock = product.stock === 0
   const isLowStock = product.stock > 0 && product.stock <= 5
 
+  const imageUrl = product.imageQuery.startsWith('http')
+    ? product.imageQuery
+    : `https://img.usecurling.com/p/400/300?q=${product.imageQuery}&dpr=2`
+
   return (
-    <Card className="overflow-hidden border-border/50 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 group bg-white">
+    <Card className="overflow-hidden border-border/50 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 group bg-white flex flex-col h-full">
       <div className="aspect-[4/3] relative overflow-hidden bg-muted">
         <img
-          src={`https://img.usecurling.com/p/400/300?q=${product.imageQuery}&dpr=2`}
+          src={imageUrl}
           alt={product.name}
           className={cn(
             'w-full h-full object-cover transition-transform duration-500 group-hover:scale-105',
@@ -35,7 +39,7 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
         </div>
       </div>
 
-      <CardContent className="p-4 space-y-2">
+      <CardContent className="p-4 space-y-2 flex-grow">
         <div className="flex justify-between items-start gap-2">
           <h3 className="font-semibold text-lg leading-tight text-slate-800 line-clamp-2 min-h-[3rem]">
             {product.name}
@@ -62,13 +66,13 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
               variant="outline"
               className="bg-emerald-50 text-emerald-600 border-emerald-200"
             >
-              Disponível
+              Disponível: {product.stock} un
             </Badge>
           )}
         </div>
       </CardContent>
 
-      <CardFooter className="p-4 pt-0">
+      <CardFooter className="p-4 pt-0 mt-auto">
         <Button
           className="w-full bg-primary hover:bg-primary/90 text-white font-medium active:scale-95 transition-all"
           onClick={() => onSelect(product)}

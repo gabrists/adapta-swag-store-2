@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { Store, History, Package2 } from 'lucide-react'
+import { Store, History, Package2, PackagePlus } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export default function Layout() {
@@ -15,6 +15,11 @@ export default function Layout() {
       path: '/historico',
       label: 'Histórico',
       icon: History,
+    },
+    {
+      path: '/gerenciar',
+      label: 'Gerenciar',
+      icon: PackagePlus,
     },
   ]
 

@@ -4,6 +4,7 @@ export interface Product {
   category: string
   imageQuery: string
   stock: number
+  description?: string
 }
 
 export interface HistoryEntry {
