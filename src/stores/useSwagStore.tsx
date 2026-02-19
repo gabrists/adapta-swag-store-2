@@ -11,6 +11,7 @@ import { triggerConfetti } from '@/lib/confetti'
 interface SwagContextType {
   products: Product[]
   history: HistoryEntry[]
+  collaborators: string[]
   withdrawItem: (
     productId: string,
     user: string,
@@ -106,9 +107,107 @@ const INITIAL_PRODUCTS: Product[] = [
   },
 ]
 
+const INITIAL_COLLABORATORS = [
+  'Allan Baptista',
+  'Angelo Nuncio Pinheiro',
+  'Arthur da Fonte Guerra',
+  'Axel Ríos',
+  'Ben Schulze',
+  'Bia',
+  'Braga',
+  'Caio Filip Juliaci',
+  'Davi Cunha',
+  'Davy Pedrosa',
+  'Edson Muniz',
+  'Eduarda Almeida',
+  'Eduardo Coelho',
+  'Erica Ayumi',
+  'Ezequiel',
+  'Felipe Batista',
+  'Felipe Mamede',
+  'Felipe Navaar',
+  'Felipe Oliveira Garcia',
+  'Felipe Peixoto',
+  'Fellipe Carvalho',
+  'Fellipe Carvalho',
+  'Fernando Mascarenhas',
+  'Fernando Sousa',
+  'Gabriel Carvalho',
+  'Gabriel Henrique',
+  'Gabriel Jesus',
+  'Gabriel Pavão',
+  'Gabriel Santos',
+  'Giampaolo Lepore',
+  'Guilherme Lago',
+  'Guilherme Teofilo',
+  'Gustavo Fonseca',
+  'Hamú',
+  'Ian Ede',
+  'Ingrid Costa',
+  'Isadora Magri',
+  'Izabel Villyn',
+  'Jadson Consolini',
+  'Jamilson Scarcella',
+  'Jessica Ferreira',
+  'João Augusto',
+  'João Ferrari',
+  'João Locatelli',
+  'João Vitor Andrade Estrela',
+  'Joao Vitor Ferrari',
+  'Juan Bonfim',
+  'Julia Pereira Cruz',
+  'Kaike Mota',
+  'Kelvi Maycon',
+  'Kelvin Dutra',
+  'Kelvyn Holovecki',
+  'Kimberly Prestes',
+  'Léo Camargo',
+  'Léo Marinho',
+  'Lucas Andrade',
+  'Lucas Bueno',
+  'Lucas Dias',
+  'Lucas Machado',
+  'lucas paiva',
+  'Lucas Pereira',
+  'Lucas Richard',
+  'Lucas Romcy',
+  'Lucas Vin',
+  'Lucas Yuri',
+  'Luis Fernando',
+  'Luis Miguel',
+  'Lydia',
+  'Márcia Ertel',
+  'Marcos Cury',
+  'Mateus Tápias',
+  'Matheus Kubo',
+  'Matheus Prado',
+  'Matheus Sotto',
+  'Max',
+  'miguel',
+  'Miguel Souza Dias',
+  'Monike Leal',
+  'Patrick Peters',
+  'Paulo Zanquetta',
+  'Priscilla Petry',
+  'Rafael Cabral',
+  'Raphael Araujo',
+  'Raphaela Castro',
+  'Rodrigo A. Santos',
+  'Romario',
+  'Ruan Azevedo',
+  'Ruan Azevedo',
+  'Samyla Vidal',
+  'Tainara Oliveira',
+  'Themila Andrade',
+  'Thiago Machado',
+  'Vinicius Galetti',
+  'Yuri',
+]
+
 export function SwagProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>([])
   const [history, setHistory] = useState<HistoryEntry[]>([])
+  const [collaborators, setCollaborators] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -117,6 +216,9 @@ export function SwagProvider({ children }: { children: ReactNode }) {
       try {
         const storedProducts = localStorage.getItem('adapta-swag-products')
         const storedHistory = localStorage.getItem('adapta-swag-history')
+        const storedCollaborators = localStorage.getItem(
+          'adapta-swag-collaborators',
+        )
 
         if (storedProducts) {
           setProducts(JSON.parse(storedProducts))
@@ -127,9 +229,16 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         if (storedHistory) {
           setHistory(JSON.parse(storedHistory))
         }
+
+        if (storedCollaborators) {
+          setCollaborators(JSON.parse(storedCollaborators))
+        } else {
+          setCollaborators(INITIAL_COLLABORATORS)
+        }
       } catch (error) {
         console.error('Failed to load data from local storage', error)
         setProducts(INITIAL_PRODUCTS)
+        setCollaborators(INITIAL_COLLABORATORS)
       } finally {
         setIsLoading(false)
       }
@@ -142,8 +251,12 @@ export function SwagProvider({ children }: { children: ReactNode }) {
     if (!isLoading) {
       localStorage.setItem('adapta-swag-products', JSON.stringify(products))
       localStorage.setItem('adapta-swag-history', JSON.stringify(history))
+      localStorage.setItem(
+        'adapta-swag-collaborators',
+        JSON.stringify(collaborators),
+      )
     }
-  }, [products, history, isLoading])
+  }, [products, history, collaborators, isLoading])
 
   const withdrawItem = (
     productId: string,
@@ -183,7 +296,14 @@ export function SwagProvider({ children }: { children: ReactNode }) {
 
   return (
     <SwagContext.Provider
-      value={{ products, history, withdrawItem, addProduct, isLoading }}
+      value={{
+        products,
+        history,
+        collaborators,
+        withdrawItem,
+        addProduct,
+        isLoading,
+      }}
     >
       {children}
     </SwagContext.Provider>

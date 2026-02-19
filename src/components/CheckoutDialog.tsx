@@ -4,11 +4,12 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { CalendarIcon, Loader2 } from 'lucide-react'
+import { CalendarIcon, Loader2, Check, ChevronsUpDown } from 'lucide-react'
 
 import { Product } from '@/types'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { Button } from '@/components/ui/button'
+import useSwagStore from '@/stores/useSwagStore'
 import {
   Dialog,
   DialogContent,
@@ -33,31 +34,21 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select'
 import { Calendar } from '@/components/ui/calendar'
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command'
 import { cn } from '@/lib/utils'
-
-const MOCK_USERS = [
-  'Ana Silva',
-  'Bruno Souza',
-  'Carlos Oliveira',
-  'Diana Lima',
-  'Eduardo Santos',
-  'Fernanda Costa',
-  'Gabriel Pereira',
-  'Helena Rodrigues',
-]
 
 const formSchema = z.object({
   user: z.string().min(1, 'Selecione quem está retirando'),
@@ -79,7 +70,9 @@ export function CheckoutDialog({
   onConfirm,
 }: CheckoutDialogProps) {
   const isMobile = useIsMobile()
+  const { collaborators } = useSwagStore()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [comboboxOpen, setComboboxOpen] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -98,6 +91,7 @@ export function CheckoutDialog({
         destination: '',
         date: new Date(),
       })
+      setComboboxOpen(false)
     }
   }, [open, form])
 
@@ -117,22 +111,67 @@ export function CheckoutDialog({
           control={form.control}
           name="user"
           render={({ field }) => (
-            <FormItem>
+            <FormItem className="flex flex-col">
               <FormLabel>Quem está retirando?</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um colaborador" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {MOCK_USERS.map((user) => (
-                    <SelectItem key={user} value={user}>
-                      {user}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover
+                open={comboboxOpen}
+                onOpenChange={setComboboxOpen}
+                modal={true}
+              >
+                <PopoverTrigger asChild>
+                  <FormControl>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      aria-expanded={comboboxOpen}
+                      className={cn(
+                        'w-full justify-between',
+                        !field.value && 'text-muted-foreground',
+                      )}
+                    >
+                      {field.value
+                        ? collaborators.find(
+                            (collaborator) => collaborator === field.value,
+                          ) || field.value
+                        : 'Selecione um colaborador'}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </FormControl>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="w-[--radix-popover-trigger-width] p-0"
+                  align="start"
+                >
+                  <Command>
+                    <CommandInput placeholder="Buscar colaborador..." />
+                    <CommandList>
+                      <CommandEmpty>Colaborador não encontrado.</CommandEmpty>
+                      <CommandGroup>
+                        {collaborators.map((collaborator, index) => (
+                          <CommandItem
+                            value={collaborator}
+                            key={`${collaborator}-${index}`}
+                            onSelect={() => {
+                              form.setValue('user', collaborator)
+                              setComboboxOpen(false)
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                'mr-2 h-4 w-4',
+                                collaborator === field.value
+                                  ? 'opacity-100'
+                                  : 'opacity-0',
+                              )}
+                            />
+                            {collaborator}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
               <FormMessage />
             </FormItem>
           )}
@@ -209,7 +248,7 @@ export function CheckoutDialog({
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="px-4 pb-8">
+        <DrawerContent className="px-4 pb-8 max-h-[95vh] mt-0">
           <DrawerHeader className="text-left px-1">
             <DrawerTitle>Retirar Item</DrawerTitle>
             <DrawerDescription>
