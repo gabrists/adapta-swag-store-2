@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { Loader2, Save, Image as ImageIcon, Upload, X } from 'lucide-react'
+import { Loader2, Save, Image as ImageIcon, CloudUpload, X } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
 import useSwagStore from '@/stores/useSwagStore'
@@ -34,6 +34,7 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
+import { uploadToR2 } from '@/lib/storage'
 
 const formSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -52,6 +53,7 @@ export default function ManageProducts() {
   const { toast } = useToast()
   const navigate = useNavigate()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -75,7 +77,7 @@ export default function ManageProducts() {
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setIsDragging(true)
+    if (!isUploading) setIsDragging(true)
   }
 
   const handleDragLeave = (e: React.DragEvent) => {
@@ -88,38 +90,52 @@ export default function ManageProducts() {
     e.preventDefault()
     e.stopPropagation()
     setIsDragging(false)
+    if (isUploading) return
+
     const file = e.dataTransfer.files?.[0]
     processFile(file)
   }
 
-  const processFile = (file?: File) => {
+  const processFile = async (file?: File) => {
     if (file) {
-      // 5MB Limit
-      if (file.size > 5 * 1024 * 1024) {
+      try {
+        setIsUploading(true)
+
+        // Optimistic preview
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          setImagePreview(reader.result as string)
+        }
+        reader.readAsDataURL(file)
+
+        // Upload to R2
+        const url = await uploadToR2(file)
+        form.setValue('imageQuery', url, { shouldValidate: true })
+        setImagePreview(url)
+
         toast({
-          title: 'Arquivo muito grande',
-          description: 'A imagem deve ter no máximo 5MB.',
+          title: 'Upload concluído',
+          description: 'Imagem armazenada no Cloudflare R2.',
+          className: 'bg-emerald-50 border-emerald-200 text-emerald-900',
+        })
+      } catch (error) {
+        toast({
+          title: 'Erro no upload',
+          description:
+            error instanceof Error
+              ? error.message
+              : 'Não foi possível enviar a imagem.',
           variant: 'destructive',
         })
-        return
+        if (!form.getValues('imageQuery')) {
+          setImagePreview(null)
+        }
+      } finally {
+        setIsUploading(false)
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
       }
-
-      if (!file.type.startsWith('image/')) {
-        toast({
-          title: 'Formato inválido',
-          description: 'Por favor, envie apenas arquivos de imagem.',
-          variant: 'destructive',
-        })
-        return
-      }
-
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const result = reader.result as string
-        setImagePreview(result)
-        form.setValue('imageQuery', result, { shouldValidate: true })
-      }
-      reader.readAsDataURL(file)
     }
   }
 
@@ -254,43 +270,69 @@ export default function ManageProducts() {
                       <img
                         src={imagePreview}
                         alt="Preview"
-                        className="w-full h-full object-contain"
+                        className={cn(
+                          'w-full h-full object-contain transition-opacity',
+                          isUploading ? 'opacity-50' : 'opacity-100',
+                        )}
                       />
-                      <button
-                        type="button"
-                        onClick={handleRemoveImage}
-                        className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full shadow-md hover:bg-red-600 transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                      {isUploading && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                        </div>
+                      )}
+                      {!isUploading && (
+                        <button
+                          type="button"
+                          onClick={handleRemoveImage}
+                          className="absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full shadow-md hover:bg-red-600 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   ) : (
                     <div
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={() =>
+                        !isUploading && fileInputRef.current?.click()
+                      }
                       onDragOver={handleDragOver}
                       onDragLeave={handleDragLeave}
                       onDrop={handleDrop}
                       className={cn(
-                        'w-full h-40 border-2 border-dashed rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all duration-200',
-                        isDragging
+                        'w-full h-40 border-2 border-dashed rounded-lg flex flex-col items-center justify-center transition-all duration-200',
+                        isUploading
+                          ? 'cursor-wait bg-slate-50'
+                          : 'cursor-pointer',
+                        isDragging && !isUploading
                           ? 'border-primary bg-primary/5'
                           : 'border-slate-300 hover:bg-slate-50 hover:border-slate-400',
                       )}
                     >
-                      <div className="bg-slate-100 p-3 rounded-full mb-3">
-                        <Upload
-                          className={cn(
-                            'w-6 h-6',
-                            isDragging ? 'text-primary' : 'text-slate-400',
-                          )}
-                        />
-                      </div>
-                      <span className="text-sm font-medium text-slate-700">
-                        Clique para fazer upload
-                      </span>
-                      <span className="text-xs text-slate-500 mt-1">
-                        ou arraste e solte (PNG, JPG, WEBP)
-                      </span>
+                      {isUploading ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                          <span className="text-sm font-medium text-slate-600">
+                            Enviando para R2...
+                          </span>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="bg-slate-100 p-3 rounded-full mb-3">
+                            <CloudUpload
+                              className={cn(
+                                'w-6 h-6',
+                                isDragging ? 'text-primary' : 'text-slate-400',
+                              )}
+                            />
+                          </div>
+                          <span className="text-sm font-medium text-slate-700">
+                            Clique para Upload
+                          </span>
+                          <span className="text-xs text-slate-500 mt-1">
+                            ou arraste e solte (PNG, JPG, WEBP)
+                          </span>
+                        </>
+                      )}
                     </div>
                   )}
 
@@ -300,6 +342,7 @@ export default function ManageProducts() {
                     onChange={handleFileChange}
                     accept="image/*"
                     className="hidden"
+                    disabled={isUploading}
                   />
 
                   <div className="flex items-center gap-2">
@@ -330,9 +373,7 @@ export default function ManageProducts() {
                                   imagePreview &&
                                   imagePreview.startsWith('data:')
                                 ) {
-                                  // If input changes and we have a data URI upload, do nothing or clear?
-                                  // We let the user type, but if they type, it will replace the data URI on submit
-                                  // We don't clear the preview here to avoid flickering if they are just copying
+                                  // Keep preview if it's a data URL unless cleared
                                 }
                               }}
                             />
@@ -366,17 +407,17 @@ export default function ManageProducts() {
               <div className="flex justify-end pt-2">
                 <Button
                   type="submit"
-                  className="min-w-[150px]"
-                  disabled={isSubmitting}
+                  className="min-w-[150px] gap-2"
+                  disabled={isSubmitting || isUploading}
                 >
-                  {isSubmitting ? (
+                  {isSubmitting || isUploading ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Salvando...
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Processando...
                     </>
                   ) : (
                     <>
-                      <Save className="mr-2 h-4 w-4" />
+                      <Save className="h-4 w-4" />
                       Salvar Brinde
                     </>
                   )}

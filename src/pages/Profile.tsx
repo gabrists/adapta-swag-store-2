@@ -2,7 +2,14 @@ import { useState, useRef, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { Loader2, Save, User as UserIcon, Mail, Camera } from 'lucide-react'
+import {
+  Loader2,
+  Save,
+  User as UserIcon,
+  Mail,
+  Camera,
+  CloudUpload,
+} from 'lucide-react'
 
 import useAuthStore from '@/stores/useAuthStore'
 import { useToast } from '@/hooks/use-toast'
@@ -25,6 +32,8 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { uploadToR2 } from '@/lib/storage'
+import { cn } from '@/lib/utils'
 
 const formSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -35,6 +44,7 @@ export default function Profile() {
   const { user, updateProfile } = useAuthStore()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -55,29 +65,45 @@ export default function Profile() {
     }
   }, [user, form])
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      // 5MB Limit
-      if (file.size > 5 * 1024 * 1024) {
+      try {
+        setIsUploading(true)
+        // Optimistic preview
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          setAvatarPreview(reader.result as string)
+        }
+        reader.readAsDataURL(file)
+
+        // Upload to R2
+        const url = await uploadToR2(file)
+        setAvatarPreview(url)
+
         toast({
-          title: 'Arquivo muito grande',
-          description: 'A imagem deve ter no máximo 5MB.',
+          title: 'Foto enviada',
+          description: 'Nova foto de perfil armazenada no Cloudflare R2.',
+          className: 'bg-emerald-50 border-emerald-200 text-emerald-900',
+        })
+      } catch (error) {
+        toast({
+          title: 'Erro ao enviar foto',
+          description:
+            error instanceof Error ? error.message : 'Tente novamente.',
           variant: 'destructive',
         })
-        return
+        setAvatarPreview(user?.avatar || null)
+      } finally {
+        setIsUploading(false)
       }
-
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setAvatarPreview(reader.result as string)
-      }
-      reader.readAsDataURL(file)
     }
   }
 
   const handleAvatarClick = () => {
-    fileInputRef.current?.click()
+    if (!isUploading) {
+      fileInputRef.current?.click()
+    }
   }
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -115,21 +141,35 @@ export default function Profile() {
         <CardHeader>
           <div className="flex flex-col md:flex-row items-center gap-6">
             <div
-              className="relative group cursor-pointer"
+              className={cn(
+                'relative group cursor-pointer',
+                isUploading && 'cursor-wait',
+              )}
               onClick={handleAvatarClick}
             >
               <Avatar className="h-24 w-24 border-4 border-white shadow-md group-hover:opacity-90 transition-opacity">
                 <AvatarImage
                   src={avatarPreview || user?.avatar}
-                  className="object-cover"
+                  className={cn(
+                    'object-cover transition-opacity',
+                    isUploading && 'opacity-50',
+                  )}
                 />
                 <AvatarFallback className="text-2xl">
                   {user?.name?.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
-                <Camera className="w-8 h-8 text-white" />
-              </div>
+
+              {isUploading ? (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/10 rounded-full">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                  <CloudUpload className="w-8 h-8 text-white" />
+                </div>
+              )}
+
               <div className="absolute bottom-0 right-0 bg-primary text-white p-1.5 rounded-full shadow-lg border-2 border-white">
                 <Camera className="w-4 h-4" />
               </div>
@@ -141,6 +181,7 @@ export default function Profile() {
               className="hidden"
               accept="image/*"
               onChange={handleFileChange}
+              disabled={isUploading}
             />
 
             <div className="text-center md:text-left space-y-1">
@@ -148,9 +189,20 @@ export default function Profile() {
               <CardDescription>
                 {user?.role === 'admin' ? 'Administrador' : 'Colaborador'}
               </CardDescription>
-              <p className="text-xs text-muted-foreground pt-1">
-                Clique na foto para alterar
-              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-2 h-8 gap-2 text-xs"
+                onClick={handleAvatarClick}
+                disabled={isUploading}
+              >
+                {isUploading ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <CloudUpload className="w-3 h-3" />
+                )}
+                Upload Foto
+              </Button>
             </div>
           </div>
         </CardHeader>
@@ -199,17 +251,17 @@ export default function Profile() {
               <div className="flex justify-end pt-2">
                 <Button
                   type="submit"
-                  className="min-w-[150px]"
-                  disabled={isSubmitting}
+                  className="min-w-[150px] gap-2"
+                  disabled={isSubmitting || isUploading}
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      <Loader2 className="h-4 w-4 animate-spin" />
                       Salvando...
                     </>
                   ) : (
                     <>
-                      <Save className="mr-2 h-4 w-4" />
+                      <Save className="h-4 w-4" />
                       Salvar Alterações
                     </>
                   )}

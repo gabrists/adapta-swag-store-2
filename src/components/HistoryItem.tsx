@@ -32,7 +32,10 @@ export function HistoryItem({ entry }: HistoryItemProps) {
 
   // Get first item image for the card thumbnail
   const firstItem = entry.items[0]
-  const isQuery = !firstItem.productImageQuery.startsWith('http')
+  const isQuery =
+    !firstItem.productImageQuery.startsWith('http') &&
+    !firstItem.productImageQuery.startsWith('data:')
+
   const thumbnail = isQuery
     ? `https://img.usecurling.com/p/100/100?q=${firstItem.productImageQuery}&dpr=2`
     : firstItem.productImageQuery

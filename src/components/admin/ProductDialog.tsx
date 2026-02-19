@@ -2,7 +2,14 @@ import { useEffect, useState, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { Loader2, Save, Upload, X, Image as ImageIcon } from 'lucide-react'
+import {
+  Loader2,
+  Save,
+  Upload,
+  X,
+  Image as ImageIcon,
+  CloudUpload,
+} from 'lucide-react'
 
 import { Product } from '@/types'
 import { Button } from '@/components/ui/button'
@@ -21,7 +28,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -33,6 +39,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { uploadToR2 } from '@/lib/storage'
+import { useToast } from '@/hooks/use-toast'
+import { cn } from '@/lib/utils'
 
 const formSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
@@ -61,7 +70,9 @@ export function ProductDialog({
   product,
   onSave,
 }: ProductDialogProps) {
+  const { toast } = useToast()
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [isUploading, setIsUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -126,25 +137,53 @@ export function ProductDialog({
         })
         setImagePreview(null)
       }
+      setIsUploading(false)
     }
   }, [open, product, form])
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        // 2MB limit
-        alert('A imagem deve ser menor que 2MB')
-        return
-      }
+      try {
+        setIsUploading(true)
+        // Optimistic preview
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          setImagePreview(reader.result as string)
+        }
+        reader.readAsDataURL(file)
 
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        const result = reader.result as string
-        setImagePreview(result)
-        form.setValue('imageQuery', result, { shouldValidate: true })
+        // Actual upload
+        const url = await uploadToR2(file)
+        form.setValue('imageQuery', url, { shouldValidate: true })
+        setImagePreview(url) // Update with "remote" URL (simulated)
+
+        toast({
+          title: 'Upload concluído',
+          description: 'Imagem enviada para Cloudflare R2 com sucesso.',
+          className: 'bg-emerald-50 border-emerald-200 text-emerald-900',
+        })
+      } catch (error) {
+        toast({
+          title: 'Erro no upload',
+          description:
+            error instanceof Error
+              ? error.message
+              : 'Não foi possível enviar a imagem.',
+          variant: 'destructive',
+        })
+        // Reset preview on error
+        if (form.getValues('imageQuery')) {
+          setImagePreview(form.getValues('imageQuery'))
+        } else {
+          setImagePreview(null)
+        }
+      } finally {
+        setIsUploading(false)
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''
+        }
       }
-      reader.readAsDataURL(file)
     }
   }
 
@@ -400,28 +439,56 @@ export function ProductDialog({
                     <img
                       src={imagePreview}
                       alt="Preview"
-                      className="w-full h-full object-contain"
+                      className={cn(
+                        'w-full h-full object-contain transition-opacity',
+                        isUploading ? 'opacity-50' : 'opacity-100',
+                      )}
                     />
-                    <button
-                      type="button"
-                      onClick={handleRemoveImage}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
+                    {isUploading && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                      </div>
+                    )}
+                    {!isUploading && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="w-full h-32 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors"
+                    onClick={() =>
+                      !isUploading && fileInputRef.current?.click()
+                    }
+                    className={cn(
+                      'w-full h-32 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center transition-colors',
+                      isUploading
+                        ? 'cursor-wait bg-slate-50'
+                        : 'cursor-pointer hover:bg-slate-50',
+                    )}
                   >
-                    <Upload className="w-8 h-8 text-slate-400 mb-2" />
-                    <span className="text-sm text-slate-500">
-                      Clique para fazer upload
-                    </span>
-                    <span className="text-xs text-slate-400 mt-1">
-                      ou arraste e solte
-                    </span>
+                    {isUploading ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                        <span className="text-sm text-slate-500">
+                          Enviando para Cloudflare R2...
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <CloudUpload className="w-8 h-8 text-slate-400 mb-2" />
+                        <span className="text-sm text-slate-500">
+                          Clique para fazer upload
+                        </span>
+                        <span className="text-xs text-slate-400 mt-1">
+                          armazenamento seguro via R2
+                        </span>
+                      </>
+                    )}
                   </div>
                 )}
 
@@ -431,6 +498,7 @@ export function ProductDialog({
                   onChange={handleFileChange}
                   accept="image/*"
                   className="hidden"
+                  disabled={isUploading}
                 />
 
                 <div className="flex items-center gap-2">
@@ -500,16 +568,17 @@ export function ProductDialog({
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
-                className="rounded-lg"
+                className="rounded-lg gap-2"
+                disabled={isUploading || form.formState.isSubmitting}
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
-                disabled={form.formState.isSubmitting}
-                className="rounded-lg"
+                disabled={isUploading || form.formState.isSubmitting}
+                className="rounded-lg gap-2"
               >
-                {form.formState.isSubmitting ? (
+                {form.formState.isSubmitting || isUploading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Save className="h-4 w-4" />
