@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -54,6 +54,7 @@ const formSchema = z.object({
   user: z.string().min(1, 'Selecione quem está retirando'),
   destination: z.string().min(3, 'Informe o destino (cliente ou evento)'),
   date: z.date({ required_error: 'Selecione a data da retirada' }),
+  quantity: z.coerce.number().min(1, 'A quantidade deve ser pelo menos 1'),
 })
 
 interface CheckoutDialogProps {
@@ -76,12 +77,22 @@ export function CheckoutDialog({
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [comboboxOpen, setComboboxOpen] = useState(false)
 
+  // Calculate max stock based on product and size
+  const maxStock = useMemo(() => {
+    if (!product) return 0
+    if (product.hasGrid && size && product.grid) {
+      return product.grid[size] || 0
+    }
+    return product.stock
+  }, [product, size])
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       user: '',
       destination: '',
       date: new Date(),
+      quantity: 1,
     },
   })
 
@@ -92,12 +103,21 @@ export function CheckoutDialog({
         user: '',
         destination: '',
         date: new Date(),
+        quantity: 1,
       })
       setComboboxOpen(false)
     }
   }, [open, form])
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (values.quantity > maxStock) {
+      form.setError('quantity', {
+        type: 'manual',
+        message: `Quantidade indisponível. Máximo: ${maxStock}`,
+      })
+      return
+    }
+
     setIsSubmitting(true)
     // Simulate API delay
     await new Promise((resolve) => setTimeout(resolve, 800))
@@ -199,6 +219,27 @@ export function CheckoutDialog({
 
         <FormField
           control={form.control}
+          name="quantity"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Quantidade</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  min={1}
+                  max={maxStock}
+                  className="rounded-lg"
+                  {...field}
+                  onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="date"
           render={({ field }) => (
             <FormItem className="flex flex-col">
@@ -261,6 +302,10 @@ export function CheckoutDialog({
           Tamanho: <span className="font-bold text-primary">{size}</span>
         </>
       )}
+      <br />
+      <span className="text-xs text-muted-foreground">
+        Estoque disponível: {maxStock}
+      </span>
     </span>
   )
 

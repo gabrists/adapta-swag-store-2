@@ -17,6 +17,7 @@ interface SwagContextType {
     user: string,
     destination: string,
     date: Date,
+    amount: number,
     size?: string,
   ) => void
   addProduct: (
@@ -235,6 +236,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
     user: string,
     destination: string,
     date: Date,
+    amount: number,
     size?: string,
   ) => {
     setProducts((prev) =>
@@ -242,14 +244,17 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         if (p.id !== productId) return p
 
         if (p.hasGrid && size && p.grid) {
-          const newGrid = { ...p.grid, [size]: Math.max(0, p.grid[size] - 1) }
+          const newGrid = {
+            ...p.grid,
+            [size]: Math.max(0, p.grid[size] - amount),
+          }
           const newStock = Object.values(newGrid).reduce(
             (acc, curr) => acc + curr,
             0,
           )
           return { ...p, grid: newGrid, stock: newStock }
         } else {
-          return { ...p, stock: Math.max(0, p.stock - 1) }
+          return { ...p, stock: Math.max(0, p.stock - amount) }
         }
       }),
     )
@@ -265,6 +270,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         destination,
         date: date.toISOString(),
         size,
+        quantity: amount,
       }
       setHistory((prev) => [newEntry, ...prev])
       triggerConfetti()

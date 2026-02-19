@@ -29,6 +29,7 @@ export interface HistoryEntry {
   destination: string
   date: string // ISO string
   size?: string
+  quantity: number
 }
 
 export type Category =

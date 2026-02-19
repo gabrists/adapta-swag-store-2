@@ -42,12 +42,13 @@ export default function Index() {
         values.user,
         values.destination,
         values.date,
+        values.quantity,
         values.size,
       )
 
       toast({
         title: 'Retirada confirmada!',
-        description: `${checkoutProduct.name} ${values.size ? `(${values.size}) ` : ''}foi registrado com sucesso.`,
+        description: `Você resgatou ${values.quantity} unidades de ${checkoutProduct.name}`,
         duration: 3000,
         className: 'bg-emerald-50 border-emerald-200 text-emerald-900',
       })
