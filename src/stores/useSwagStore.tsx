@@ -15,6 +15,8 @@ import {
   HistoryItemEntry,
 } from '@/types'
 import { triggerConfetti } from '@/lib/confetti'
+import { supabase } from '@/lib/supabase/client'
+import { useToast } from '@/hooks/use-toast'
 
 interface SwagContextType {
   products: Product[]
@@ -30,247 +32,57 @@ interface SwagContextType {
     size?: string,
   ) => void
   clearCart: () => void
-  checkoutCart: (user: string, destination: string, date: Date) => void
+  checkoutCart: (
+    userName: string,
+    destination: string,
+    date: Date,
+  ) => Promise<void>
   addProduct: (
     product: Omit<Product, 'id' | 'stock'> & {
       stock?: number
       grid?: ProductSizeGrid
     },
-  ) => void
-  updateProduct: (product: Product) => void
-  deleteProduct: (productId: string) => void
-  adjustStock: (productId: string, amount: number, size?: string) => void
-  addCollaborator: (collaborator: Omit<Collaborator, 'id'>) => void
-  updateCollaborator: (collaborator: Collaborator) => void
-  deleteCollaborator: (id: string) => void
+  ) => Promise<void>
+  updateProduct: (product: Product) => Promise<void>
+  deleteProduct: (productId: string) => Promise<void>
+  adjustStock: (
+    productId: string,
+    amount: number,
+    size?: string,
+  ) => Promise<void>
+  addCollaborator: (collaborator: Omit<Collaborator, 'id'>) => Promise<void>
+  updateCollaborator: (collaborator: Collaborator) => Promise<void>
+  deleteCollaborator: (id: string) => Promise<void>
   isLoading: boolean
 }
 
 const SwagContext = createContext<SwagContextType | undefined>(undefined)
-
-const INITIAL_PRODUCTS: Product[] = [
-  {
-    id: '1',
-    name: 'Camiseta Adapta Tech (Preta)',
-    category: 'Vestuário',
-    imageQuery: 't-shirt black',
-    stock: 22,
-    hasGrid: true,
-    grid: { PP: 0, P: 2, M: 15, G: 0, GG: 5 },
-    description: 'Camiseta de algodão egípcio com estampa minimalista.',
-    price: 45.0,
-  },
-  {
-    id: '2',
-    name: 'Moletom "Vibe Coding" (Cinza)',
-    category: 'Vestuário',
-    imageQuery: 'hoodie grey',
-    stock: 20,
-    hasGrid: true,
-    grid: { PP: 0, P: 5, M: 5, G: 5, GG: 5 },
-    description: 'Moletom confortável para os dias de código intenso.',
-    price: 120.0,
-  },
-  {
-    id: '3',
-    name: 'Garrafa Térmica 500ml',
-    category: 'Utensílios',
-    imageQuery: 'thermos bottle black',
-    stock: 30,
-    hasGrid: false,
-    description: 'Mantém sua bebida na temperatura ideal por horas.',
-    price: 65.0,
-  },
-  {
-    id: '4',
-    name: 'Kit Onboarding Deluxe',
-    category: 'Kits',
-    imageQuery: 'welcome kit gift box',
-    stock: 8,
-    hasGrid: false,
-    description: 'O kit completo para receber novos talentos com estilo.',
-    price: 250.0,
-  },
-]
-
-const INITIAL_COLLABORATOR_NAMES = [
-  'Allan Baptista',
-  'Angelo Nuncio Pinheiro',
-  'Arthur da Fonte Guerra',
-  'Axel Ríos',
-  'Ben Schulze',
-  'Bia',
-  'Braga',
-  'Caio Filip Juliaci',
-  'Davi Cunha',
-  'Davy Pedrosa',
-  'Edson Muniz',
-  'Eduarda Almeida',
-  'Eduardo Coelho',
-  'Erica Ayumi',
-  'Ezequiel',
-  'Felipe Batista',
-  'Felipe Mamede',
-  'Felipe Navaar',
-  'Felipe Oliveira Garcia',
-  'Felipe Peixoto',
-  'Fellipe Carvalho',
-  'Fellipe Carvalho',
-  'Fernando Mascarenhas',
-  'Fernando Sousa',
-  'Gabriel Carvalho',
-  'Gabriel Henrique',
-  'Gabriel Jesus',
-  'Gabriel Pavão',
-  'Gabriel Santos',
-  'Giampaolo Lepore',
-  'Guilherme Lago',
-  'Guilherme Teofilo',
-  'Gustavo Fonseca',
-  'Hamú',
-  'Ian Ede',
-  'Ingrid Costa',
-  'Isadora Magri',
-  'Izabel Villyn',
-  'Jadson Consolini',
-  'Jamilson Scarcella',
-  'Jessica Ferreira',
-  'João Augusto',
-  'João Ferrari',
-  'João Locatelli',
-  'João Vitor Andrade Estrela',
-  'Joao Vitor Ferrari',
-  'Juan Bonfim',
-  'Julia Pereira Cruz',
-  'Kaike Mota',
-  'Kelvi Maycon',
-  'Kelvin Dutra',
-  'Kelvyn Holovecki',
-  'Kimberly Prestes',
-  'Léo Camargo',
-  'Léo Marinho',
-  'Lucas Andrade',
-  'Lucas Bueno',
-  'Lucas Dias',
-  'Lucas Machado',
-  'lucas paiva',
-  'Lucas Pereira',
-  'Lucas Richard',
-  'Lucas Romcy',
-  'Lucas Vin',
-  'Lucas Yuri',
-  'Luis Fernando',
-  'Luis Miguel',
-  'Lydia',
-  'Márcia Ertel',
-  'Marcos Cury',
-  'Mateus Tápias',
-  'Matheus Kubo',
-  'Matheus Prado',
-  'Matheus Sotto',
-  'Max',
-  'miguel',
-  'Miguel Souza Dias',
-  'Monike Leal',
-  'Patrick Peters',
-  'Paulo Zanquetta',
-  'Priscilla Petry',
-  'Rafael Cabral',
-  'Raphael Araujo',
-  'Raphaela Castro',
-  'Rodrigo A. Santos',
-  'Romario',
-  'Ruan Azevedo',
-  'Ruan Azevedo',
-  'Samyla Vidal',
-  'Tainara Oliveira',
-  'Themila Andrade',
-  'Thiago Machado',
-  'Vinicius Galetti',
-  'Yuri',
-]
-
-const generateInitialTeam = (): Collaborator[] => {
-  const departments = [
-    'Engenharia',
-    'Produto',
-    'Vendas',
-    'Marketing',
-    'RH',
-    'Financeiro',
-  ]
-  return INITIAL_COLLABORATOR_NAMES.map((name, i) => ({
-    id: `c-${i}`,
-    name,
-    email: `${name.toLowerCase().split(' ')[0]}@adapta.org`,
-    department: departments[i % departments.length],
-    role: 'Colaborador',
-    avatarUrl: `https://img.usecurling.com/ppl/thumbnail?gender=${i % 2 === 0 ? 'male' : 'female'}&seed=${i}`,
-  }))
-}
 
 export function SwagProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>([])
   const [cart, setCart] = useState<CartItem[]>([])
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [team, setTeam] = useState<Collaborator[]>([])
+  const [departments, setDepartments] = useState<Record<string, string>>({}) // id -> name
   const [isLoading, setIsLoading] = useState(true)
+  const { toast } = useToast()
 
   const collaborators = useMemo(() => team.map((c) => c.name).sort(), [team])
 
+  // Fetch initial data
   useEffect(() => {
-    const loadData = () => {
+    const loadData = async () => {
       try {
-        const storedProducts = localStorage.getItem('adapta-swag-products-v2')
-        const storedHistory = localStorage.getItem('adapta-swag-history')
-        const storedTeam = localStorage.getItem('adapta-swag-team')
-
-        if (storedProducts) {
-          const parsedProducts = JSON.parse(storedProducts)
-          // Migration logic to ensure price exists
-          const migratedProducts = parsedProducts.map((p: any) => ({
-            ...p,
-            price: p.price !== undefined ? p.price : 0,
-          }))
-          setProducts(migratedProducts)
-        } else {
-          setProducts(INITIAL_PRODUCTS)
-        }
-
-        if (storedHistory) {
-          const parsedHistory = JSON.parse(storedHistory)
-          // Migration logic for old history format
-          const migratedHistory = parsedHistory.map((entry: any) => {
-            if (entry.items) return entry
-            return {
-              id: entry.id,
-              user: entry.user,
-              destination: entry.destination,
-              date: entry.date,
-              totalQuantity: entry.quantity,
-              items: [
-                {
-                  productId: entry.productId,
-                  productName: entry.productName,
-                  productImageQuery: entry.productImageQuery,
-                  size: entry.size,
-                  quantity: entry.quantity,
-                },
-              ],
-            }
-          })
-          setHistory(migratedHistory)
-        }
-
-        if (storedTeam) {
-          setTeam(JSON.parse(storedTeam))
-        } else {
-          setTeam(generateInitialTeam())
-        }
+        setIsLoading(true)
+        await Promise.all([fetchDepartments(), fetchItems(), fetchEmployees()])
+        await fetchHistory() // Depends on items/employees
       } catch (error) {
-        console.error('Failed to load data from local storage', error)
-        setProducts(INITIAL_PRODUCTS)
-        setTeam(generateInitialTeam())
+        console.error('Error loading data:', error)
+        toast({
+          title: 'Erro de Conexão',
+          description: 'Não foi possível carregar os dados do servidor.',
+          variant: 'destructive',
+        })
       } finally {
         setIsLoading(false)
       }
@@ -279,13 +91,105 @@ export function SwagProvider({ children }: { children: ReactNode }) {
     loadData()
   }, [])
 
-  useEffect(() => {
-    if (!isLoading) {
-      localStorage.setItem('adapta-swag-products-v2', JSON.stringify(products))
-      localStorage.setItem('adapta-swag-history', JSON.stringify(history))
-      localStorage.setItem('adapta-swag-team', JSON.stringify(team))
-    }
-  }, [products, history, team, isLoading])
+  const fetchDepartments = async () => {
+    const { data, error } = await supabase.from('departments').select('*')
+    if (error) throw error
+    const deptMap: Record<string, string> = {}
+    data?.forEach((d) => {
+      deptMap[d.id] = d.name
+    })
+    setDepartments(deptMap)
+  }
+
+  const fetchItems = async () => {
+    const { data, error } = await supabase
+      .from('items')
+      .select('*')
+      .order('name')
+    if (error) throw error
+
+    const mappedProducts: Product[] =
+      data?.map((item) => ({
+        id: item.id,
+        name: item.name,
+        category: item.category,
+        imageQuery: item.image_url || '',
+        stock: item.current_stock,
+        hasGrid: item.has_grid,
+        grid: item.grid as unknown as ProductSizeGrid, // Trusting the DB JSON structure
+        description: item.description || '',
+        price: Number(item.price) || 0,
+      })) || []
+
+    setProducts(mappedProducts)
+  }
+
+  const fetchEmployees = async () => {
+    // We need to join with departments, but for now we fetch separately or use join syntax if preferred
+    // Supabase allows: select('*, departments(name)')
+    const { data, error } = await supabase
+      .from('employees')
+      .select('*, departments(name)')
+      .order('name')
+
+    if (error) throw error
+
+    const mappedTeam: Collaborator[] =
+      data?.map((emp: any) => ({
+        id: emp.id,
+        name: emp.name,
+        email: emp.email,
+        department: emp.departments?.name || 'Geral',
+        role: emp.role || 'Colaborador',
+        avatarUrl: emp.avatar_url,
+      })) || []
+
+    setTeam(mappedTeam)
+  }
+
+  const fetchHistory = async () => {
+    const { data, error } = await supabase
+      .from('inventory_movements')
+      .select(
+        `
+        *,
+        items (name, image_url),
+        employees (name)
+      `,
+      )
+      .eq('type', 'OUT')
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    // Group by group_id to reconstruct transactions
+    const groups: Record<string, HistoryEntry> = {}
+
+    data?.forEach((row: any) => {
+      if (!groups[row.group_id]) {
+        groups[row.group_id] = {
+          id: row.group_id, // Using group_id as transaction ID
+          items: [],
+          user: row.employees?.name || 'Desconhecido',
+          destination: row.destination || '',
+          date: row.created_at,
+          totalQuantity: 0,
+        }
+      }
+
+      groups[row.group_id].items.push({
+        productId: row.item_id,
+        productName: row.items?.name || 'Item Removido',
+        productImageQuery: row.items?.image_url || '',
+        size: row.size,
+        quantity: row.quantity,
+      })
+
+      groups[row.group_id].totalQuantity += row.quantity
+    })
+
+    setHistory(Object.values(groups))
+  }
 
   const addToCart = (product: Product, quantity: number, size?: string) => {
     setCart((prev) => {
@@ -356,75 +260,92 @@ export function SwagProvider({ children }: { children: ReactNode }) {
     setCart([])
   }
 
-  const checkoutCart = (user: string, destination: string, date: Date) => {
+  const checkoutCart = async (
+    userName: string,
+    destination: string,
+    date: Date,
+  ) => {
     if (cart.length === 0) return
 
-    // Update products stock
-    setProducts((prevProducts) => {
-      return prevProducts.map((p) => {
-        const cartItemsForProduct = cart.filter(
-          (item) => item.productId === p.id,
-        )
+    try {
+      const employee = team.find((c) => c.name === userName)
+      // If employee not found (should not happen with select), we proceed with null id or handle error
+      // Ideally we should use ID from the start, but UI passes name.
+      const employeeId = employee?.id
 
-        if (cartItemsForProduct.length === 0) return p
+      const groupId = crypto.randomUUID()
+      const movements = []
 
-        let newProduct = { ...p }
-
-        cartItemsForProduct.forEach((item) => {
-          if (newProduct.hasGrid && item.size && newProduct.grid) {
-            const newGrid = {
-              ...newProduct.grid,
-              [item.size]: Math.max(
-                0,
-                newProduct.grid[item.size] - item.quantity,
-              ),
-            }
-            const newStock = Object.values(newGrid).reduce(
-              (acc, curr) => acc + curr,
-              0,
-            )
-            newProduct = { ...newProduct, grid: newGrid, stock: newStock }
-          } else {
-            newProduct = {
-              ...newProduct,
-              stock: Math.max(0, newProduct.stock - item.quantity),
-            }
-          }
+      // Prepare movements
+      for (const item of cart) {
+        movements.push({
+          group_id: groupId,
+          item_id: item.productId,
+          employee_id: employeeId,
+          type: 'OUT',
+          quantity: item.quantity,
+          size: item.size,
+          destination: destination,
+          created_at: date.toISOString(),
         })
 
-        return newProduct
+        // For grid items, we must update the specific JSON key in DB
+        // The trigger only updates 'current_stock' total.
+        const product = products.find((p) => p.id === item.productId)
+        if (product && product.hasGrid && item.size && product.grid) {
+          const newGrid = {
+            ...product.grid,
+            [item.size]: Math.max(0, product.grid[item.size] - item.quantity),
+          }
+          // Optimistic update locally
+          updateProductState(item.productId, { grid: newGrid })
+          // DB update for grid
+          await supabase
+            .from('items')
+            .update({ grid: newGrid })
+            .eq('id', item.productId)
+        }
+      }
+
+      // Insert movements (This triggers stock decrement in DB)
+      const { error } = await supabase
+        .from('inventory_movements')
+        .insert(movements)
+
+      if (error) throw error
+
+      setCart([])
+      triggerConfetti()
+
+      // Refresh data to ensure sync
+      await fetchItems()
+      await fetchHistory()
+    } catch (error) {
+      console.error('Checkout error:', error)
+      toast({
+        title: 'Erro no Checkout',
+        description: 'Não foi possível finalizar a retirada.',
+        variant: 'destructive',
       })
-    })
-
-    // Create history entry
-    const historyItems: HistoryItemEntry[] = cart.map((item) => ({
-      productId: item.productId,
-      productName: item.productName,
-      productImageQuery: item.productImageQuery,
-      size: item.size,
-      quantity: item.quantity,
-    }))
-
-    const totalQuantity = historyItems.reduce(
-      (acc, item) => acc + item.quantity,
-      0,
-    )
-
-    const newEntry: HistoryEntry = {
-      id: crypto.randomUUID(),
-      items: historyItems,
-      user,
-      destination,
-      date: date.toISOString(),
-      totalQuantity,
     }
-
-    setHistory((prev) => [newEntry, ...prev])
-    setCart([])
-    triggerConfetti()
   }
 
-  const addProduct = (
+  // Helper for optimistic updates
+  const updateProductState = (id: string, updates: Partial<Product>) => {
+    setProducts((prev) =>
+      prev.map((p) => {
+        if (p.id !== id) return p
+        const updated = { ...p, ...updates }
+        // Re-calculate stock if grid changed
+        if (updated.hasGrid && updated.grid) {
+          updated.stock = Object.values(updated.grid).reduce((a, b) => a + b, 0)
+        }
+        return updated
+      }),
+    )
+  }
+
+  const addProduct = async (
     productData: Omit<Product, 'id' | 'stock'> & {
       stock?: number
       grid?: ProductSizeGrid
@@ -440,15 +361,33 @@ export function SwagProvider({ children }: { children: ReactNode }) {
       finalStock = productData.stock || 0
     }
 
-    const newProduct: Product = {
-      ...productData,
-      stock: finalStock,
-      id: crypto.randomUUID(),
+    const newItem = {
+      name: productData.name,
+      description: productData.description,
+      image_url: productData.imageQuery,
+      category: productData.category,
+      price: productData.price,
+      has_grid: productData.hasGrid,
+      grid: productData.grid ? JSON.stringify(productData.grid) : null,
+      current_stock: finalStock,
+      critical_level: 5,
     }
-    setProducts((prev) => [newProduct, ...prev])
+
+    // Use explicit any to bypass strict type check for now or cast properly
+    const { error, data } = await supabase
+      .from('items')
+      .insert(newItem as any)
+      .select()
+
+    if (error) {
+      console.error(error)
+      throw error
+    }
+
+    await fetchItems()
   }
 
-  const updateProduct = (updatedProduct: Product) => {
+  const updateProduct = async (updatedProduct: Product) => {
     let finalStock = updatedProduct.stock
     if (updatedProduct.hasGrid && updatedProduct.grid) {
       finalStock = Object.values(updatedProduct.grid).reduce(
@@ -456,47 +395,172 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         0,
       )
     }
-    const finalProduct = { ...updatedProduct, stock: finalStock }
-    setProducts((prev) =>
-      prev.map((p) => (p.id === finalProduct.id ? finalProduct : p)),
-    )
+
+    const updates = {
+      name: updatedProduct.name,
+      description: updatedProduct.description,
+      image_url: updatedProduct.imageQuery,
+      category: updatedProduct.category,
+      price: updatedProduct.price,
+      has_grid: updatedProduct.hasGrid,
+      grid: updatedProduct.grid ? updatedProduct.grid : null, // supabase handles json conversion
+      current_stock: finalStock,
+    }
+
+    const { error } = await supabase
+      .from('items')
+      .update(updates as any)
+      .eq('id', updatedProduct.id)
+
+    if (error) {
+      console.error(error)
+      throw error
+    }
+
+    await fetchItems()
   }
 
-  const deleteProduct = (productId: string) => {
+  const deleteProduct = async (productId: string) => {
+    const { error } = await supabase.from('items').delete().eq('id', productId)
+    if (error) {
+      console.error(error)
+      toast({
+        title: 'Erro ao excluir',
+        description:
+          'Verifique se existem movimentações associadas a este item.',
+        variant: 'destructive',
+      })
+      throw error
+    }
     setProducts((prev) => prev.filter((p) => p.id !== productId))
   }
 
-  const adjustStock = (productId: string, amount: number, size?: string) => {
-    setProducts((prev) =>
-      prev.map((p) => {
-        if (p.id !== productId) return p
-        if (p.hasGrid && size && p.grid) {
+  const adjustStock = async (
+    productId: string,
+    amount: number,
+    size?: string,
+  ) => {
+    try {
+      // Create a movement record to track adjustment (using IN or OUT)
+      // If amount > 0, it's IN (Restock)
+      // If amount < 0, it's OUT (Adjustment/Loss)
+      const type = amount > 0 ? 'IN' : 'OUT'
+      const absAmount = Math.abs(amount)
+
+      const { error } = await supabase.from('inventory_movements').insert({
+        group_id: crypto.randomUUID(), // Individual adjustment
+        item_id: productId,
+        type: type,
+        quantity: absAmount,
+        size: size,
+        destination: 'Ajuste de Estoque',
+      })
+
+      if (error) throw error
+
+      // If grid, update grid JSON manually as well
+      if (size) {
+        const product = products.find((p) => p.id === productId)
+        if (product && product.grid) {
           const newGrid = {
-            ...p.grid,
-            [size]: Math.max(0, p.grid[size] + amount),
+            ...product.grid,
+            [size]: Math.max(0, product.grid[size] + amount),
           }
-          const newStock = Object.values(newGrid).reduce(
-            (acc, curr) => acc + curr,
-            0,
-          )
-          return { ...p, grid: newGrid, stock: newStock }
-        } else {
-          return { ...p, stock: Math.max(0, p.stock + amount) }
+          await supabase
+            .from('items')
+            .update({ grid: newGrid })
+            .eq('id', productId)
         }
-      }),
+      }
+
+      await fetchItems()
+    } catch (error) {
+      console.error(error)
+      throw error
+    }
+  }
+
+  const addCollaborator = async (data: Omit<Collaborator, 'id'>) => {
+    // We need to resolve department name to ID
+    // If department exists in our local map 'departments' (id->name), we need to reverse lookup
+    // Or just query/insert departments on the fly.
+    // For simplicity, we assume departments are seeded and fixed, we search by name.
+
+    let deptId = Object.keys(departments).find(
+      (key) => departments[key] === data.department,
     )
+
+    if (!deptId) {
+      // Fallback: try to fetch or create department
+      const { data: deptData, error } = await supabase
+        .from('departments')
+        .select('id')
+        .eq('name', data.department)
+        .single()
+
+      if (deptData) {
+        deptId = deptData.id
+      } else {
+        // Create if not exists (optional, based on requirement)
+        const { data: newDept } = await supabase
+          .from('departments')
+          .insert({ name: data.department })
+          .select()
+          .single()
+        if (newDept) deptId = newDept.id
+      }
+    }
+
+    if (!deptId) throw new Error('Department not found')
+
+    const newEmp = {
+      name: data.name,
+      email: data.email,
+      department_id: deptId,
+      role: data.role,
+      avatar_url: data.avatarUrl,
+    }
+
+    const { error } = await supabase.from('employees').insert(newEmp)
+    if (error) throw error
+
+    await fetchEmployees()
   }
 
-  const addCollaborator = (data: Omit<Collaborator, 'id'>) => {
-    const newCollaborator = { ...data, id: crypto.randomUUID() }
-    setTeam((prev) => [newCollaborator, ...prev])
+  const updateCollaborator = async (data: Collaborator) => {
+    let deptId = Object.keys(departments).find(
+      (key) => departments[key] === data.department,
+    )
+    // Fallback lookup if local map isn't sufficient (though it should be if fetched correctly)
+    if (!deptId) {
+      const { data: deptData } = await supabase
+        .from('departments')
+        .select('id')
+        .eq('name', data.department)
+        .single()
+      if (deptData) deptId = deptData.id
+    }
+
+    const updates = {
+      name: data.name,
+      email: data.email,
+      department_id: deptId,
+      role: data.role,
+      avatar_url: data.avatarUrl,
+    }
+
+    const { error } = await supabase
+      .from('employees')
+      .update(updates)
+      .eq('id', data.id)
+    if (error) throw error
+
+    await fetchEmployees()
   }
 
-  const updateCollaborator = (data: Collaborator) => {
-    setTeam((prev) => prev.map((c) => (c.id === data.id ? data : c)))
-  }
-
-  const deleteCollaborator = (id: string) => {
+  const deleteCollaborator = async (id: string) => {
+    const { error } = await supabase.from('employees').delete().eq('id', id)
+    if (error) throw error
     setTeam((prev) => prev.filter((c) => c.id !== id))
   }
 

@@ -110,7 +110,7 @@ export default function ManageProducts() {
         }
         reader.readAsDataURL(file)
 
-        // Upload to R2
+        // Upload to R2 (Mock)
         const url = await uploadToR2(file)
         form.setValue('imageQuery', url, { shouldValidate: true })
         setImagePreview(url)
@@ -152,28 +152,34 @@ export default function ManageProducts() {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true)
 
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 600))
+    try {
+      await addProduct({
+        name: values.name,
+        stock: values.stock,
+        price: values.price,
+        description: values.description,
+        category: values.category,
+        imageQuery: values.imageQuery,
+      })
 
-    addProduct({
-      name: values.name,
-      stock: values.stock,
-      price: values.price,
-      description: values.description,
-      category: values.category,
-      imageQuery: values.imageQuery,
-    })
+      toast({
+        title: 'Brinde cadastrado!',
+        description: `${values.name} foi adicionado ao catálogo com sucesso.`,
+        className: 'bg-emerald-50 border-emerald-200 text-emerald-900',
+      })
 
-    toast({
-      title: 'Brinde cadastrado!',
-      description: `${values.name} foi adicionado ao catálogo com sucesso.`,
-      className: 'bg-emerald-50 border-emerald-200 text-emerald-900',
-    })
-
-    setIsSubmitting(false)
-    form.reset()
-    setImagePreview(null)
-    navigate('/')
+      form.reset()
+      setImagePreview(null)
+      navigate('/')
+    } catch (error) {
+      toast({
+        title: 'Erro ao cadastrar',
+        description: 'Tente novamente.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (

@@ -5,6 +5,8 @@ import {
   useEffect,
   ReactNode,
 } from 'react'
+import { Session, User as SupabaseUser } from '@supabase/supabase-js'
+import { supabase } from '@/lib/supabase/client'
 
 export interface User {
   id: string
@@ -17,8 +19,9 @@ export interface User {
 interface AuthContextType {
   isAuthenticated: boolean
   user: User | null
-  login: (email: string, password?: string) => Promise<void>
-  logout: () => void
+  session: Session | null
+  login: (email: string, password?: string) => Promise<{ error: any }>
+  logout: () => Promise<void>
   isLoading: boolean
   updateProfile: (data: { name: string; avatar?: string }) => void
 }
@@ -27,72 +30,122 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [session, setSession] = useState<Session | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const storedUser = localStorage.getItem('adapta-swag-auth-user')
-        if (storedUser) {
-          setUser(JSON.parse(storedUser))
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+      if (session?.user) {
+        mapSupabaseUserToAppUser(session.user).then((appUser) => {
+          setUser(appUser)
           setIsAuthenticated(true)
-        }
-      } catch (error) {
-        console.error('Failed to parse user from local storage', error)
-      } finally {
+          setIsLoading(false)
+        })
+      } else {
+        setUser(null)
+        setIsAuthenticated(false)
         setIsLoading(false)
       }
-    }
+    })
 
-    checkAuth()
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      if (session?.user) {
+        mapSupabaseUserToAppUser(session.user).then((appUser) => {
+          setUser(appUser)
+          setIsAuthenticated(true)
+          setIsLoading(false)
+        })
+      } else {
+        setIsLoading(false)
+      }
+    })
+
+    return () => subscription.unsubscribe()
   }, [])
 
-  const login = async (email: string) => {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 800))
+  const mapSupabaseUserToAppUser = async (
+    sbUser: SupabaseUser,
+  ): Promise<User> => {
+    // In a real app, you might fetch extra profile data from a profiles table
+    // For now, we derive it from metadata or default values
+    const isAdmin = sbUser.email?.toLowerCase().includes('admin') || false
+    const name =
+      sbUser.user_metadata?.name ||
+      sbUser.email?.split('@')[0].replace('.', ' ') ||
+      'Usuário'
 
-    // Determine user role and name based on email for demo purposes
-    const isAdmin = email.toLowerCase().includes('admin')
-    const namePart = email.split('@')[0]
-    const formattedName =
-      namePart.charAt(0).toUpperCase() + namePart.slice(1).replace('.', ' ')
-
-    const newUser: User = {
-      id: crypto.randomUUID(),
-      name: formattedName || 'Colaborador',
-      email,
-      avatar: `https://img.usecurling.com/ppl/medium?gender=male&seed=${namePart}`, // Seed ensures consistent avatar
+    return {
+      id: sbUser.id,
+      name:
+        name.charAt(0).toUpperCase() + name.slice(1) ||
+        sbUser.email ||
+        'Usuário',
+      email: sbUser.email || '',
+      avatar:
+        sbUser.user_metadata?.avatar_url ||
+        `https://img.usecurling.com/ppl/medium?gender=male&seed=${sbUser.email}`,
       role: isAdmin ? 'admin' : 'user',
     }
-
-    setUser(newUser)
-    setIsAuthenticated(true)
-    localStorage.setItem('adapta-swag-auth-user', JSON.stringify(newUser))
   }
 
-  const logout = () => {
+  const login = async (email: string, password?: string) => {
+    if (!password) throw new Error('Password is required for Supabase Auth')
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    return { error }
+  }
+
+  const logout = async () => {
+    await supabase.auth.signOut()
     setUser(null)
     setIsAuthenticated(false)
-    localStorage.removeItem('adapta-swag-auth-user')
   }
 
-  const updateProfile = (data: { name: string; avatar?: string }) => {
+  const updateProfile = async (data: { name: string; avatar?: string }) => {
     if (!user) return
 
-    const updatedUser = {
-      ...user,
-      name: data.name,
-      avatar: data.avatar || user.avatar,
-    }
+    const { error } = await supabase.auth.updateUser({
+      data: {
+        name: data.name,
+        avatar_url: data.avatar,
+      },
+    })
 
-    setUser(updatedUser)
-    localStorage.setItem('adapta-swag-auth-user', JSON.stringify(updatedUser))
+    if (!error) {
+      setUser((prev) =>
+        prev
+          ? {
+              ...prev,
+              name: data.name,
+              avatar: data.avatar || prev.avatar,
+            }
+          : null,
+      )
+    }
   }
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, user, login, logout, isLoading, updateProfile }}
+      value={{
+        isAuthenticated,
+        user,
+        session,
+        login,
+        logout,
+        isLoading,
+        updateProfile,
+      }}
     >
       {children}
     </AuthContext.Provider>

@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { Package2, Loader2, ArrowRight } from 'lucide-react'
+import { Package2, Loader2, ArrowRight, AlertCircle } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -23,6 +23,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import useAuthStore from '@/stores/useAuthStore'
 import { useToast } from '@/hooks/use-toast'
 
@@ -37,6 +38,7 @@ export default function Login() {
   const location = useLocation()
   const { toast } = useToast()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   // Get return url from location state or default to home
   const from = location.state?.from?.pathname || '/'
@@ -51,15 +53,21 @@ export default function Login() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true)
+    setErrorMessage(null)
     try {
-      await login(values.email, values.password)
+      const { error } = await login(values.email, values.password)
+      if (error) {
+        throw error
+      }
       toast({
         title: 'Bem-vindo de volta!',
         description: 'Login realizado com sucesso.',
         className: 'bg-emerald-50 border-emerald-200 text-emerald-900',
       })
       navigate(from, { replace: true })
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Login error', error)
+      setErrorMessage(error.message || 'Falha na autenticação')
       toast({
         title: 'Erro ao entrar',
         description: 'Verifique suas credenciais e tente novamente.',
@@ -94,6 +102,13 @@ export default function Login() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {errorMessage && (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Erro</AlertTitle>
+                <AlertDescription>{errorMessage}</AlertDescription>
+              </Alert>
+            )}
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit(onSubmit)}
@@ -106,10 +121,7 @@ export default function Login() {
                     <FormItem>
                       <FormLabel>E-mail</FormLabel>
                       <FormControl>
-                        <Input
-                          placeholder="seu.nome@adapta.com.br"
-                          {...field}
-                        />
+                        <Input placeholder="seu.nome@adapta.org" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
