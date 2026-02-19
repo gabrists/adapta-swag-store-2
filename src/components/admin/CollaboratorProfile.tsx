@@ -18,7 +18,6 @@ import { ptBR } from 'date-fns/locale'
 import { History, Package, Plus, Calendar, Box } from 'lucide-react'
 import useSwagStore from '@/stores/useSwagStore'
 import { ManualDeliveryDialog } from '@/components/admin/ManualDeliveryDialog'
-import { cn } from '@/lib/utils'
 
 interface CollaboratorProfileProps {
   open: boolean
@@ -140,16 +139,21 @@ export function CollaboratorProfile({
                           <div className="bg-white rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden group">
                             <div className="p-3 flex items-start gap-3">
                               {/* Product Image */}
-                              <div className="h-12 w-12 shrink-0 rounded-lg border border-slate-100 bg-slate-50 overflow-hidden relative">
-                                <img
+                              <Avatar className="h-12 w-12 border border-slate-100 rounded-md bg-slate-50">
+                                <AvatarImage
                                   src={getImageSrc(
                                     order.productImage,
                                     order.productName,
                                   )}
                                   alt={order.productName}
-                                  className="h-full w-full object-cover"
+                                  className="object-cover"
                                 />
-                              </div>
+                                <AvatarFallback className="rounded-md text-slate-500 text-xs font-bold bg-slate-100">
+                                  {order.productName
+                                    ?.substring(0, 2)
+                                    .toUpperCase() || 'IT'}
+                                </AvatarFallback>
+                              </Avatar>
 
                               {/* Details */}
                               <div className="flex-1 min-w-0">
