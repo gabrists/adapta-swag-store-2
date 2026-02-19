@@ -510,9 +510,9 @@ export function ProductDialog({
                 className="rounded-lg"
               >
                 {form.formState.isSubmitting ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Save className="mr-2 h-4 w-4" />
+                  <Save className="h-4 w-4" />
                 )}
                 {isEditing ? 'Salvar Alterações' : 'Criar Item'}
               </Button>

@@ -156,7 +156,7 @@ export function CheckoutDialog({
                             (collaborator) => collaborator === field.value,
                           ) || field.value
                         : 'Selecione um colaborador'}
-                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                   </FormControl>
                 </PopoverTrigger>
@@ -285,7 +285,7 @@ export function CheckoutDialog({
           className="w-full font-bold bg-primary text-white rounded-lg"
           disabled={isSubmitting}
         >
-          {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
           Confirmar Retirada
         </Button>
       </form>

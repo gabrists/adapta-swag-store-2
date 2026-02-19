@@ -139,7 +139,7 @@ export default function Collaborators() {
           onClick={handleCreate}
           className="bg-primary hover:bg-primary/90 text-white shadow-sm rounded-lg"
         >
-          <Plus className="w-4 h-4 mr-2" />
+          <Plus className="w-4 h-4" />
           Novo Colaborador
         </Button>
       </div>
@@ -228,7 +228,7 @@ export default function Collaborators() {
                       <DropdownMenuContent align="end" className="rounded-lg">
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => handleEdit(collab)}>
-                          <Pencil className="mr-2 h-4 w-4" />
+                          <Pencil className="h-4 w-4" />
                           Editar
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
@@ -236,7 +236,7 @@ export default function Collaborators() {
                           onClick={() => handleDelete(collab)}
                           className="text-red-600 focus:text-red-600"
                         >
-                          <Trash2 className="mr-2 h-4 w-4" />
+                          <Trash2 className="h-4 w-4" />
                           Excluir
                         </DropdownMenuItem>
                       </DropdownMenuContent>

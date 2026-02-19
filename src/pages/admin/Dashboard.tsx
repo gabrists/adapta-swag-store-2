@@ -78,7 +78,7 @@ export default function Dashboard() {
         </div>
         <Button asChild>
           <Link to="/admin/inventory">
-            Ir para Inventário <ArrowRight className="ml-2 w-4 h-4" />
+            Ir para Inventário <ArrowRight className="w-4 h-4" />
           </Link>
         </Button>
       </div>

@@ -149,7 +149,7 @@ export default function Inventory() {
           onClick={handleCreate}
           className="bg-primary hover:bg-primary/90 text-white shadow-sm rounded-lg"
         >
-          <Plus className="w-4 h-4 mr-2" />
+          <Plus className="w-4 h-4" />
           Novo Item
         </Button>
       </div>
@@ -325,7 +325,7 @@ export default function Inventory() {
                       <DropdownMenuContent align="end" className="rounded-lg">
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => handleEdit(product)}>
-                          <Pencil className="mr-2 h-4 w-4" />
+                          <Pencil className="h-4 w-4" />
                           Editar Detalhes
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
@@ -333,7 +333,7 @@ export default function Inventory() {
                           onClick={() => handleDelete(product)}
                           className="text-red-600 focus:text-red-600"
                         >
-                          <Trash2 className="mr-2 h-4 w-4" />
+                          <Trash2 className="h-4 w-4" />
                           Excluir Item
                         </DropdownMenuItem>
                       </DropdownMenuContent>

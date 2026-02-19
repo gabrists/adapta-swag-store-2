@@ -164,7 +164,7 @@ export function CollaboratorDialog({
                 onClick={triggerFileInput}
                 className="text-xs h-8 border-dashed"
               >
-                <Upload className="mr-2 h-3 w-3" />
+                <Upload className="h-3 w-3" />
                 Carregar foto
               </Button>
 
@@ -281,9 +281,9 @@ export function CollaboratorDialog({
                 className="bg-[#0E9C8B] hover:bg-[#0E9C8B]/90 text-white"
               >
                 {form.formState.isSubmitting ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Save className="mr-2 h-4 w-4" />
+                  <Save className="h-4 w-4" />
                 )}
                 {isEditing ? 'Salvar' : 'Adicionar'}
               </Button>
