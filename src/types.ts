@@ -49,6 +49,22 @@ export interface HistoryEntry {
   totalQuantity: number
 }
 
+export interface Order {
+  id: string
+  employeeId: string
+  itemId: string
+  quantity: number
+  size?: string
+  status: 'Pendente' | 'Entregue' | 'Rejeitado'
+  rejectionReason?: string
+  createdAt: string
+  productName?: string
+  productImage?: string
+  employeeName?: string
+  employeeEmail?: string
+  employeeAvatar?: string
+}
+
 export interface Collaborator {
   id: string
   name: string

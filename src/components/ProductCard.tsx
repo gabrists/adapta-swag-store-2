@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-import { ShoppingCart } from 'lucide-react'
+import { ShoppingCart, Plus } from 'lucide-react'
 
 interface ProductCardProps {
   product: Product
@@ -144,7 +144,7 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
             'Selecione Tamanho'
           ) : (
             <>
-              <ShoppingCart className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4 mr-2" />
               Adicionar
             </>
           )}

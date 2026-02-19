@@ -12,10 +12,12 @@ import ManageProducts from '@/pages/ManageProducts'
 import Login from '@/pages/Login'
 import Profile from '@/pages/Profile'
 import NotFound from '@/pages/NotFound'
+import OrdersPage from '@/pages/Orders'
 import Dashboard from '@/pages/admin/Dashboard'
 import Inventory from '@/pages/admin/Inventory'
 import Settings from '@/pages/admin/Settings'
 import Collaborators from '@/pages/admin/Collaborators'
+import ApprovalsPage from '@/pages/admin/Approvals'
 
 const App = () => (
   <BrowserRouter
@@ -33,6 +35,7 @@ const App = () => (
               <Route element={<Layout />}>
                 {/* Storefront Routes */}
                 <Route path="/" element={<Index />} />
+                <Route path="/orders" element={<OrdersPage />} />
                 <Route path="/historico" element={<HistoryPage />} />
                 <Route path="/gerenciar" element={<ManageProducts />} />
                 <Route path="/profile" element={<Profile />} />
@@ -40,6 +43,7 @@ const App = () => (
                 {/* Admin Routes */}
                 <Route path="/admin">
                   <Route index element={<Dashboard />} />
+                  <Route path="approvals" element={<ApprovalsPage />} />
                   <Route path="inventory" element={<Inventory />} />
                   <Route path="collaborators" element={<Collaborators />} />
                   <Route path="settings" element={<Settings />} />

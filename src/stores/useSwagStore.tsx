@@ -12,6 +12,7 @@ import {
   ProductSizeGrid,
   Collaborator,
   CartItem,
+  Order,
 } from '@/types'
 import { triggerConfetti } from '@/lib/confetti'
 import { supabase } from '@/lib/supabase/client'
@@ -21,6 +22,7 @@ interface SwagContextType {
   products: Product[]
   cart: CartItem[]
   history: HistoryEntry[]
+  orders: Order[]
   team: Collaborator[]
   collaborators: string[]
   addToCart: (product: Product, quantity: number, size?: string) => void
@@ -52,6 +54,8 @@ interface SwagContextType {
   addCollaborator: (collaborator: Omit<Collaborator, 'id'>) => Promise<void>
   updateCollaborator: (collaborator: Collaborator) => Promise<void>
   deleteCollaborator: (id: string) => Promise<void>
+  approveOrder: (order: Order) => Promise<void>
+  rejectOrder: (orderId: string, reason: string) => Promise<void>
   isLoading: boolean
 }
 
@@ -61,6 +65,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>([])
   const [cart, setCart] = useState<CartItem[]>([])
   const [history, setHistory] = useState<HistoryEntry[]>([])
+  const [orders, setOrders] = useState<Order[]>([])
   const [team, setTeam] = useState<Collaborator[]>([])
   const [departments, setDepartments] = useState<Record<string, string>>({}) // id -> name
   const [isLoading, setIsLoading] = useState(true)
@@ -73,7 +78,12 @@ export function SwagProvider({ children }: { children: ReactNode }) {
     const loadData = async () => {
       try {
         setIsLoading(true)
-        await Promise.all([fetchDepartments(), fetchItems(), fetchEmployees()])
+        await Promise.all([
+          fetchDepartments(),
+          fetchItems(),
+          fetchEmployees(),
+          fetchOrders(),
+        ])
         await fetchHistory() // Depends on items/employees
       } catch (error) {
         console.error('Error loading data:', error)
@@ -144,6 +154,40 @@ export function SwagProvider({ children }: { children: ReactNode }) {
       })) || []
 
     setTeam(mappedTeam)
+  }
+
+  const fetchOrders = async () => {
+    const { data, error } = await supabase
+      .from('orders')
+      .select(
+        `
+        *,
+        items (name, image_url),
+        employees (name, email, avatar_url)
+      `,
+      )
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    const mappedOrders: Order[] =
+      data?.map((order: any) => ({
+        id: order.id,
+        employeeId: order.employee_id,
+        itemId: order.item_id,
+        quantity: order.quantity,
+        size: order.size,
+        status: order.status,
+        rejectionReason: order.rejection_reason,
+        createdAt: order.created_at,
+        productName: order.items?.name,
+        productImage: order.items?.image_url,
+        employeeName: order.employees?.name,
+        employeeEmail: order.employees?.email,
+        employeeAvatar: order.employees?.avatar_url,
+      })) || []
+
+    setOrders(mappedOrders)
   }
 
   const fetchHistory = async () => {
@@ -266,69 +310,142 @@ export function SwagProvider({ children }: { children: ReactNode }) {
 
     try {
       const employee = team.find((c) => c.name === userName)
-      const employeeId = employee?.id
+      if (!employee) throw new Error('Colaborador não encontrado')
 
-      const groupId = crypto.randomUUID()
-      const movements = []
+      const orderInserts = cart.map((item) => ({
+        employee_id: employee.id,
+        item_id: item.productId,
+        quantity: item.quantity,
+        size: item.size,
+        status: 'Pendente',
+        created_at: new Date().toISOString(),
+      }))
 
-      for (const item of cart) {
-        movements.push({
-          group_id: groupId,
-          item_id: item.productId,
-          employee_id: employeeId,
-          type: 'OUT',
-          quantity: item.quantity,
-          size: item.size,
-          destination: destination,
-          created_at: date.toISOString(),
-        })
-
-        const product = products.find((p) => p.id === item.productId)
-        if (product && product.hasGrid && item.size && product.grid) {
-          const newGrid = {
-            ...product.grid,
-            [item.size]: Math.max(0, product.grid[item.size] - item.quantity),
-          }
-          updateProductState(item.productId, { grid: newGrid })
-          await supabase
-            .from('items')
-            .update({ grid: newGrid })
-            .eq('id', item.productId)
-        }
-      }
-
-      const { error } = await supabase
-        .from('inventory_movements')
-        .insert(movements)
+      const { error } = await supabase.from('orders').insert(orderInserts)
 
       if (error) throw error
 
       setCart([])
-      triggerConfetti()
+      toast({
+        title: 'Pedido enviado para aprovação do RH!',
+        description: 'Acompanhe o status em "Meus Pedidos".',
+        className: 'bg-yellow-50 border-yellow-200 text-yellow-900',
+      })
 
-      await fetchItems()
-      await fetchHistory()
+      await fetchOrders()
     } catch (error) {
       console.error('Checkout error:', error)
       toast({
-        title: 'Erro no Checkout',
-        description: 'Não foi possível finalizar a retirada.',
+        title: 'Erro na Solicitação',
+        description: 'Não foi possível enviar o pedido.',
         variant: 'destructive',
       })
     }
   }
 
-  const updateProductState = (id: string, updates: Partial<Product>) => {
-    setProducts((prev) =>
-      prev.map((p) => {
-        if (p.id !== id) return p
-        const updated = { ...p, ...updates }
-        if (updated.hasGrid && updated.grid) {
-          updated.stock = Object.values(updated.grid).reduce((a, b) => a + b, 0)
+  const approveOrder = async (order: Order) => {
+    try {
+      // 1. Insert Inventory Movement (Triggers stock deduction in DB)
+      const { error: moveError } = await supabase
+        .from('inventory_movements')
+        .insert({
+          group_id: crypto.randomUUID(),
+          item_id: order.itemId,
+          employee_id: order.employeeId,
+          type: 'OUT',
+          quantity: order.quantity,
+          size: order.size,
+          destination: 'Solicitação Aprovada',
+        })
+
+      if (moveError) throw moveError
+
+      // 2. Update Order Status
+      const { error: updateError } = await supabase
+        .from('orders')
+        .update({ status: 'Entregue' })
+        .eq('id', order.id)
+
+      if (updateError) throw updateError
+
+      // Update Local State
+      if (order.size) {
+        const product = products.find((p) => p.id === order.itemId)
+        if (product && product.grid) {
+          const newGrid = {
+            ...product.grid,
+            [order.size]: Math.max(
+              0,
+              product.grid[order.size] - order.quantity,
+            ),
+          }
+          const finalStock = Object.values(newGrid).reduce(
+            (acc, curr) => acc + curr,
+            0,
+          )
+          // Optimistic update
+          setProducts((prev) =>
+            prev.map((p) =>
+              p.id === order.itemId
+                ? { ...p, grid: newGrid, stock: finalStock }
+                : p,
+            ),
+          )
         }
-        return updated
-      }),
-    )
+      } else {
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === order.itemId
+              ? { ...p, stock: Math.max(0, p.stock - order.quantity) }
+              : p,
+          ),
+        )
+      }
+
+      toast({
+        title: 'Pedido Aprovado',
+        description: 'Estoque atualizado e pedido marcado como entregue.',
+        className: 'bg-emerald-50 border-emerald-200 text-emerald-900',
+      })
+      triggerConfetti()
+
+      await Promise.all([fetchOrders(), fetchHistory(), fetchItems()])
+    } catch (error) {
+      console.error('Approve error:', error)
+      toast({
+        title: 'Erro ao aprovar',
+        description: 'Não foi possível processar a aprovação.',
+        variant: 'destructive',
+      })
+    }
+  }
+
+  const rejectOrder = async (orderId: string, reason: string) => {
+    try {
+      const { error } = await supabase
+        .from('orders')
+        .update({
+          status: 'Rejeitado',
+          rejection_reason: reason,
+        })
+        .eq('id', orderId)
+
+      if (error) throw error
+
+      toast({
+        title: 'Pedido Rejeitado',
+        description: 'O status do pedido foi atualizado.',
+      })
+
+      await fetchOrders()
+    } catch (error) {
+      console.error('Reject error:', error)
+      toast({
+        title: 'Erro ao rejeitar',
+        description: 'Tente novamente.',
+        variant: 'destructive',
+      })
+    }
   }
 
   const addProduct = async (
@@ -544,6 +661,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         products,
         cart,
         history,
+        orders,
         team,
         collaborators,
         addToCart,
@@ -558,6 +676,8 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         addCollaborator,
         updateCollaborator,
         deleteCollaborator,
+        approveOrder,
+        rejectOrder,
         isLoading,
       }}
     >

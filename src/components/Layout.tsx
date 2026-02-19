@@ -17,6 +17,8 @@ import {
   ChevronsUpDown,
   Plus,
   Users,
+  Clock,
+  ClipboardCheck,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -46,9 +48,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import useAuthStore from '@/stores/useAuthStore'
 import { CartSheet } from '@/components/CartSheet'
+import useSwagStore from '@/stores/useSwagStore'
 
 export default function Layout() {
   const { user, logout } = useAuthStore()
+  const { orders } = useSwagStore()
   const location = useLocation()
   const navigate = useNavigate()
 
@@ -57,11 +61,21 @@ export default function Layout() {
     navigate('/login')
   }
 
+  // Count pending orders for admin badge
+  const pendingOrdersCount = orders.filter(
+    (o) => o.status === 'Pendente',
+  ).length
+
   const storefrontItems = [
     {
       title: 'Vitrine',
       url: '/',
       icon: Store,
+    },
+    {
+      title: 'Meus Pedidos',
+      url: '/orders',
+      icon: Clock,
     },
     {
       title: 'Histórico',
@@ -76,6 +90,12 @@ export default function Layout() {
       url: '/admin',
       icon: LayoutDashboard,
       exact: true,
+    },
+    {
+      title: 'Aprovações',
+      url: '/admin/approvals',
+      icon: ClipboardCheck,
+      badge: pendingOrdersCount > 0 ? pendingOrdersCount : undefined,
     },
     {
       title: 'Inventário',
@@ -160,6 +180,11 @@ export default function Layout() {
                             <NavLink to={item.url}>
                               <item.icon className="text-slate-600" />
                               <span>{item.title}</span>
+                              {item.badge && (
+                                <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
+                                  {item.badge}
+                                </span>
+                              )}
                             </NavLink>
                           </SidebarMenuButton>
                         </SidebarMenuItem>

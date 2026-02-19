@@ -27,14 +27,10 @@ export function CartSheet() {
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0)
 
   const handleCheckoutConfirm = (values: any) => {
+    // We repurpose checkoutCart to submit orders
     checkoutCart(values.user, values.destination, values.date)
     setIsCheckoutOpen(false)
     setIsOpen(false)
-    toast({
-      title: 'Pedido realizado!',
-      description: 'Retirada de brindes concluída com sucesso.',
-      className: 'bg-emerald-50 border-emerald-200 text-emerald-900',
-    })
   }
 
   return (
@@ -53,7 +49,7 @@ export function CartSheet() {
         <SheetContent className="w-full sm:max-w-md flex flex-col h-full">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-2">
-              <ShoppingCart className="h-5 w-5" /> Carrinho de Retirada
+              <ShoppingCart className="h-5 w-5" /> Carrinho de Solicitação
             </SheetTitle>
           </SheetHeader>
 
@@ -68,7 +64,7 @@ export function CartSheet() {
                     Seu carrinho está vazio
                   </p>
                   <p className="text-sm mt-1">
-                    Adicione itens da vitrine para realizar uma retirada.
+                    Adicione itens da vitrine para solicitar ao RH.
                   </p>
                 </div>
                 <Button variant="outline" onClick={() => setIsOpen(false)}>
@@ -177,7 +173,7 @@ export function CartSheet() {
                   onClick={() => setIsCheckoutOpen(true)}
                 >
                   <ShoppingCart className="mr-2 h-5 w-5" />
-                  Finalizar Retirada
+                  Solicitar Aprovação
                 </Button>
               </div>
             </SheetFooter>
