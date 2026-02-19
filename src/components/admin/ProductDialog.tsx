@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -21,9 +21,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
+import { Switch } from '@/components/ui/switch'
 import {
   Select,
   SelectContent,
@@ -34,19 +36,23 @@ import {
 
 const formSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
-  category: z.enum(['Vendas', 'RH', 'Marketing', 'Tech', 'Institucional'], {
-    required_error: 'Selecione uma categoria',
-  }),
+  category: z.string().min(1, 'Selecione uma categoria'),
   description: z.string().min(5, 'Descrição é obrigatória'),
   imageQuery: z.string().min(2, 'Informe um termo para imagem'),
-  stock: z.coerce.number().min(0, 'Estoque mínimo é 0'),
+  hasGrid: z.boolean(),
+  stock: z.coerce.number().min(0).optional(),
+  gridPP: z.coerce.number().min(0).optional(),
+  gridP: z.coerce.number().min(0).optional(),
+  gridM: z.coerce.number().min(0).optional(),
+  gridG: z.coerce.number().min(0).optional(),
+  gridGG: z.coerce.number().min(0).optional(),
 })
 
 interface ProductDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   product?: Product | null
-  onSave: (values: z.infer<typeof formSchema>) => Promise<void>
+  onSave: (values: any) => Promise<void>
 }
 
 export function ProductDialog({
@@ -62,19 +68,33 @@ export function ProductDialog({
       category: 'Institucional',
       description: '',
       imageQuery: '',
+      hasGrid: false,
       stock: 0,
+      gridPP: 0,
+      gridP: 0,
+      gridM: 0,
+      gridG: 0,
+      gridGG: 0,
     },
   })
+
+  const hasGrid = form.watch('hasGrid')
 
   useEffect(() => {
     if (open) {
       if (product) {
         form.reset({
           name: product.name,
-          category: product.category as any,
+          category: product.category,
           description: product.description || '',
           imageQuery: product.imageQuery,
+          hasGrid: product.hasGrid,
           stock: product.stock,
+          gridPP: product.grid?.PP || 0,
+          gridP: product.grid?.P || 0,
+          gridM: product.grid?.M || 0,
+          gridG: product.grid?.G || 0,
+          gridGG: product.grid?.GG || 0,
         })
       } else {
         form.reset({
@@ -82,14 +102,38 @@ export function ProductDialog({
           category: 'Institucional',
           description: '',
           imageQuery: '',
+          hasGrid: false,
           stock: 0,
+          gridPP: 0,
+          gridP: 0,
+          gridM: 0,
+          gridG: 0,
+          gridGG: 0,
         })
       }
     }
   }, [open, product, form])
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    await onSave(values)
+    const finalData = {
+      name: values.name,
+      category: values.category,
+      description: values.description,
+      imageQuery: values.imageQuery,
+      hasGrid: values.hasGrid,
+      stock: values.hasGrid ? 0 : values.stock, // Stock will be calculated in store for grid
+      grid: values.hasGrid
+        ? {
+            PP: values.gridPP || 0,
+            P: values.gridP || 0,
+            M: values.gridM || 0,
+            G: values.gridG || 0,
+            GG: values.gridGG || 0,
+          }
+        : undefined,
+    }
+
+    await onSave(finalData)
     form.reset()
     onOpenChange(false)
   }
@@ -98,7 +142,7 @@ export function ProductDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px] rounded-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Editar Item' : 'Novo Item'}</DialogTitle>
           <DialogDescription>
@@ -117,7 +161,11 @@ export function ProductDialog({
                 <FormItem>
                   <FormLabel>Nome do Produto</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: Mochila Executiva" {...field} />
+                    <Input
+                      placeholder="Ex: Mochila Executiva"
+                      className="rounded-lg"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -137,7 +185,7 @@ export function ProductDialog({
                       value={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="rounded-lg">
                           <SelectValue placeholder="Selecione" />
                         </SelectTrigger>
                       </FormControl>
@@ -149,6 +197,9 @@ export function ProductDialog({
                         <SelectItem value="Institucional">
                           Institucional
                         </SelectItem>
+                        <SelectItem value="Vestuário">Vestuário</SelectItem>
+                        <SelectItem value="Utensílios">Utensílios</SelectItem>
+                        <SelectItem value="Kits">Kits</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -158,18 +209,144 @@ export function ProductDialog({
 
               <FormField
                 control={form.control}
+                name="hasGrid"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Tem tamanhos?</FormLabel>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {hasGrid ? (
+              <div className="space-y-2 border rounded-lg p-3 bg-slate-50">
+                <FormLabel>Grade de Estoque</FormLabel>
+                <div className="grid grid-cols-5 gap-2">
+                  <FormField
+                    control={form.control}
+                    name="gridPP"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-center block">
+                          PP
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="0"
+                            className="text-center px-1 rounded-md"
+                            {...field}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="gridP"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-center block">
+                          P
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="0"
+                            className="text-center px-1 rounded-md"
+                            {...field}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="gridM"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-center block">
+                          M
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="0"
+                            className="text-center px-1 rounded-md"
+                            {...field}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="gridG"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-center block">
+                          G
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="0"
+                            className="text-center px-1 rounded-md"
+                            {...field}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="gridGG"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-center block">
+                          GG
+                        </FormLabel>
+                        <FormControl>
+                          <Input
+                            type="number"
+                            min="0"
+                            className="text-center px-1 rounded-md"
+                            {...field}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            ) : (
+              <FormField
+                control={form.control}
                 name="stock"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Estoque Inicial</FormLabel>
                     <FormControl>
-                      <Input type="number" min="0" {...field} />
+                      <Input
+                        type="number"
+                        min="0"
+                        className="rounded-lg"
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
+            )}
 
             <FormField
               control={form.control}
@@ -178,7 +355,11 @@ export function ProductDialog({
                 <FormItem>
                   <FormLabel>Termo da Imagem (Inglês)</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: black backpack" {...field} />
+                    <Input
+                      placeholder="Ex: black backpack"
+                      className="rounded-lg"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -194,7 +375,7 @@ export function ProductDialog({
                   <FormControl>
                     <Textarea
                       placeholder="Detalhes sobre o produto..."
-                      className="resize-none"
+                      className="resize-none rounded-lg"
                       rows={3}
                       {...field}
                     />
@@ -209,10 +390,15 @@ export function ProductDialog({
                 type="button"
                 variant="outline"
                 onClick={() => onOpenChange(false)}
+                className="rounded-lg"
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={form.formState.isSubmitting}>
+              <Button
+                type="submit"
+                disabled={form.formState.isSubmitting}
+                className="rounded-lg"
+              >
                 {form.formState.isSubmitting ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (

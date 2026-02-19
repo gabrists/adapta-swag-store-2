@@ -15,6 +15,9 @@ export default function Index() {
 
   const [searchQuery, setSearchQuery] = useState('')
   const [checkoutProduct, setCheckoutProduct] = useState<Product | null>(null)
+  const [checkoutSize, setCheckoutSize] = useState<string | undefined>(
+    undefined,
+  )
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
 
   const filteredProducts = useMemo(() => {
@@ -26,8 +29,9 @@ export default function Index() {
     })
   }, [products, searchQuery])
 
-  const handleSelectProduct = (product: Product) => {
+  const handleSelectProduct = (product: Product, size?: string) => {
     setCheckoutProduct(product)
+    setCheckoutSize(size)
     setIsCheckoutOpen(true)
   }
 
@@ -38,11 +42,12 @@ export default function Index() {
         values.user,
         values.destination,
         values.date,
+        values.size,
       )
 
       toast({
         title: 'Retirada confirmada!',
-        description: `${checkoutProduct.name} foi registrado com sucesso.`,
+        description: `${checkoutProduct.name} ${values.size ? `(${values.size}) ` : ''}foi registrado com sucesso.`,
         duration: 3000,
         className: 'bg-emerald-50 border-emerald-200 text-emerald-900',
       })
@@ -53,11 +58,11 @@ export default function Index() {
     return (
       <div className="space-y-6">
         <div className="flex gap-4">
-          <Skeleton className="h-10 w-full rounded-lg" />
+          <Skeleton className="h-10 w-full rounded-xl" />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(8)].map((_, i) => (
-            <Skeleton key={i} className="h-[300px] w-full rounded-xl" />
+            <Skeleton key={i} className="h-[350px] w-full rounded-xl" />
           ))}
         </div>
       </div>
@@ -72,7 +77,7 @@ export default function Index() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <Input
             placeholder="O que você procura hoje?"
-            className="pl-9 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+            className="pl-9 bg-slate-50 border-slate-200 focus:bg-white transition-colors rounded-lg"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -83,7 +88,10 @@ export default function Index() {
       <section>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg font-bold text-slate-800">Todos os itens</h2>
-          <Badge variant="secondary" className="bg-slate-100 text-slate-500">
+          <Badge
+            variant="secondary"
+            className="bg-slate-100 text-slate-500 rounded-md"
+          >
             {filteredProducts.length} itens
           </Badge>
         </div>
@@ -117,6 +125,7 @@ export default function Index() {
         open={isCheckoutOpen}
         onOpenChange={setIsCheckoutOpen}
         product={checkoutProduct}
+        size={checkoutSize}
         onConfirm={handleConfirmCheckout}
       />
     </div>

@@ -5,7 +5,7 @@ import {
   useState,
   ReactNode,
 } from 'react'
-import { Product, HistoryEntry } from '@/types'
+import { Product, HistoryEntry, ProductSizeGrid } from '@/types'
 import { triggerConfetti } from '@/lib/confetti'
 
 interface SwagContextType {
@@ -17,11 +17,17 @@ interface SwagContextType {
     user: string,
     destination: string,
     date: Date,
+    size?: string,
   ) => void
-  addProduct: (product: Omit<Product, 'id'>) => void
+  addProduct: (
+    product: Omit<Product, 'id' | 'stock'> & {
+      stock?: number
+      grid?: ProductSizeGrid
+    },
+  ) => void
   updateProduct: (product: Product) => void
   deleteProduct: (productId: string) => void
-  adjustStock: (productId: string, amount: number) => void
+  adjustStock: (productId: string, amount: number, size?: string) => void
   isLoading: boolean
 }
 
@@ -30,83 +36,41 @@ const SwagContext = createContext<SwagContextType | undefined>(undefined)
 const INITIAL_PRODUCTS: Product[] = [
   {
     id: '1',
-    name: 'Kit Onboarding Deluxe',
-    category: 'RH',
-    imageQuery: 'welcome kit gift box',
-    stock: 12,
-    description: 'Um kit completo para receber novos colaboradores com estilo.',
+    name: 'Camiseta Adapta Tech (Preta)',
+    category: 'Vestuário',
+    imageQuery: 't-shirt black',
+    stock: 22,
+    hasGrid: true,
+    grid: { PP: 0, P: 2, M: 15, G: 0, GG: 5 },
+    description: 'Camiseta de algodão egípcio com estampa minimalista.',
   },
   {
     id: '2',
-    name: 'Garrafa Térmica Adapta',
-    category: 'Institucional',
-    imageQuery: 'water bottle insulated',
-    stock: 4,
-    description: 'Mantém sua bebida gelada por 24h ou quente por 12h.',
+    name: 'Moletom "Vibe Coding" (Cinza)',
+    category: 'Vestuário',
+    imageQuery: 'hoodie grey',
+    stock: 20,
+    hasGrid: true,
+    grid: { PP: 0, P: 5, M: 5, G: 5, GG: 5 },
+    description: 'Moletom confortável para os dias de código intenso.',
   },
   {
     id: '3',
-    name: 'Caderno Moleskine Premium',
-    category: 'Vendas',
-    imageQuery: 'notebook black',
-    stock: 25,
-    description: 'Caderno de anotações de alta qualidade para suas ideias.',
+    name: 'Garrafa Térmica 500ml',
+    category: 'Utensílios',
+    imageQuery: 'thermos bottle black',
+    stock: 30,
+    hasGrid: false,
+    description: 'Mantém sua bebida na temperatura ideal por horas.',
   },
   {
     id: '4',
-    name: 'Mochila Tech Anti-furto',
-    category: 'Tech',
-    imageQuery: 'backpack tech',
-    stock: 0,
-    description: 'Segurança e praticidade para transportar seus gadgets.',
-  },
-  {
-    id: '5',
-    name: 'Camiseta Algodão Egípcio',
-    category: 'Institucional',
-    imageQuery: 't-shirt black folded',
+    name: 'Kit Onboarding Deluxe',
+    category: 'Kits',
+    imageQuery: 'welcome kit gift box',
     stock: 8,
-    description: 'Conforto inigualável com algodão de fibra longa.',
-  },
-  {
-    id: '6',
-    name: 'Powerbank Wireless 10k',
-    category: 'Tech',
-    imageQuery: 'powerbank wireless',
-    stock: 3,
-    description: 'Carregamento sem fio rápido para nunca ficar sem bateria.',
-  },
-  {
-    id: '7',
-    name: 'Copo Stanley Personalizado',
-    category: 'Vendas',
-    imageQuery: 'tumbler cup',
-    stock: 15,
-    description: 'O copo mais desejado do momento, com a marca da empresa.',
-  },
-  {
-    id: '8',
-    name: 'Boné Trucker Adapta',
-    category: 'Marketing',
-    imageQuery: 'cap trucker hat',
-    stock: 2,
-    description: 'Estilo despojado para eventos e dia a dia.',
-  },
-  {
-    id: '9',
-    name: 'Ecobag Sustentável',
-    category: 'RH',
-    imageQuery: 'tote bag canvas',
-    stock: 30,
-    description: 'Sacola ecológica resistente e versátil.',
-  },
-  {
-    id: '10',
-    name: 'Adesivos Pack Dev',
-    category: 'Tech',
-    imageQuery: 'laptop stickers',
-    stock: 50,
-    description: 'Pacote de adesivos variados para personalizar seu setup.',
+    hasGrid: false,
+    description: 'O kit completo para receber novos talentos com estilo.',
   },
 ]
 
@@ -217,7 +181,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
     // Load from local storage
     const loadData = () => {
       try {
-        const storedProducts = localStorage.getItem('adapta-swag-products')
+        const storedProducts = localStorage.getItem('adapta-swag-products-v2') // Changed key to force new seed data
         const storedHistory = localStorage.getItem('adapta-swag-history')
         const storedCollaborators = localStorage.getItem(
           'adapta-swag-collaborators',
@@ -252,7 +216,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isLoading) {
-      localStorage.setItem('adapta-swag-products', JSON.stringify(products))
+      localStorage.setItem('adapta-swag-products-v2', JSON.stringify(products))
       localStorage.setItem('adapta-swag-history', JSON.stringify(history))
       localStorage.setItem(
         'adapta-swag-collaborators',
@@ -261,16 +225,33 @@ export function SwagProvider({ children }: { children: ReactNode }) {
     }
   }, [products, history, collaborators, isLoading])
 
+  const calculateTotalStock = (product: Product): number => {
+    if (!product.hasGrid || !product.grid) return product.stock
+    return Object.values(product.grid).reduce((acc, curr) => acc + curr, 0)
+  }
+
   const withdrawItem = (
     productId: string,
     user: string,
     destination: string,
     date: Date,
+    size?: string,
   ) => {
     setProducts((prev) =>
-      prev.map((p) =>
-        p.id === productId ? { ...p, stock: Math.max(0, p.stock - 1) } : p,
-      ),
+      prev.map((p) => {
+        if (p.id !== productId) return p
+
+        if (p.hasGrid && size && p.grid) {
+          const newGrid = { ...p.grid, [size]: Math.max(0, p.grid[size] - 1) }
+          const newStock = Object.values(newGrid).reduce(
+            (acc, curr) => acc + curr,
+            0,
+          )
+          return { ...p, grid: newGrid, stock: newStock }
+        } else {
+          return { ...p, stock: Math.max(0, p.stock - 1) }
+        }
+      }),
     )
 
     const product = products.find((p) => p.id === productId)
@@ -283,23 +264,51 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         user,
         destination,
         date: date.toISOString(),
+        size,
       }
       setHistory((prev) => [newEntry, ...prev])
       triggerConfetti()
     }
   }
 
-  const addProduct = (product: Omit<Product, 'id'>) => {
+  const addProduct = (
+    productData: Omit<Product, 'id' | 'stock'> & {
+      stock?: number
+      grid?: ProductSizeGrid
+    },
+  ) => {
+    let finalStock = 0
+    if (productData.hasGrid && productData.grid) {
+      finalStock = Object.values(productData.grid).reduce(
+        (acc, curr) => acc + curr,
+        0,
+      )
+    } else {
+      finalStock = productData.stock || 0
+    }
+
     const newProduct: Product = {
-      ...product,
+      ...productData,
+      stock: finalStock,
       id: crypto.randomUUID(),
     }
     setProducts((prev) => [newProduct, ...prev])
   }
 
   const updateProduct = (updatedProduct: Product) => {
+    // Recalculate total stock just in case
+    let finalStock = updatedProduct.stock
+    if (updatedProduct.hasGrid && updatedProduct.grid) {
+      finalStock = Object.values(updatedProduct.grid).reduce(
+        (acc, curr) => acc + curr,
+        0,
+      )
+    }
+
+    const finalProduct = { ...updatedProduct, stock: finalStock }
+
     setProducts((prev) =>
-      prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p)),
+      prev.map((p) => (p.id === finalProduct.id ? finalProduct : p)),
     )
   }
 
@@ -307,11 +316,25 @@ export function SwagProvider({ children }: { children: ReactNode }) {
     setProducts((prev) => prev.filter((p) => p.id !== productId))
   }
 
-  const adjustStock = (productId: string, amount: number) => {
+  const adjustStock = (productId: string, amount: number, size?: string) => {
     setProducts((prev) =>
-      prev.map((p) =>
-        p.id === productId ? { ...p, stock: Math.max(0, p.stock + amount) } : p,
-      ),
+      prev.map((p) => {
+        if (p.id !== productId) return p
+
+        if (p.hasGrid && size && p.grid) {
+          const newGrid = {
+            ...p.grid,
+            [size]: Math.max(0, p.grid[size] + amount),
+          }
+          const newStock = Object.values(newGrid).reduce(
+            (acc, curr) => acc + curr,
+            0,
+          )
+          return { ...p, grid: newGrid, stock: newStock }
+        } else {
+          return { ...p, stock: Math.max(0, p.stock + amount) }
+        }
+      }),
     )
   }
 

@@ -1,7 +1,7 @@
 import useSwagStore from '@/stores/useSwagStore'
 import { HistoryItem } from '@/components/HistoryItem'
 import { Skeleton } from '@/components/ui/skeleton'
-import { History as HistoryIcon, ArrowLeft } from 'lucide-react'
+import { History as HistoryIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Link } from 'react-router-dom'
 
@@ -12,7 +12,7 @@ export default function HistoryPage() {
     return (
       <div className="space-y-4">
         {[...Array(5)].map((_, i) => (
-          <Skeleton key={i} className="h-24 w-full rounded-lg" />
+          <Skeleton key={i} className="h-24 w-full rounded-xl" />
         ))}
       </div>
     )
@@ -53,7 +53,7 @@ export default function HistoryPage() {
               distribuindo felicidade!
             </p>
           </div>
-          <Button asChild variant="default">
+          <Button asChild variant="default" className="rounded-lg">
             <Link to="/">Ir para Vitrine</Link>
           </Button>
         </div>

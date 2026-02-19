@@ -58,13 +58,15 @@ const formSchema = z.object({
 
 interface CheckoutDialogProps {
   product: Product | null
+  size?: string
   open: boolean
   onOpenChange: (open: boolean) => void
-  onConfirm: (values: z.infer<typeof formSchema>) => void
+  onConfirm: (values: z.infer<typeof formSchema> & { size?: string }) => void
 }
 
 export function CheckoutDialog({
   product,
+  size,
   open,
   onOpenChange,
   onConfirm,
@@ -99,7 +101,7 @@ export function CheckoutDialog({
     setIsSubmitting(true)
     // Simulate API delay
     await new Promise((resolve) => setTimeout(resolve, 800))
-    onConfirm(values)
+    onConfirm({ ...values, size })
     setIsSubmitting(false)
     onOpenChange(false)
   }
@@ -125,7 +127,7 @@ export function CheckoutDialog({
                       role="combobox"
                       aria-expanded={comboboxOpen}
                       className={cn(
-                        'w-full justify-between',
+                        'w-full justify-between rounded-lg',
                         !field.value && 'text-muted-foreground',
                       )}
                     >
@@ -184,7 +186,11 @@ export function CheckoutDialog({
             <FormItem>
               <FormLabel>Para quem é?</FormLabel>
               <FormControl>
-                <Input placeholder="Nome do Cliente ou Evento" {...field} />
+                <Input
+                  placeholder="Nome do Cliente ou Evento"
+                  className="rounded-lg"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -203,7 +209,7 @@ export function CheckoutDialog({
                     <Button
                       variant={'outline'}
                       className={cn(
-                        'w-full pl-3 text-left font-normal',
+                        'w-full pl-3 text-left font-normal rounded-lg',
                         !field.value && 'text-muted-foreground',
                       )}
                     >
@@ -235,7 +241,7 @@ export function CheckoutDialog({
 
         <Button
           type="submit"
-          className="w-full font-bold bg-primary text-white"
+          className="w-full font-bold bg-primary text-white rounded-lg"
           disabled={isSubmitting}
         >
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -245,18 +251,26 @@ export function CheckoutDialog({
     </Form>
   )
 
+  const description = (
+    <span className="block mt-1">
+      Item:{' '}
+      <span className="font-semibold text-foreground">{product?.name}</span>
+      {size && (
+        <>
+          <br />
+          Tamanho: <span className="font-bold text-primary">{size}</span>
+        </>
+      )}
+    </span>
+  )
+
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        <DrawerContent className="px-4 pb-8 max-h-[95vh] mt-0">
+        <DrawerContent className="px-4 pb-8 max-h-[95vh] mt-0 rounded-t-xl">
           <DrawerHeader className="text-left px-1">
             <DrawerTitle>Retirar Item</DrawerTitle>
-            <DrawerDescription>
-              Você está retirando:{' '}
-              <span className="font-semibold text-foreground">
-                {product?.name}
-              </span>
-            </DrawerDescription>
+            <DrawerDescription>{description}</DrawerDescription>
           </DrawerHeader>
           {Content}
           <DrawerFooter className="pt-2 px-1"></DrawerFooter>
@@ -267,15 +281,10 @@ export function CheckoutDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] rounded-xl">
         <DialogHeader>
           <DialogTitle>Retirar Item</DialogTitle>
-          <DialogDescription>
-            Você está retirando:{' '}
-            <span className="font-semibold text-foreground">
-              {product?.name}
-            </span>
-          </DialogDescription>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         {Content}
       </DialogContent>
