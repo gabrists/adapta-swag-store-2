@@ -18,6 +18,7 @@ import {
 import { triggerConfetti } from '@/lib/confetti'
 import { supabase } from '@/lib/supabase/client'
 import { useToast } from '@/hooks/use-toast'
+import useAuthStore from '@/stores/useAuthStore'
 
 interface SwagContextType {
   products: Product[]
@@ -66,6 +67,7 @@ interface SwagContextType {
 const SwagContext = createContext<SwagContextType | undefined>(undefined)
 
 export function SwagProvider({ children }: { children: ReactNode }) {
+  const { user } = useAuthStore()
   const [products, setProducts] = useState<Product[]>([])
   const [cart, setCart] = useState<CartItem[]>([])
   const [history, setHistory] = useState<HistoryEntry[]>([])
@@ -303,7 +305,21 @@ export function SwagProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const checkAdminPermission = () => {
+    if (user?.role !== 'admin') {
+      toast({
+        title: 'Acesso Negado',
+        description:
+          'Você não tem permissão de administrador para realizar esta ação.',
+        variant: 'destructive',
+      })
+      return false
+    }
+    return true
+  }
+
   const saveSlackSettings = async (settings: Partial<SlackSettings>) => {
+    if (!checkAdminPermission()) return
     if (!slackSettings?.id) return
 
     const updates = {
@@ -323,6 +339,8 @@ export function SwagProvider({ children }: { children: ReactNode }) {
   }
 
   const testSlackConnection = async () => {
+    // Only allow admin to test, though it's harmless
+    if (!checkAdminPermission()) return
     await sendSlackNotification(
       '🔔 *Teste de Conexão:* O sistema Adapta Swag Store está conectado ao Slack com sucesso!',
     )
@@ -445,6 +463,8 @@ export function SwagProvider({ children }: { children: ReactNode }) {
   }
 
   const approveOrder = async (order: Order) => {
+    if (!checkAdminPermission()) return
+
     try {
       // 1. Insert Inventory Movement
       const { error: moveError } = await supabase
@@ -541,6 +561,8 @@ export function SwagProvider({ children }: { children: ReactNode }) {
   }
 
   const rejectOrder = async (orderId: string, reason: string) => {
+    if (!checkAdminPermission()) return
+
     try {
       const { error } = await supabase
         .from('orders')
@@ -582,6 +604,8 @@ export function SwagProvider({ children }: { children: ReactNode }) {
       grid?: ProductSizeGrid
     },
   ) => {
+    if (!checkAdminPermission()) return
+
     let finalStock = 0
     if (productData.hasGrid && productData.grid) {
       finalStock = Object.values(productData.grid).reduce(
@@ -617,6 +641,8 @@ export function SwagProvider({ children }: { children: ReactNode }) {
   }
 
   const updateProduct = async (updatedProduct: Product) => {
+    if (!checkAdminPermission()) return
+
     let finalStock = updatedProduct.stock
     if (updatedProduct.hasGrid && updatedProduct.grid) {
       finalStock = Object.values(updatedProduct.grid).reduce(
@@ -652,6 +678,8 @@ export function SwagProvider({ children }: { children: ReactNode }) {
   }
 
   const deleteProduct = async (productId: string) => {
+    if (!checkAdminPermission()) return
+
     const { error } = await supabase.from('items').delete().eq('id', productId)
     if (error) {
       console.error(error)
@@ -671,6 +699,8 @@ export function SwagProvider({ children }: { children: ReactNode }) {
     amount: number,
     size?: string,
   ) => {
+    if (!checkAdminPermission()) return
+
     try {
       const type = amount > 0 ? 'IN' : 'OUT'
       const absAmount = Math.abs(amount)
@@ -708,6 +738,8 @@ export function SwagProvider({ children }: { children: ReactNode }) {
   }
 
   const addCollaborator = async (data: Omit<Collaborator, 'id'>) => {
+    if (!checkAdminPermission()) return
+
     let deptId = Object.keys(departments).find(
       (key) => departments[key] === data.department,
     )
@@ -748,6 +780,8 @@ export function SwagProvider({ children }: { children: ReactNode }) {
   }
 
   const updateCollaborator = async (data: Collaborator) => {
+    if (!checkAdminPermission()) return
+
     let deptId = Object.keys(departments).find(
       (key) => departments[key] === data.department,
     )
@@ -778,6 +812,8 @@ export function SwagProvider({ children }: { children: ReactNode }) {
   }
 
   const deleteCollaborator = async (id: string) => {
+    if (!checkAdminPermission()) return
+
     const { error } = await supabase.from('employees').delete().eq('id', id)
     if (error) throw error
     setTeam((prev) => prev.filter((c) => c.id !== id))

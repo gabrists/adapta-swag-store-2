@@ -218,6 +218,30 @@ export type Database = {
           },
         ]
       }
+      slack_settings: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_enabled: boolean
+          updated_at: string | null
+          webhook_url: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean
+          updated_at?: string | null
+          webhook_url?: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean
+          updated_at?: string | null
+          webhook_url?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

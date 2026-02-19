@@ -6,6 +6,7 @@ import { SwagProvider } from '@/stores/useSwagStore'
 import { AuthProvider } from '@/stores/useAuthStore'
 import Layout from '@/components/Layout'
 import RequireAuth from '@/components/RequireAuth'
+import RequireAdmin from '@/components/RequireAdmin'
 import Index from '@/pages/Index'
 import HistoryPage from '@/pages/History'
 import ManageProducts from '@/pages/ManageProducts'
@@ -37,16 +38,18 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/orders" element={<OrdersPage />} />
                 <Route path="/historico" element={<HistoryPage />} />
-                <Route path="/gerenciar" element={<ManageProducts />} />
                 <Route path="/profile" element={<Profile />} />
 
-                {/* Admin Routes */}
-                <Route path="/admin">
-                  <Route index element={<Dashboard />} />
-                  <Route path="approvals" element={<ApprovalsPage />} />
-                  <Route path="inventory" element={<Inventory />} />
-                  <Route path="collaborators" element={<Collaborators />} />
-                  <Route path="settings" element={<Settings />} />
+                {/* Admin Routes - Protected by RequireAdmin */}
+                <Route element={<RequireAdmin />}>
+                  <Route path="/gerenciar" element={<ManageProducts />} />
+                  <Route path="/admin">
+                    <Route index element={<Dashboard />} />
+                    <Route path="approvals" element={<ApprovalsPage />} />
+                    <Route path="inventory" element={<Inventory />} />
+                    <Route path="collaborators" element={<Collaborators />} />
+                    <Route path="settings" element={<Settings />} />
+                  </Route>
                 </Route>
               </Route>
             </Route>

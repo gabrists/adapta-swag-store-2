@@ -76,25 +76,58 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const mapSupabaseUserToAppUser = async (
     sbUser: SupabaseUser,
   ): Promise<User> => {
-    // In a real app, you might fetch extra profile data from a profiles table
-    // For now, we derive it from metadata or default values
-    const isAdmin = sbUser.email?.toLowerCase().includes('admin') || false
-    const name =
-      sbUser.user_metadata?.name ||
-      sbUser.email?.split('@')[0].replace('.', ' ') ||
-      'Usuário'
+    try {
+      // Fetch employee data from Supabase to get the real role
+      const { data: employee, error } = await supabase
+        .from('employees')
+        .select('*')
+        .eq('email', sbUser.email)
+        .single()
 
-    return {
-      id: sbUser.id,
-      name:
-        name.charAt(0).toUpperCase() + name.slice(1) ||
-        sbUser.email ||
-        'Usuário',
-      email: sbUser.email || '',
-      avatar:
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching employee data:', error)
+      }
+
+      let role: 'admin' | 'user' = 'user'
+
+      // Check role from database
+      if (employee?.role === 'admin') {
+        role = 'admin'
+      }
+
+      // Fallback: Ensure admin@adapta.org is always admin (useful for first login/recovery)
+      if (sbUser.email === 'admin@adapta.org') {
+        role = 'admin'
+      }
+
+      const name =
+        employee?.name ||
+        sbUser.user_metadata?.name ||
+        sbUser.email?.split('@')[0].replace('.', ' ') ||
+        'Usuário'
+
+      const avatar =
+        employee?.avatar_url ||
         sbUser.user_metadata?.avatar_url ||
-        `https://img.usecurling.com/ppl/medium?gender=male&seed=${sbUser.email}`,
-      role: isAdmin ? 'admin' : 'user',
+        `https://img.usecurling.com/ppl/medium?gender=male&seed=${sbUser.email}`
+
+      return {
+        id: sbUser.id,
+        name: name.charAt(0).toUpperCase() + name.slice(1),
+        email: sbUser.email || '',
+        avatar,
+        role,
+      }
+    } catch (error) {
+      console.error('Error mapping user:', error)
+      // Fallback safe user
+      return {
+        id: sbUser.id,
+        name: 'Usuário',
+        email: sbUser.email || '',
+        avatar: '',
+        role: 'user',
+      }
     }
   }
 
