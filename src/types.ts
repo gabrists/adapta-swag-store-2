@@ -18,6 +18,7 @@ export interface Product {
   stock: number // Total stock
   hasGrid: boolean
   grid?: ProductSizeGrid
+  price: number // Added for Dashboard KPI
 }
 
 export interface CartItem {

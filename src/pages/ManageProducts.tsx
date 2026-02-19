@@ -39,6 +39,7 @@ import { uploadToR2 } from '@/lib/storage'
 const formSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   stock: z.coerce.number().min(0, 'Quantidade não pode ser negativa'),
+  price: z.coerce.number().min(0, 'O valor não pode ser negativo'),
   description: z
     .string()
     .min(10, 'Descrição deve ter pelo menos 10 caracteres'),
@@ -63,6 +64,7 @@ export default function ManageProducts() {
     defaultValues: {
       name: '',
       stock: 0,
+      price: 0,
       description: '',
       category: '',
       imageQuery: '',
@@ -156,6 +158,7 @@ export default function ManageProducts() {
     addProduct({
       name: values.name,
       stock: values.stock,
+      price: values.price,
       description: values.description,
       category: values.category,
       imageQuery: values.imageQuery,
@@ -244,22 +247,52 @@ export default function ManageProducts() {
                 />
               </div>
 
-              <FormField
-                control={form.control}
-                name="stock"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Quantidade em Estoque</FormLabel>
-                    <FormControl>
-                      <Input type="number" min="0" placeholder="0" {...field} />
-                    </FormControl>
-                    <FormDescription>
-                      Número inicial de itens disponíveis para retirada.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                  control={form.control}
+                  name="stock"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Quantidade em Estoque</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Número inicial de itens disponíveis.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="price"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Valor Unitário (R$)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          placeholder="0.00"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Valor estimado para relatórios.
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
 
               <div className="space-y-4">
                 <FormLabel>Imagem do Produto</FormLabel>

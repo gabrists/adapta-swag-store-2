@@ -58,6 +58,7 @@ const INITIAL_PRODUCTS: Product[] = [
     hasGrid: true,
     grid: { PP: 0, P: 2, M: 15, G: 0, GG: 5 },
     description: 'Camiseta de algodão egípcio com estampa minimalista.',
+    price: 45.0,
   },
   {
     id: '2',
@@ -68,6 +69,7 @@ const INITIAL_PRODUCTS: Product[] = [
     hasGrid: true,
     grid: { PP: 0, P: 5, M: 5, G: 5, GG: 5 },
     description: 'Moletom confortável para os dias de código intenso.',
+    price: 120.0,
   },
   {
     id: '3',
@@ -77,6 +79,7 @@ const INITIAL_PRODUCTS: Product[] = [
     stock: 30,
     hasGrid: false,
     description: 'Mantém sua bebida na temperatura ideal por horas.',
+    price: 65.0,
   },
   {
     id: '4',
@@ -86,6 +89,7 @@ const INITIAL_PRODUCTS: Product[] = [
     stock: 8,
     hasGrid: false,
     description: 'O kit completo para receber novos talentos com estilo.',
+    price: 250.0,
   },
 ]
 
@@ -222,7 +226,13 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         const storedTeam = localStorage.getItem('adapta-swag-team')
 
         if (storedProducts) {
-          setProducts(JSON.parse(storedProducts))
+          const parsedProducts = JSON.parse(storedProducts)
+          // Migration logic to ensure price exists
+          const migratedProducts = parsedProducts.map((p: any) => ({
+            ...p,
+            price: p.price !== undefined ? p.price : 0,
+          }))
+          setProducts(migratedProducts)
         } else {
           setProducts(INITIAL_PRODUCTS)
         }
