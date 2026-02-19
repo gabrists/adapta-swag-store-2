@@ -59,6 +59,12 @@ interface SwagContextType {
   deleteCollaborator: (id: string) => Promise<void>
   approveOrder: (order: Order) => Promise<void>
   rejectOrder: (orderId: string, reason: string) => Promise<void>
+  registerManualDelivery: (
+    employeeId: string,
+    itemId: string,
+    quantity: number,
+    size?: string,
+  ) => Promise<void>
   saveSlackSettings: (settings: Partial<SlackSettings>) => Promise<void>
   testSlackConnection: () => Promise<void>
   isLoading: boolean
@@ -138,6 +144,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         price: Number(item.price) || 0,
         unitCost: Number(item.unit_cost) || 0,
         supplierUrl: item.supplier_url || '',
+        isSingleQuota: item.is_single_quota || false,
       })) || []
 
     setProducts(mappedProducts)
@@ -259,7 +266,6 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         isEnabled: data.is_enabled,
       })
     } else {
-      // Create default if not exists (though migration handles this usually)
       const { data: newData, error: newError } = await supabase
         .from('slack_settings')
         .insert({ webhook_url: '', is_enabled: false })
@@ -280,8 +286,6 @@ export function SwagProvider({ children }: { children: ReactNode }) {
     if (!slackSettings?.isEnabled || !slackSettings?.webhookUrl) return
 
     try {
-      // Using 'no-cors' mode since webhooks often don't return proper CORS headers for browser fetch
-      // However, Slack webhooks usually support POST. If CORS fails, we rely on the fallback.
       const response = await fetch(slackSettings.webhookUrl, {
         method: 'POST',
         headers: {
@@ -295,13 +299,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('Failed to send Slack notification:', error)
-      // Fallback: Log payload and show Toast
       console.log('Slack Payload:', JSON.stringify({ text }))
-      toast({
-        title: 'Notificação enviada ao Slack!',
-        description: 'Payload registrado no console (Fallback).',
-        className: 'bg-slate-900 text-white border-none',
-      })
     }
   }
 
@@ -339,7 +337,6 @@ export function SwagProvider({ children }: { children: ReactNode }) {
   }
 
   const testSlackConnection = async () => {
-    // Only allow admin to test, though it's harmless
     if (!checkAdminPermission()) return
     await sendSlackNotification(
       '🔔 *Teste de Conexão:* O sistema Adapta Swag Store está conectado ao Slack com sucesso!',
@@ -438,7 +435,6 @@ export function SwagProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error
 
-      // Trigger Slack Notification for each item in the order
       for (const item of cart) {
         const message = `🚨 *Novo Pedido de Swag:* ${userName} solicitou ${item.quantity}x ${item.productName}${item.size ? ` (Tam: ${item.size})` : ''}. <${window.location.origin}/admin/approvals|Clique para aprovar>`
         sendSlackNotification(message)
@@ -466,7 +462,6 @@ export function SwagProvider({ children }: { children: ReactNode }) {
     if (!checkAdminPermission()) return
 
     try {
-      // 1. Insert Inventory Movement
       const { error: moveError } = await supabase
         .from('inventory_movements')
         .insert({
@@ -481,7 +476,6 @@ export function SwagProvider({ children }: { children: ReactNode }) {
 
       if (moveError) throw moveError
 
-      // 2. Update Order Status
       const { error: updateError } = await supabase
         .from('orders')
         .update({ status: 'Entregue' })
@@ -489,58 +483,10 @@ export function SwagProvider({ children }: { children: ReactNode }) {
 
       if (updateError) throw updateError
 
-      // Update Local State & Check for Low Stock
-      let newStockLevel = 0
-      let productSupplierUrl = ''
+      await updateLocalStock(order.itemId, order.quantity, order.size)
 
-      if (order.size) {
-        const product = products.find((p) => p.id === order.itemId)
-        if (product && product.grid) {
-          const newGrid = {
-            ...product.grid,
-            [order.size]: Math.max(
-              0,
-              product.grid[order.size] - order.quantity,
-            ),
-          }
-          const finalStock = Object.values(newGrid).reduce(
-            (acc, curr) => acc + curr,
-            0,
-          )
-          newStockLevel = finalStock
-          productSupplierUrl = product.supplierUrl || ''
-
-          setProducts((prev) =>
-            prev.map((p) =>
-              p.id === order.itemId
-                ? { ...p, grid: newGrid, stock: finalStock }
-                : p,
-            ),
-          )
-        }
-      } else {
-        const product = products.find((p) => p.id === order.itemId)
-        if (product) {
-          newStockLevel = Math.max(0, product.stock - order.quantity)
-          productSupplierUrl = product.supplierUrl || ''
-
-          setProducts((prev) =>
-            prev.map((p) =>
-              p.id === order.itemId ? { ...p, stock: newStockLevel } : p,
-            ),
-          )
-        }
-      }
-
-      // Slack: Approval Notification
       const approvalMsg = `✅ *Pedido Aprovado:* Seu pedido de ${order.productName} foi separado e está pronto para retirada com o RH!`
       sendSlackNotification(approvalMsg)
-
-      // Slack: Critical Stock Alert
-      if (newStockLevel < 5) {
-        const stockMsg = `⚠️ *Alerta de Estoque:* O item ${order.productName} está acabando! Restam apenas ${newStockLevel} unidades. ${productSupplierUrl ? `<${productSupplierUrl}|Link para fornecedor>` : '(Sem link do fornecedor)'}`
-        sendSlackNotification(stockMsg)
-      }
 
       toast({
         title: 'Pedido Aprovado',
@@ -549,7 +495,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
       })
       triggerConfetti()
 
-      await Promise.all([fetchOrders(), fetchHistory(), fetchItems()])
+      await Promise.all([fetchOrders(), fetchHistory()])
     } catch (error) {
       console.error('Approve error:', error)
       toast({
@@ -558,6 +504,118 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         variant: 'destructive',
       })
     }
+  }
+
+  const registerManualDelivery = async (
+    employeeId: string,
+    itemId: string,
+    quantity: number,
+    size?: string,
+  ) => {
+    if (!checkAdminPermission()) return
+
+    try {
+      // 1. Create Order as Delivered
+      const { error: orderError } = await supabase.from('orders').insert({
+        employee_id: employeeId,
+        item_id: itemId,
+        quantity,
+        size,
+        status: 'Entregue',
+        created_at: new Date().toISOString(),
+      })
+
+      if (orderError) throw orderError
+
+      // 2. Inventory Movement
+      const { error: moveError } = await supabase
+        .from('inventory_movements')
+        .insert({
+          group_id: crypto.randomUUID(),
+          item_id: itemId,
+          employee_id: employeeId,
+          type: 'OUT',
+          quantity,
+          size,
+          destination: 'Entrega Manual',
+        })
+
+      if (moveError) throw moveError
+
+      await updateLocalStock(itemId, quantity, size)
+
+      toast({
+        title: 'Entrega registrada!',
+        description: 'O pedido foi criado e o estoque atualizado.',
+        className: 'bg-emerald-50 border-emerald-200 text-emerald-900',
+      })
+      triggerConfetti()
+
+      await Promise.all([fetchOrders(), fetchHistory()])
+    } catch (error) {
+      console.error('Manual Delivery error:', error)
+      toast({
+        title: 'Erro ao registrar',
+        description: 'Não foi possível salvar a entrega.',
+        variant: 'destructive',
+      })
+      throw error
+    }
+  }
+
+  const updateLocalStock = async (
+    itemId: string,
+    quantity: number,
+    size?: string,
+  ) => {
+    let newStockLevel = 0
+    let productSupplierUrl = ''
+    let productName = ''
+
+    if (size) {
+      const product = products.find((p) => p.id === itemId)
+      if (product && product.grid) {
+        productName = product.name
+        const newGrid = {
+          ...product.grid,
+          [size]: Math.max(0, product.grid[size] - quantity),
+        }
+        const finalStock = Object.values(newGrid).reduce(
+          (acc, curr) => acc + curr,
+          0,
+        )
+        newStockLevel = finalStock
+        productSupplierUrl = product.supplierUrl || ''
+
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === itemId ? { ...p, grid: newGrid, stock: finalStock } : p,
+          ),
+        )
+      }
+    } else {
+      const product = products.find((p) => p.id === itemId)
+      if (product) {
+        productName = product.name
+        newStockLevel = Math.max(0, product.stock - quantity)
+        productSupplierUrl = product.supplierUrl || ''
+
+        setProducts((prev) =>
+          prev.map((p) =>
+            p.id === itemId ? { ...p, stock: newStockLevel } : p,
+          ),
+        )
+      }
+    }
+
+    // Critical Stock Alert
+    if (newStockLevel < 5 && productName) {
+      const stockMsg = `⚠️ *Alerta de Estoque:* O item ${productName} está acabando! Restam apenas ${newStockLevel} unidades. ${productSupplierUrl ? `<${productSupplierUrl}|Link para fornecedor>` : '(Sem link do fornecedor)'}`
+      sendSlackNotification(stockMsg)
+    }
+
+    // Refetch items to sync with server (since triggers might update DB)
+    await fetchItems()
   }
 
   const rejectOrder = async (orderId: string, reason: string) => {
@@ -574,11 +632,9 @@ export function SwagProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error
 
-      // Find order to get product name for notification
       const order = orders.find((o) => o.id === orderId)
       const productName = order?.productName || 'Item'
 
-      // Slack: Rejection Notification
       const rejectionMsg = `❌ *Pedido Rejeitado:* Seu pedido de ${productName} não pôde ser atendido.${reason ? ` Motivo: ${reason}` : ''}`
       sendSlackNotification(rejectionMsg)
 
@@ -627,6 +683,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
       has_grid: productData.hasGrid,
       grid: productData.grid ? JSON.stringify(productData.grid) : null,
       current_stock: finalStock,
+      is_single_quota: productData.isSingleQuota,
       critical_level: 5,
     }
 
@@ -662,6 +719,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
       has_grid: updatedProduct.hasGrid,
       grid: updatedProduct.grid ? updatedProduct.grid : null,
       current_stock: finalStock,
+      is_single_quota: updatedProduct.isSingleQuota,
     }
 
     const { error } = await supabase
@@ -843,6 +901,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         deleteCollaborator,
         approveOrder,
         rejectOrder,
+        registerManualDelivery,
         saveSlackSettings,
         testSlackConnection,
         isLoading,

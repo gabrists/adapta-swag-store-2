@@ -6,6 +6,7 @@ import {
   Trash2,
   Pencil,
   Users,
+  Eye,
 } from 'lucide-react'
 import useSwagStore from '@/stores/useSwagStore'
 import { Collaborator } from '@/types'
@@ -43,6 +44,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { CollaboratorDialog } from '@/components/admin/CollaboratorDialog'
+import { CollaboratorProfile } from '@/components/admin/CollaboratorProfile'
 
 const departmentColors: Record<string, string> = {
   Marketing: 'bg-pink-100 text-pink-800',
@@ -61,6 +63,7 @@ export default function Collaborators() {
 
   const [searchQuery, setSearchQuery] = useState('')
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [profileOpen, setProfileOpen] = useState(false)
   const [selectedCollab, setSelectedCollab] = useState<Collaborator | null>(
     null,
   )
@@ -88,6 +91,11 @@ export default function Collaborators() {
     setDeleteCollab(collab)
   }
 
+  const handleViewProfile = (collab: Collaborator) => {
+    setSelectedCollab(collab)
+    setProfileOpen(true)
+  }
+
   const confirmDelete = () => {
     if (deleteCollab) {
       deleteCollaborator(deleteCollab.id)
@@ -103,6 +111,8 @@ export default function Collaborators() {
   const handleSave = async (values: any) => {
     // Simulate delay
     await new Promise((resolve) => setTimeout(resolve, 500))
+
+    if (selectedCollab && !dialogOpen) return // Should not happen
 
     if (selectedCollab) {
       updateCollaborator({
@@ -215,32 +225,43 @@ export default function Collaborators() {
                     </span>
                   </TableCell>
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          className="h-8 w-8 p-0 rounded-md"
-                        >
-                          <span className="sr-only">Menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="rounded-lg">
-                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleEdit(collab)}>
-                          <Pencil className="h-4 w-4" />
-                          Editar
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => handleDelete(collab)}
-                          className="text-red-600 focus:text-red-600"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          Excluir
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="flex justify-end items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleViewProfile(collab)}
+                        className="h-8 w-8 p-0 text-slate-500 hover:text-[#0E9C8B] hover:bg-[#0E9C8B]/10 rounded-md"
+                        title="Ver Perfil"
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="h-8 w-8 p-0 rounded-md"
+                          >
+                            <span className="sr-only">Menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="rounded-lg">
+                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => handleEdit(collab)}>
+                            <Pencil className="h-4 w-4" />
+                            Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            onClick={() => handleDelete(collab)}
+                            className="text-red-600 focus:text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                            Excluir
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
@@ -254,6 +275,12 @@ export default function Collaborators() {
         onOpenChange={setDialogOpen}
         collaborator={selectedCollab}
         onSave={handleSave}
+      />
+
+      <CollaboratorProfile
+        open={profileOpen}
+        onOpenChange={setProfileOpen}
+        collaborator={selectedCollab}
       />
 
       <AlertDialog

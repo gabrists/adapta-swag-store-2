@@ -4,14 +4,19 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter } from '@/components/ui/card'
 import { cn } from '@/lib/utils'
-import { ShoppingCart, Plus } from 'lucide-react'
+import { ShoppingCart, Plus, Check } from 'lucide-react'
 
 interface ProductCardProps {
   product: Product
   onAddToCart: (product: Product, size?: string) => void
+  hasOrdered?: boolean
 }
 
-export function ProductCard({ product, onAddToCart }: ProductCardProps) {
+export function ProductCard({
+  product,
+  onAddToCart,
+  hasOrdered = false,
+}: ProductCardProps) {
   const [selectedSize, setSelectedSize] = useState<string | null>(null)
 
   const isOutOfStock = product.stock === 0
@@ -40,6 +45,12 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
   const currentStock = getDisplayStock()
   const displayLowStock = currentStock > 0 && currentStock < 3
 
+  // Disable if single quota and already ordered
+  const isDisabled =
+    isOutOfStock ||
+    (product.hasGrid && !selectedSize) ||
+    (product.isSingleQuota && hasOrdered)
+
   return (
     <Card className="overflow-hidden border-border/50 shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 group bg-white flex flex-col h-full rounded-xl">
       <div className="aspect-[4/3] relative overflow-hidden bg-muted">
@@ -60,6 +71,13 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
             {product.category}
           </Badge>
         </div>
+        {product.isSingleQuota && (
+          <div className="absolute top-3 right-3">
+            <Badge className="bg-[#0E9C8B]/90 text-white backdrop-blur-sm shadow-sm font-medium border-none">
+              Cota Única
+            </Badge>
+          </div>
+        )}
       </div>
 
       <CardContent className="p-4 space-y-3 flex-grow">
@@ -134,11 +152,21 @@ export function ProductCard({ product, onAddToCart }: ProductCardProps) {
 
       <CardFooter className="p-4 pt-0 mt-auto">
         <Button
-          className="w-full bg-primary hover:bg-primary/90 text-white font-medium active:scale-95 transition-all rounded-lg"
+          className={cn(
+            'w-full font-medium active:scale-95 transition-all rounded-lg',
+            hasOrdered && product.isSingleQuota
+              ? 'bg-slate-200 text-slate-500 cursor-not-allowed hover:bg-slate-200'
+              : 'bg-primary hover:bg-primary/90 text-white',
+          )}
           onClick={() => onAddToCart(product, selectedSize || undefined)}
-          disabled={product.hasGrid ? !selectedSize : isOutOfStock}
+          disabled={isDisabled}
         >
-          {isOutOfStock ? (
+          {product.isSingleQuota && hasOrdered ? (
+            <>
+              <Check className="w-4 h-4 mr-2" />
+              Item já resgatado
+            </>
+          ) : isOutOfStock ? (
             'Indisponível'
           ) : product.hasGrid && !selectedSize ? (
             'Selecione Tamanho'

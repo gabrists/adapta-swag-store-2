@@ -21,6 +21,7 @@ export interface Product {
   price: number // Added for Dashboard KPI
   unitCost: number // Added for Financial KPI
   supplierUrl?: string // Added for Restock
+  isSingleQuota: boolean // Added for Single Quota Feature
 }
 
 export interface CartItem {

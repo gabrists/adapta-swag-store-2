@@ -45,6 +45,7 @@ const formSchema = z.object({
   unitCost: z.coerce.number().min(0, 'Custo não pode ser negativo'),
   supplierUrl: z.string().url('URL inválida').optional().or(z.literal('')),
   hasGrid: z.boolean(),
+  isSingleQuota: z.boolean(),
   stock: z.coerce.number().min(0).optional(),
   gridPP: z.coerce.number().min(0).optional(),
   gridP: z.coerce.number().min(0).optional(),
@@ -81,6 +82,7 @@ export function ProductDialog({
       unitCost: 0,
       supplierUrl: '',
       hasGrid: false,
+      isSingleQuota: false,
       stock: 0,
       gridPP: 0,
       gridP: 0,
@@ -103,6 +105,7 @@ export function ProductDialog({
           unitCost: product.unitCost || 0,
           supplierUrl: product.supplierUrl || '',
           hasGrid: product.hasGrid,
+          isSingleQuota: product.isSingleQuota || false,
           stock: product.stock,
           gridPP: product.grid?.PP || 0,
           gridP: product.grid?.P || 0,
@@ -130,6 +133,7 @@ export function ProductDialog({
           unitCost: 0,
           supplierUrl: '',
           hasGrid: false,
+          isSingleQuota: false,
           stock: 0,
           gridPP: 0,
           gridP: 0,
@@ -203,6 +207,7 @@ export function ProductDialog({
       unitCost: values.unitCost,
       supplierUrl: values.supplierUrl,
       hasGrid: values.hasGrid,
+      isSingleQuota: values.isSingleQuota,
       stock: values.hasGrid ? 0 : values.stock,
       grid: values.hasGrid
         ? {
@@ -335,27 +340,52 @@ export function ProductDialog({
               />
             </div>
 
-            <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm bg-slate-50">
-              <div className="space-y-0.5">
-                <FormLabel className="text-base">Controle de Grade</FormLabel>
-                <FormDescription>
-                  Este produto possui variação de tamanhos?
-                </FormDescription>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm bg-slate-50">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">Controle de Grade</FormLabel>
+                  <FormDescription className="text-xs">
+                    Este produto possui variação de tamanhos?
+                  </FormDescription>
+                </div>
+                <FormField
+                  control={form.control}
+                  name="hasGrid"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
               </div>
-              <FormField
-                control={form.control}
-                name="hasGrid"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                  </FormItem>
-                )}
-              />
+
+              <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm bg-slate-50">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">Item Cota Única</FormLabel>
+                  <FormDescription className="text-xs">
+                    Limitar a 1 unidade por pessoa?
+                  </FormDescription>
+                </div>
+                <FormField
+                  control={form.control}
+                  name="isSingleQuota"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             {hasGrid ? (

@@ -380,3 +380,61 @@ export const Constants = {
     Enums: {},
   },
 } as const
+
+// ====== DATABASE EXTENDED CONTEXT (auto-generated) ======
+// This section contains constraints, RLS policies, functions, triggers,
+// indexes and materialized views not present in the type definitions above.
+
+// --- CONSTRAINTS ---
+// Table: departments
+//   UNIQUE departments_name_key: UNIQUE (name)
+//   PRIMARY KEY departments_pkey: PRIMARY KEY (id)
+// Table: employees
+//   FOREIGN KEY employees_department_id_fkey: FOREIGN KEY (department_id) REFERENCES departments(id)
+//   UNIQUE employees_email_key: UNIQUE (email)
+//   PRIMARY KEY employees_pkey: PRIMARY KEY (id)
+// Table: inventory_movements
+//   FOREIGN KEY inventory_movements_employee_id_fkey: FOREIGN KEY (employee_id) REFERENCES employees(id)
+//   FOREIGN KEY inventory_movements_item_id_fkey: FOREIGN KEY (item_id) REFERENCES items(id)
+//   PRIMARY KEY inventory_movements_pkey: PRIMARY KEY (id)
+//   CHECK inventory_movements_type_check: CHECK ((type = ANY (ARRAY['IN'::text, 'OUT'::text])))
+// Table: items
+//   PRIMARY KEY items_pkey: PRIMARY KEY (id)
+// Table: orders
+//   FOREIGN KEY orders_employee_id_fkey: FOREIGN KEY (employee_id) REFERENCES employees(id)
+//   FOREIGN KEY orders_item_id_fkey: FOREIGN KEY (item_id) REFERENCES items(id)
+//   PRIMARY KEY orders_pkey: PRIMARY KEY (id)
+//   CHECK orders_status_check: CHECK ((status = ANY (ARRAY['Pendente'::text, 'Entregue'::text, 'Rejeitado'::text])))
+// Table: slack_settings
+//   PRIMARY KEY slack_settings_pkey: PRIMARY KEY (id)
+
+// --- DATABASE FUNCTIONS ---
+// FUNCTION update_stock_after_movement()
+//   CREATE OR REPLACE FUNCTION public.update_stock_after_movement()
+//    RETURNS trigger
+//    LANGUAGE plpgsql
+//   AS $function$
+//   BEGIN
+//     IF NEW.type = 'IN' THEN
+//       UPDATE public.items
+//       SET current_stock = current_stock + NEW.quantity
+//       WHERE id = NEW.item_id;
+//     ELSIF NEW.type = 'OUT' THEN
+//       UPDATE public.items
+//       SET current_stock = GREATEST(0, current_stock - NEW.quantity)
+//       WHERE id = NEW.item_id;
+//     END IF;
+//     RETURN NEW;
+//   END;
+//   $function$
+//
+
+// --- TRIGGERS ---
+// Table: inventory_movements
+//   update_stock_trigger: CREATE TRIGGER update_stock_trigger AFTER INSERT ON public.inventory_movements FOR EACH ROW EXECUTE FUNCTION update_stock_after_movement()
+
+// --- INDEXES ---
+// Table: departments
+//   CREATE UNIQUE INDEX departments_name_key ON public.departments USING btree (name)
+// Table: employees
+//   CREATE UNIQUE INDEX employees_email_key ON public.employees USING btree (email)

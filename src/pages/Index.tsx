@@ -4,12 +4,14 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import useSwagStore from '@/stores/useSwagStore'
+import useAuthStore from '@/stores/useAuthStore'
 import { ProductCard } from '@/components/ProductCard'
 import { Product } from '@/types'
 import { useToast } from '@/hooks/use-toast'
 
 export default function Index() {
-  const { products, isLoading, addToCart } = useSwagStore()
+  const { products, orders, isLoading, addToCart } = useSwagStore()
+  const { user } = useAuthStore()
   const { toast } = useToast()
 
   const [searchQuery, setSearchQuery] = useState('')
@@ -77,13 +79,26 @@ export default function Index() {
 
         {filteredProducts.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-            {filteredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onAddToCart={handleAddToCart}
-              />
-            ))}
+            {filteredProducts.map((product) => {
+              const hasOrdered =
+                user && product.isSingleQuota
+                  ? orders.some(
+                      (o) =>
+                        o.employeeId === user.id &&
+                        o.itemId === product.id &&
+                        (o.status === 'Pendente' || o.status === 'Entregue'),
+                    )
+                  : false
+
+              return (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onAddToCart={handleAddToCart}
+                  hasOrdered={hasOrdered}
+                />
+              )
+            })}
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
