@@ -5,7 +5,6 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { SwagProvider } from '@/stores/useSwagStore'
 import { AuthProvider } from '@/stores/useAuthStore'
 import Layout from '@/components/Layout'
-import AdminLayout from '@/components/AdminLayout'
 import RequireAuth from '@/components/RequireAuth'
 import Index from '@/pages/Index'
 import HistoryPage from '@/pages/History'
@@ -30,19 +29,19 @@ const App = () => (
             <Route path="/login" element={<Login />} />
 
             <Route element={<RequireAuth />}>
-              {/* Public Storefront Routes */}
               <Route element={<Layout />}>
+                {/* Storefront Routes */}
                 <Route path="/" element={<Index />} />
                 <Route path="/historico" element={<HistoryPage />} />
                 <Route path="/gerenciar" element={<ManageProducts />} />
                 <Route path="/profile" element={<Profile />} />
-              </Route>
 
-              {/* Admin Routes */}
-              <Route path="/admin" element={<AdminLayout />}>
-                <Route index element={<Dashboard />} />
-                <Route path="inventory" element={<Inventory />} />
-                <Route path="settings" element={<Settings />} />
+                {/* Admin Routes */}
+                <Route path="/admin">
+                  <Route index element={<Dashboard />} />
+                  <Route path="inventory" element={<Inventory />} />
+                  <Route path="settings" element={<Settings />} />
+                </Route>
               </Route>
             </Route>
 

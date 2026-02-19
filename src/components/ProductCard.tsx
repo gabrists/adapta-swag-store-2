@@ -16,9 +16,12 @@ export function ProductCard({ product, onSelect }: ProductCardProps) {
   const isOutOfStock = product.stock === 0
   const isLowStock = product.stock > 0 && product.stock < 3
 
-  const imageUrl = product.imageQuery.startsWith('http')
-    ? product.imageQuery
-    : `https://img.usecurling.com/p/400/300?q=${product.imageQuery}&dpr=2`
+  // Determine image source: URL, Data URI, or Placeholder Query
+  const imageUrl =
+    product.imageQuery.startsWith('http') ||
+    product.imageQuery.startsWith('data:')
+      ? product.imageQuery
+      : `https://img.usecurling.com/p/400/300?q=${product.imageQuery}&dpr=2`
 
   const handleSizeSelect = (size: string, stock: number) => {
     if (stock > 0) {

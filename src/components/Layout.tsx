@@ -1,132 +1,255 @@
-import { Outlet, NavLink, Link, useLocation } from 'react-router-dom'
-import { Store, History, Package2, PackagePlus } from 'lucide-react'
-import { cn } from '@/lib/utils'
-import { buttonVariants } from '@/components/ui/button'
-import { UserProfile } from '@/components/UserProfile'
+import {
+  Outlet,
+  NavLink,
+  Link,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom'
+import {
+  Store,
+  History,
+  Package2,
+  PackagePlus,
+  LayoutDashboard,
+  Package,
+  Settings,
+  LogOut,
+  User as UserIcon,
+  ChevronsUpDown,
+} from 'lucide-react'
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger,
+  SidebarSeparator,
+} from '@/components/ui/sidebar'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import useAuthStore from '@/stores/useAuthStore'
 
 export default function Layout() {
+  const { user, logout } = useAuthStore()
   const location = useLocation()
+  const navigate = useNavigate()
 
-  const navItems = [
+  const handleLogout = () => {
+    logout()
+    navigate('/login')
+  }
+
+  const storefrontItems = [
     {
-      path: '/',
-      label: 'Vitrine',
+      title: 'Vitrine',
+      url: '/',
       icon: Store,
     },
     {
-      path: '/historico',
-      label: 'Histórico',
+      title: 'Histórico',
+      url: '/historico',
       icon: History,
     },
     {
-      path: '/gerenciar',
-      label: 'Cadastrar Brinde',
+      title: 'Cadastrar Brinde',
+      url: '/gerenciar',
       icon: PackagePlus,
     },
   ]
 
+  const adminItems = [
+    {
+      title: 'Dashboard',
+      url: '/admin',
+      icon: LayoutDashboard,
+      exact: true,
+    },
+    {
+      title: 'Inventário',
+      url: '/admin/inventory',
+      icon: Package,
+    },
+    {
+      title: 'Configurações',
+      url: '/admin/settings',
+      icon: Settings,
+    },
+  ]
+
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans text-slate-900">
-      {/* Desktop Header */}
-      <header className="hidden md:block bg-white border-b border-slate-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <Link
-              to="/"
-              className="flex items-center gap-2.5 hover:opacity-80 transition-opacity"
-            >
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white shadow-lg shadow-primary/20">
-                <Package2 className="w-5 h-5" />
-              </div>
-              <span className="font-display font-bold text-xl tracking-tight text-slate-900">
-                Adapta <span className="text-primary">Swag</span>
-              </span>
-            </Link>
+    <SidebarProvider>
+      <Sidebar collapsible="icon" className="border-r border-border">
+        <SidebarHeader>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton size="lg" asChild>
+                <Link to="/">
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                    <Package2 className="size-4" />
+                  </div>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-bold">Adapta Swag</span>
+                    <span className="truncate text-xs">Store</span>
+                  </div>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarHeader>
 
-            <nav className="flex items-center gap-1">
-              {navItems.map((item) => {
-                const isPrimaryAction = item.path === '/gerenciar'
+        <SidebarContent>
+          <SidebarGroup>
+            <SidebarGroupLabel>Loja</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {storefrontItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={location.pathname === item.url}
+                      tooltip={item.title}
+                    >
+                      <NavLink to={item.url}>
+                        <item.icon className="text-primary" />
+                        <span>{item.title}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
 
-                return (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    className={({ isActive }) =>
-                      cn(
-                        isPrimaryAction
-                          ? buttonVariants({ variant: 'default', size: 'sm' })
-                          : 'px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2',
-                        !isPrimaryAction &&
-                          (isActive
-                            ? 'bg-slate-100 text-primary'
-                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'),
-                        isPrimaryAction && 'ml-2 gap-2 shadow-sm',
+          {user?.role === 'admin' && (
+            <>
+              <SidebarSeparator />
+              <SidebarGroup>
+                <SidebarGroupLabel>Administração</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {adminItems.map((item) => {
+                      const isActive = item.exact
+                        ? location.pathname === item.url
+                        : location.pathname.startsWith(item.url)
+
+                      return (
+                        <SidebarMenuItem key={item.title}>
+                          <SidebarMenuButton
+                            asChild
+                            isActive={isActive}
+                            tooltip={item.title}
+                          >
+                            <NavLink to={item.url}>
+                              <item.icon className="text-slate-600" />
+                              <span>{item.title}</span>
+                            </NavLink>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
                       )
-                    }
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </>
+          )}
+        </SidebarContent>
+
+        <SidebarFooter>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton
+                    size="lg"
+                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                   >
-                    <item.icon className="w-4 h-4" />
-                    {item.label}
-                  </NavLink>
-                )
-              })}
-            </nav>
-          </div>
+                    <Avatar className="h-8 w-8 rounded-lg">
+                      <AvatarImage src={user?.avatar} alt={user?.name} />
+                      <AvatarFallback className="rounded-lg">
+                        {user?.name?.substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="grid flex-1 text-left text-sm leading-tight">
+                      <span className="truncate font-semibold">
+                        {user?.name}
+                      </span>
+                      <span className="truncate text-xs">{user?.email}</span>
+                    </div>
+                    <ChevronsUpDown className="ml-auto size-4" />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                  side="bottom"
+                  align="end"
+                  sideOffset={4}
+                >
+                  <DropdownMenuLabel className="p-0 font-normal">
+                    <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                      <Avatar className="h-8 w-8 rounded-lg">
+                        <AvatarImage src={user?.avatar} alt={user?.name} />
+                        <AvatarFallback className="rounded-lg">
+                          {user?.name?.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="grid flex-1 text-left text-sm leading-tight">
+                        <span className="truncate font-semibold">
+                          {user?.name}
+                        </span>
+                        <span className="truncate text-xs">{user?.email}</span>
+                      </div>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    <UserIcon className="mr-2 h-4 w-4" />
+                    Gerenciar Conta
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="text-red-600 focus:text-red-600"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Deslogar
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarFooter>
+      </Sidebar>
 
-          <div className="flex items-center gap-4">
-            <UserProfile />
-          </div>
-        </div>
-      </header>
-
-      {/* Mobile Header */}
-      <header className="md:hidden bg-white border-b border-slate-200 sticky top-0 z-40">
-        <div className="px-4 h-16 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white">
-              <Package2 className="w-5 h-5" />
-            </div>
-            <span className="font-display font-bold text-lg tracking-tight text-slate-900">
-              Adapta <span className="text-primary">Swag</span>
+      <SidebarInset className="bg-slate-50">
+        <header className="flex h-16 shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 bg-white px-4">
+          <SidebarTrigger className="-ml-1" />
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="w-px h-4 bg-border mx-2" />
+            <span className="font-medium text-foreground">
+              {location.pathname.startsWith('/admin')
+                ? 'Administração'
+                : 'Adapta Swag Store'}
             </span>
-          </Link>
-          <UserProfile align="end" showName={false} />
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 w-full max-w-7xl mx-auto p-4 md:p-6 pb-24 md:pb-6 animate-fade-in">
-        <Outlet />
-      </main>
-
-      {/* Mobile Bottom Navigation */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-slate-200 pb-safe z-50">
-        <div className="flex justify-around items-center h-16">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) =>
-                cn(
-                  'flex flex-col items-center justify-center w-full h-full gap-1 active:scale-95 transition-transform',
-                  isActive
-                    ? 'text-primary'
-                    : 'text-slate-400 hover:text-slate-600',
-                )
-              }
-            >
-              <item.icon
-                className={cn(
-                  'w-6 h-6',
-                  location.pathname === item.path && 'fill-current/10',
-                )}
-              />
-              <span className="text-[10px] font-medium leading-tight text-center px-1">
-                {item.label}
-              </span>
-            </NavLink>
-          ))}
-        </div>
-      </nav>
-    </div>
+          </div>
+        </header>
+        <main className="flex-1 p-4 md:p-6 lg:p-8 pt-6 w-full max-w-7xl mx-auto animate-fade-in h-full">
+          <Outlet />
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }

@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { Loader2, Save } from 'lucide-react'
+import { Loader2, Save, Upload, X, Image as ImageIcon } from 'lucide-react'
 
 import { Product } from '@/types'
 import { Button } from '@/components/ui/button'
@@ -38,7 +38,7 @@ const formSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   category: z.string().min(1, 'Selecione uma categoria'),
   description: z.string().min(5, 'Descrição é obrigatória'),
-  imageQuery: z.string().min(2, 'Informe um termo para imagem'),
+  imageQuery: z.string().min(2, 'Informe um termo ou faça upload'),
   hasGrid: z.boolean(),
   stock: z.coerce.number().min(0).optional(),
   gridPP: z.coerce.number().min(0).optional(),
@@ -61,6 +61,9 @@ export function ProductDialog({
   product,
   onSave,
 }: ProductDialogProps) {
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -96,6 +99,17 @@ export function ProductDialog({
           gridG: product.grid?.G || 0,
           gridGG: product.grid?.GG || 0,
         })
+
+        if (
+          product.imageQuery.startsWith('data:') ||
+          product.imageQuery.startsWith('http')
+        ) {
+          setImagePreview(product.imageQuery)
+        } else {
+          setImagePreview(
+            `https://img.usecurling.com/p/100/100?q=${product.imageQuery}`,
+          )
+        }
       } else {
         form.reset({
           name: '',
@@ -110,9 +124,37 @@ export function ProductDialog({
           gridG: 0,
           gridGG: 0,
         })
+        setImagePreview(null)
       }
     }
   }, [open, product, form])
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) {
+        // 2MB limit
+        alert('A imagem deve ser menor que 2MB')
+        return
+      }
+
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        const result = reader.result as string
+        setImagePreview(result)
+        form.setValue('imageQuery', result, { shouldValidate: true })
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleRemoveImage = () => {
+    setImagePreview(null)
+    form.setValue('imageQuery', '')
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     const finalData = {
@@ -121,7 +163,7 @@ export function ProductDialog({
       description: values.description,
       imageQuery: values.imageQuery,
       hasGrid: values.hasGrid,
-      stock: values.hasGrid ? 0 : values.stock, // Stock will be calculated in store for grid
+      stock: values.hasGrid ? 0 : values.stock,
       grid: values.hasGrid
         ? {
             PP: values.gridPP || 0,
@@ -135,6 +177,7 @@ export function ProductDialog({
 
     await onSave(finalData)
     form.reset()
+    setImagePreview(null)
     onOpenChange(false)
   }
 
@@ -348,23 +391,90 @@ export function ProductDialog({
               />
             )}
 
-            <FormField
-              control={form.control}
-              name="imageQuery"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Termo da Imagem (Inglês)</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Ex: black backpack"
-                      className="rounded-lg"
-                      {...field}
+            <div className="space-y-4">
+              <FormLabel>Imagem do Produto</FormLabel>
+
+              <div className="flex flex-col gap-4">
+                {imagePreview ? (
+                  <div className="relative w-full h-40 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 group">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="w-full h-full object-contain"
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full h-32 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors"
+                  >
+                    <Upload className="w-8 h-8 text-slate-400 mb-2" />
+                    <span className="text-sm text-slate-500">
+                      Clique para fazer upload
+                    </span>
+                    <span className="text-xs text-slate-400 mt-1">
+                      ou arraste e solte
+                    </span>
+                  </div>
+                )}
+
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  accept="image/*"
+                  className="hidden"
+                />
+
+                <div className="flex items-center gap-2">
+                  <div className="h-px bg-slate-200 flex-1"></div>
+                  <span className="text-xs text-slate-400 uppercase">
+                    Ou use um termo
+                  </span>
+                  <div className="h-px bg-slate-200 flex-1"></div>
+                </div>
+
+                <FormField
+                  control={form.control}
+                  name="imageQuery"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <div className="relative">
+                          <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                          <Input
+                            placeholder="Ex: black backpack"
+                            className="pl-9 rounded-lg"
+                            {...field}
+                            onChange={(e) => {
+                              field.onChange(e)
+                              if (
+                                !e.target.value.startsWith('data:') &&
+                                !e.target.value.startsWith('http')
+                              ) {
+                                setImagePreview(
+                                  `https://img.usecurling.com/p/100/100?q=${e.target.value}`,
+                                )
+                              } else {
+                                setImagePreview(e.target.value)
+                              }
+                            }}
+                          />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
 
             <FormField
               control={form.control}
