@@ -170,6 +170,54 @@ export type Database = {
         }
         Relationships: []
       }
+      orders: {
+        Row: {
+          created_at: string | null
+          employee_id: string
+          id: string
+          item_id: string
+          quantity: number
+          rejection_reason: string | null
+          size: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          employee_id: string
+          id?: string
+          item_id: string
+          quantity?: number
+          rejection_reason?: string | null
+          size?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string | null
+          employee_id?: string
+          id?: string
+          item_id?: string
+          quantity?: number
+          rejection_reason?: string | null
+          size?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'orders_employee_id_fkey'
+            columns: ['employee_id']
+            isOneToOne: false
+            referencedRelation: 'employees'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'orders_item_id_fkey'
+            columns: ['item_id']
+            isOneToOne: false
+            referencedRelation: 'items'
+            referencedColumns: ['id']
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -74,6 +74,12 @@ export interface Collaborator {
   avatarUrl?: string
 }
 
+export interface SlackSettings {
+  id: string
+  webhookUrl: string
+  isEnabled: boolean
+}
+
 export type Category =
   | 'Todos'
   | 'Vendas'

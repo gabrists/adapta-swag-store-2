@@ -13,6 +13,7 @@ import {
   Collaborator,
   CartItem,
   Order,
+  SlackSettings,
 } from '@/types'
 import { triggerConfetti } from '@/lib/confetti'
 import { supabase } from '@/lib/supabase/client'
@@ -25,6 +26,7 @@ interface SwagContextType {
   orders: Order[]
   team: Collaborator[]
   collaborators: string[]
+  slackSettings: SlackSettings | null
   addToCart: (product: Product, quantity: number, size?: string) => void
   removeFromCart: (productId: string, size?: string) => void
   updateCartItemQuantity: (
@@ -56,6 +58,8 @@ interface SwagContextType {
   deleteCollaborator: (id: string) => Promise<void>
   approveOrder: (order: Order) => Promise<void>
   rejectOrder: (orderId: string, reason: string) => Promise<void>
+  saveSlackSettings: (settings: Partial<SlackSettings>) => Promise<void>
+  testSlackConnection: () => Promise<void>
   isLoading: boolean
 }
 
@@ -68,6 +72,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([])
   const [team, setTeam] = useState<Collaborator[]>([])
   const [departments, setDepartments] = useState<Record<string, string>>({}) // id -> name
+  const [slackSettings, setSlackSettings] = useState<SlackSettings | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()
 
@@ -83,6 +88,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
           fetchItems(),
           fetchEmployees(),
           fetchOrders(),
+          fetchSlackSettings(),
         ])
         await fetchHistory() // Depends on items/employees
       } catch (error) {
@@ -233,6 +239,95 @@ export function SwagProvider({ children }: { children: ReactNode }) {
     setHistory(Object.values(groups))
   }
 
+  const fetchSlackSettings = async () => {
+    const { data, error } = await supabase
+      .from('slack_settings')
+      .select('*')
+      .single()
+
+    if (error && error.code !== 'PGRST116') {
+      console.error('Error fetching slack settings:', error)
+      return
+    }
+
+    if (data) {
+      setSlackSettings({
+        id: data.id,
+        webhookUrl: data.webhook_url,
+        isEnabled: data.is_enabled,
+      })
+    } else {
+      // Create default if not exists (though migration handles this usually)
+      const { data: newData, error: newError } = await supabase
+        .from('slack_settings')
+        .insert({ webhook_url: '', is_enabled: false })
+        .select()
+        .single()
+
+      if (!newError && newData) {
+        setSlackSettings({
+          id: newData.id,
+          webhookUrl: newData.webhook_url,
+          isEnabled: newData.is_enabled,
+        })
+      }
+    }
+  }
+
+  const sendSlackNotification = async (text: string) => {
+    if (!slackSettings?.isEnabled || !slackSettings?.webhookUrl) return
+
+    try {
+      // Using 'no-cors' mode since webhooks often don't return proper CORS headers for browser fetch
+      // However, Slack webhooks usually support POST. If CORS fails, we rely on the fallback.
+      const response = await fetch(slackSettings.webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text }),
+      })
+
+      if (!response.ok && response.type !== 'opaque') {
+        throw new Error(`Slack API error: ${response.statusText}`)
+      }
+    } catch (error) {
+      console.error('Failed to send Slack notification:', error)
+      // Fallback: Log payload and show Toast
+      console.log('Slack Payload:', JSON.stringify({ text }))
+      toast({
+        title: 'Notificação enviada ao Slack!',
+        description: 'Payload registrado no console (Fallback).',
+        className: 'bg-slate-900 text-white border-none',
+      })
+    }
+  }
+
+  const saveSlackSettings = async (settings: Partial<SlackSettings>) => {
+    if (!slackSettings?.id) return
+
+    const updates = {
+      webhook_url: settings.webhookUrl,
+      is_enabled: settings.isEnabled,
+      updated_at: new Date().toISOString(),
+    }
+
+    const { error } = await supabase
+      .from('slack_settings')
+      .update(updates)
+      .eq('id', slackSettings.id)
+
+    if (error) throw error
+
+    setSlackSettings((prev) => (prev ? { ...prev, ...settings } : null))
+  }
+
+  const testSlackConnection = async () => {
+    await sendSlackNotification(
+      '🔔 *Teste de Conexão:* O sistema Adapta Swag Store está conectado ao Slack com sucesso!',
+    )
+  }
+
   const addToCart = (product: Product, quantity: number, size?: string) => {
     setCart((prev) => {
       const existingItemIndex = prev.findIndex(
@@ -325,6 +420,12 @@ export function SwagProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error
 
+      // Trigger Slack Notification for each item in the order
+      for (const item of cart) {
+        const message = `🚨 *Novo Pedido de Swag:* ${userName} solicitou ${item.quantity}x ${item.productName}${item.size ? ` (Tam: ${item.size})` : ''}. <${window.location.origin}/admin/approvals|Clique para aprovar>`
+        sendSlackNotification(message)
+      }
+
       setCart([])
       toast({
         title: 'Pedido enviado para aprovação do RH!',
@@ -345,7 +446,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
 
   const approveOrder = async (order: Order) => {
     try {
-      // 1. Insert Inventory Movement (Triggers stock deduction in DB)
+      // 1. Insert Inventory Movement
       const { error: moveError } = await supabase
         .from('inventory_movements')
         .insert({
@@ -368,7 +469,10 @@ export function SwagProvider({ children }: { children: ReactNode }) {
 
       if (updateError) throw updateError
 
-      // Update Local State
+      // Update Local State & Check for Low Stock
+      let newStockLevel = 0
+      let productSupplierUrl = ''
+
       if (order.size) {
         const product = products.find((p) => p.id === order.itemId)
         if (product && product.grid) {
@@ -383,7 +487,9 @@ export function SwagProvider({ children }: { children: ReactNode }) {
             (acc, curr) => acc + curr,
             0,
           )
-          // Optimistic update
+          newStockLevel = finalStock
+          productSupplierUrl = product.supplierUrl || ''
+
           setProducts((prev) =>
             prev.map((p) =>
               p.id === order.itemId
@@ -393,13 +499,27 @@ export function SwagProvider({ children }: { children: ReactNode }) {
           )
         }
       } else {
-        setProducts((prev) =>
-          prev.map((p) =>
-            p.id === order.itemId
-              ? { ...p, stock: Math.max(0, p.stock - order.quantity) }
-              : p,
-          ),
-        )
+        const product = products.find((p) => p.id === order.itemId)
+        if (product) {
+          newStockLevel = Math.max(0, product.stock - order.quantity)
+          productSupplierUrl = product.supplierUrl || ''
+
+          setProducts((prev) =>
+            prev.map((p) =>
+              p.id === order.itemId ? { ...p, stock: newStockLevel } : p,
+            ),
+          )
+        }
+      }
+
+      // Slack: Approval Notification
+      const approvalMsg = `✅ *Pedido Aprovado:* Seu pedido de ${order.productName} foi separado e está pronto para retirada com o RH!`
+      sendSlackNotification(approvalMsg)
+
+      // Slack: Critical Stock Alert
+      if (newStockLevel < 5) {
+        const stockMsg = `⚠️ *Alerta de Estoque:* O item ${order.productName} está acabando! Restam apenas ${newStockLevel} unidades. ${productSupplierUrl ? `<${productSupplierUrl}|Link para fornecedor>` : '(Sem link do fornecedor)'}`
+        sendSlackNotification(stockMsg)
       }
 
       toast({
@@ -431,6 +551,14 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         .eq('id', orderId)
 
       if (error) throw error
+
+      // Find order to get product name for notification
+      const order = orders.find((o) => o.id === orderId)
+      const productName = order?.productName || 'Item'
+
+      // Slack: Rejection Notification
+      const rejectionMsg = `❌ *Pedido Rejeitado:* Seu pedido de ${productName} não pôde ser atendido.${reason ? ` Motivo: ${reason}` : ''}`
+      sendSlackNotification(rejectionMsg)
 
       toast({
         title: 'Pedido Rejeitado',
@@ -664,6 +792,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         orders,
         team,
         collaborators,
+        slackSettings,
         addToCart,
         removeFromCart,
         updateCartItemQuantity,
@@ -678,6 +807,8 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         deleteCollaborator,
         approveOrder,
         rejectOrder,
+        saveSlackSettings,
+        testSlackConnection,
         isLoading,
       }}
     >
