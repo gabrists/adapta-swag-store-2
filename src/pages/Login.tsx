@@ -57,8 +57,16 @@ export default function Login() {
     try {
       const { error } = await login(values.email, values.password)
       if (error) {
+        // Handle specific Supabase Auth errors
+        if (error.message === 'Invalid login credentials') {
+          throw new Error(
+            'Credenciais inválidas. Verifique seu e-mail e senha.',
+          )
+        }
+        // Handle generic errors
         throw error
       }
+
       toast({
         title: 'Bem-vindo de volta!',
         description: 'Login realizado com sucesso.',
@@ -67,10 +75,11 @@ export default function Login() {
       navigate(from, { replace: true })
     } catch (error: any) {
       console.error('Login error', error)
-      setErrorMessage(error.message || 'Falha na autenticação')
+      const message = error.message || 'Falha na autenticação'
+      setErrorMessage(message)
       toast({
         title: 'Erro ao entrar',
-        description: 'Verifique suas credenciais e tente novamente.',
+        description: message,
         variant: 'destructive',
       })
     } finally {

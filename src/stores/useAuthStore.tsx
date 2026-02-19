@@ -5,7 +5,7 @@ import {
   useEffect,
   ReactNode,
 } from 'react'
-import { Session, User as SupabaseUser } from '@supabase/supabase-js'
+import { Session, User as SupabaseUser, AuthError } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase/client'
 
 export interface User {
@@ -20,7 +20,10 @@ interface AuthContextType {
   isAuthenticated: boolean
   user: User | null
   session: Session | null
-  login: (email: string, password?: string) => Promise<{ error: any }>
+  login: (
+    email: string,
+    password?: string,
+  ) => Promise<{ error: AuthError | Error | null }>
   logout: () => Promise<void>
   isLoading: boolean
   updateProfile: (data: { name: string; avatar?: string }) => void
@@ -96,14 +99,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const login = async (email: string, password?: string) => {
-    if (!password) throw new Error('Password is required for Supabase Auth')
+    try {
+      if (!password) {
+        return { error: new Error('A senha é obrigatória para autenticação') }
+      }
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-    return { error }
+      return { error }
+    } catch (error: any) {
+      return { error }
+    }
   }
 
   const logout = async () => {
