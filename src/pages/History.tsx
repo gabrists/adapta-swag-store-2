@@ -26,7 +26,8 @@ export default function HistoryPage() {
             Histórico de Saídas
           </h1>
           <p className="text-sm text-slate-500">
-            Registro de todas as retiradas de brindes.
+            Registro de todas as retiradas de brindes. Clique em um item para
+            ver detalhes.
           </p>
         </div>
       </div>
