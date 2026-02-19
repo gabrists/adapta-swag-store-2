@@ -23,7 +23,7 @@ interface AuthContextType {
   login: (
     email: string,
     password?: string,
-  ) => Promise<{ error: AuthError | Error | null }>
+  ) => Promise<{ data?: any; error: AuthError | Error | null }>
   logout: () => Promise<void>
   isLoading: boolean
   updateProfile: (data: { name: string; avatar?: string }) => void
@@ -104,12 +104,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error: new Error('A senha é obrigatória para autenticação') }
       }
 
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
-      return { error }
+      return { data, error }
     } catch (error: any) {
       return { error }
     }

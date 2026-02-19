@@ -55,7 +55,7 @@ export default function Login() {
     setIsSubmitting(true)
     setErrorMessage(null)
     try {
-      const { error } = await login(values.email, values.password)
+      const { data, error } = await login(values.email, values.password)
       if (error) {
         // Handle specific Supabase Auth errors
         if (error.message === 'Invalid login credentials') {
@@ -72,7 +72,13 @@ export default function Login() {
         description: 'Login realizado com sucesso.',
         className: 'bg-emerald-50 border-emerald-200 text-emerald-900',
       })
-      navigate(from, { replace: true })
+
+      // Check for specific admin email to redirect to dashboard
+      if (data?.user?.email === 'admin@adapta.org') {
+        navigate('/admin', { replace: true })
+      } else {
+        navigate(from, { replace: true })
+      }
     } catch (error: any) {
       console.error('Login error', error)
       const message = error.message || 'Falha na autenticação'

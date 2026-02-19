@@ -15,7 +15,155 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      departments: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      employees: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          department_id: string | null
+          email: string
+          id: string
+          name: string
+          role: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          department_id?: string | null
+          email: string
+          id?: string
+          name: string
+          role?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          department_id?: string | null
+          email?: string
+          id?: string
+          name?: string
+          role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'employees_department_id_fkey'
+            columns: ['department_id']
+            isOneToOne: false
+            referencedRelation: 'departments'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      inventory_movements: {
+        Row: {
+          created_at: string | null
+          destination: string | null
+          employee_id: string | null
+          group_id: string
+          id: string
+          item_id: string
+          quantity: number
+          size: string | null
+          type: string
+        }
+        Insert: {
+          created_at?: string | null
+          destination?: string | null
+          employee_id?: string | null
+          group_id: string
+          id?: string
+          item_id: string
+          quantity: number
+          size?: string | null
+          type: string
+        }
+        Update: {
+          created_at?: string | null
+          destination?: string | null
+          employee_id?: string | null
+          group_id?: string
+          id?: string
+          item_id?: string
+          quantity?: number
+          size?: string | null
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'inventory_movements_employee_id_fkey'
+            columns: ['employee_id']
+            isOneToOne: false
+            referencedRelation: 'employees'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'inventory_movements_item_id_fkey'
+            columns: ['item_id']
+            isOneToOne: false
+            referencedRelation: 'items'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      items: {
+        Row: {
+          category: string
+          created_at: string | null
+          critical_level: number
+          current_stock: number
+          description: string | null
+          grid: Json | null
+          has_grid: boolean | null
+          id: string
+          image_url: string | null
+          name: string
+          price: number | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string | null
+          critical_level?: number
+          current_stock?: number
+          description?: string | null
+          grid?: Json | null
+          has_grid?: boolean | null
+          id?: string
+          image_url?: string | null
+          name: string
+          price?: number | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          critical_level?: number
+          current_stock?: number
+          description?: string | null
+          grid?: Json | null
+          has_grid?: boolean | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          price?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
