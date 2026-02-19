@@ -192,7 +192,8 @@ export default function Inventory() {
                       <Avatar className="h-10 w-10 border border-slate-200">
                         <AvatarImage
                           src={
-                            product.imageQuery.startsWith('http')
+                            product.imageQuery.startsWith('http') ||
+                            product.imageQuery.startsWith('data:')
                               ? product.imageQuery
                               : `https://img.usecurling.com/p/100/100?q=${product.imageQuery}`
                           }
