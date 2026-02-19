@@ -19,6 +19,9 @@ interface SwagContextType {
     date: Date,
   ) => void
   addProduct: (product: Omit<Product, 'id'>) => void
+  updateProduct: (product: Product) => void
+  deleteProduct: (productId: string) => void
+  adjustStock: (productId: string, amount: number) => void
   isLoading: boolean
 }
 
@@ -294,6 +297,24 @@ export function SwagProvider({ children }: { children: ReactNode }) {
     setProducts((prev) => [newProduct, ...prev])
   }
 
+  const updateProduct = (updatedProduct: Product) => {
+    setProducts((prev) =>
+      prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p)),
+    )
+  }
+
+  const deleteProduct = (productId: string) => {
+    setProducts((prev) => prev.filter((p) => p.id !== productId))
+  }
+
+  const adjustStock = (productId: string, amount: number) => {
+    setProducts((prev) =>
+      prev.map((p) =>
+        p.id === productId ? { ...p, stock: Math.max(0, p.stock + amount) } : p,
+      ),
+    )
+  }
+
   return (
     <SwagContext.Provider
       value={{
@@ -302,6 +323,9 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         collaborators,
         withdrawItem,
         addProduct,
+        updateProduct,
+        deleteProduct,
+        adjustStock,
         isLoading,
       }}
     >
