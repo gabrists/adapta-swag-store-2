@@ -222,7 +222,7 @@ export default function OrdersPage() {
           <TabsTrigger value="pending" className={tabsTriggerBaseClass}>
             Pendentes
             {pendingOrders.length > 0 && (
-              <span className="ml-2 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-full shadow-[0_0_10px_rgba(20,240,214,0.3)]">
+              <span className="ml-2 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-[100%] shadow-[0_0_10px_rgba(20,240,214,0.3)]">
                 {pendingOrders.length}
               </span>
             )}
