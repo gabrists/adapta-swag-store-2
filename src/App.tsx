@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
@@ -20,46 +21,52 @@ import Settings from '@/pages/admin/Settings'
 import Collaborators from '@/pages/admin/Collaborators'
 import ApprovalsPage from '@/pages/admin/Approvals'
 
-const App = () => (
-  <BrowserRouter
-    future={{ v7_startTransition: false, v7_relativeSplatPath: false }}
-  >
-    <TooltipProvider>
-      <AuthProvider>
-        <SwagProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/login" element={<Login />} />
+const App = () => {
+  useEffect(() => {
+    document.title = 'Adapta Swag Store'
+  }, [])
 
-            <Route element={<RequireAuth />}>
-              <Route element={<Layout />}>
-                {/* Storefront Routes */}
-                <Route path="/" element={<Index />} />
-                <Route path="/orders" element={<OrdersPage />} />
-                <Route path="/profile" element={<Profile />} />
+  return (
+    <BrowserRouter
+      future={{ v7_startTransition: false, v7_relativeSplatPath: false }}
+    >
+      <TooltipProvider>
+        <AuthProvider>
+          <SwagProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
+              <Route path="/login" element={<Login />} />
 
-                {/* Admin Routes - Protected by RequireAdmin */}
-                <Route element={<RequireAdmin />}>
-                  <Route path="/historico" element={<HistoryPage />} />
-                  <Route path="/gerenciar" element={<ManageProducts />} />
-                  <Route path="/admin">
-                    <Route index element={<Dashboard />} />
-                    <Route path="approvals" element={<ApprovalsPage />} />
-                    <Route path="inventory" element={<Inventory />} />
-                    <Route path="collaborators" element={<Collaborators />} />
-                    <Route path="settings" element={<Settings />} />
+              <Route element={<RequireAuth />}>
+                <Route element={<Layout />}>
+                  {/* Storefront Routes */}
+                  <Route path="/" element={<Index />} />
+                  <Route path="/orders" element={<OrdersPage />} />
+                  <Route path="/profile" element={<Profile />} />
+
+                  {/* Admin Routes - Protected by RequireAdmin */}
+                  <Route element={<RequireAdmin />}>
+                    <Route path="/historico" element={<HistoryPage />} />
+                    <Route path="/gerenciar" element={<ManageProducts />} />
+                    <Route path="/admin">
+                      <Route index element={<Dashboard />} />
+                      <Route path="approvals" element={<ApprovalsPage />} />
+                      <Route path="inventory" element={<Inventory />} />
+                      <Route path="collaborators" element={<Collaborators />} />
+                      <Route path="settings" element={<Settings />} />
+                    </Route>
                   </Route>
                 </Route>
               </Route>
-            </Route>
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </SwagProvider>
-      </AuthProvider>
-    </TooltipProvider>
-  </BrowserRouter>
-)
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </SwagProvider>
+        </AuthProvider>
+      </TooltipProvider>
+    </BrowserRouter>
+  )
+}
 
 export default App

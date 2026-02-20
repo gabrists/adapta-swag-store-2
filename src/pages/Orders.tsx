@@ -206,7 +206,8 @@ export default function OrdersPage() {
           Meus Pedidos
         </h1>
         <p className="text-base text-white">
-          Acompanhe o status das suas solicitações de brindes.
+          Acompanhe o status das suas solicitações de brindes na Adapta Swag
+          Store.
         </p>
       </div>
 

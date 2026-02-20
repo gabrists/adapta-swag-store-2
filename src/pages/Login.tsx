@@ -98,7 +98,7 @@ export default function Login() {
                 <Package2 className="w-7 h-7" />
               </div>
               <span className="font-display font-bold text-3xl tracking-tight text-white">
-                Neura <span className="text-primary">Swag</span>
+                Adapta <span className="text-primary">Swag</span>
               </span>
             </div>
           </div>
@@ -134,7 +134,7 @@ export default function Login() {
                         <FormControl>
                           <Input
                             className="h-12"
-                            placeholder="seu.nome@neura.ai"
+                            placeholder="seu.nome@adapta.org"
                             {...field}
                           />
                         </FormControl>

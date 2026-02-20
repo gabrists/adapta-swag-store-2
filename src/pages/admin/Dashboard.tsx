@@ -267,7 +267,7 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold tracking-tight text-white">
             Dashboard Analítico
           </h1>
-          <p className="text-white mt-1">Visão geral da Neura Swag Store.</p>
+          <p className="text-white mt-1">Visão geral da Adapta Swag Store.</p>
         </div>
         <Select value={dateRange} onValueChange={setDateRange}>
           <SelectTrigger className="w-[200px] bg-black/20 border-white/10 h-12 text-white">

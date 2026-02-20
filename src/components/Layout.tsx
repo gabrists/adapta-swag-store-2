@@ -133,7 +133,7 @@ export default function Layout() {
                   </div>
                   <div className="grid flex-1 text-left text-sm leading-tight text-white">
                     <span className="truncate font-bold text-[15px]">
-                      Neura Swag
+                      Adapta Swag
                     </span>
                     <span className="truncate text-xs text-primary font-medium">
                       Store
@@ -312,7 +312,7 @@ export default function Layout() {
                 <span className="font-medium text-white">
                   {location.pathname.startsWith('/admin')
                     ? 'Administração'
-                    : 'Neura Swag Store'}
+                    : 'Adapta Swag Store'}
                 </span>
               </div>
             </div>
