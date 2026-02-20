@@ -37,42 +37,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-  useEffect(() => {
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session)
-      if (session?.user) {
-        mapSupabaseUserToAppUser(session.user).then((appUser) => {
-          setUser(appUser)
-          setIsAuthenticated(true)
-          setIsLoading(false)
-        })
-      } else {
-        setUser(null)
-        setIsAuthenticated(false)
-        setIsLoading(false)
-      }
-    })
-
-    // Check initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session)
-      if (session?.user) {
-        mapSupabaseUserToAppUser(session.user).then((appUser) => {
-          setUser(appUser)
-          setIsAuthenticated(true)
-          setIsLoading(false)
-        })
-      } else {
-        setIsLoading(false)
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [])
-
   const mapSupabaseUserToAppUser = async (
     sbUser: SupabaseUser,
   ): Promise<User> => {
@@ -142,6 +106,44 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  useEffect(() => {
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+      if (session?.user) {
+        setIsAuthenticated(true)
+        setIsLoading(true)
+        mapSupabaseUserToAppUser(session.user).then((appUser) => {
+          setUser(appUser)
+          setIsLoading(false)
+        })
+      } else {
+        setUser(null)
+        setIsAuthenticated(false)
+        setIsLoading(false)
+      }
+    })
+
+    // Check initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+      if (session?.user) {
+        setIsAuthenticated(true)
+        setIsLoading(true)
+        mapSupabaseUserToAppUser(session.user).then((appUser) => {
+          setUser(appUser)
+          setIsLoading(false)
+        })
+      } else {
+        setIsLoading(false)
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
   const login = async (email: string, password?: string) => {
     try {
       if (!password) {
@@ -162,6 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     await supabase.auth.signOut()
     setUser(null)
+    setSession(null)
     setIsAuthenticated(false)
   }
 

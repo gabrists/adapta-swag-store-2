@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -33,7 +33,7 @@ const formSchema = z.object({
 })
 
 export default function Login() {
-  const { login } = useAuthStore()
+  const { login, isAuthenticated, user, isLoading } = useAuthStore()
   const navigate = useNavigate()
   const location = useLocation()
   const { toast } = useToast()
@@ -41,6 +41,17 @@ export default function Login() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   const from = location.state?.from?.pathname || '/'
+
+  // Handle successful login redirection based on auth state
+  useEffect(() => {
+    if (isAuthenticated && !isLoading && user) {
+      if (user.role === 'admin') {
+        navigate('/admin', { replace: true })
+      } else {
+        navigate(from === '/login' ? '/' : from, { replace: true })
+      }
+    }
+  }, [isAuthenticated, isLoading, user, navigate, from])
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -54,8 +65,9 @@ export default function Login() {
     setIsSubmitting(true)
     setErrorMessage(null)
     try {
-      const { data, error } = await login(values.email, values.password)
+      const { error } = await login(values.email, values.password)
       if (error) {
+        setIsSubmitting(false)
         if (error.message === 'Invalid login credentials') {
           throw new Error(
             'Credenciais inválidas. Verifique seu e-mail e senha.',
@@ -68,12 +80,8 @@ export default function Login() {
         title: 'Bem-vindo de volta!',
         description: 'Login realizado com sucesso.',
       })
-
-      if (data?.user?.email === 'admin@adapta.org') {
-        navigate('/admin', { replace: true })
-      } else {
-        navigate(from, { replace: true })
-      }
+      // Do not call setIsSubmitting(false) here.
+      // The button will remain in a loading state until the useEffect redirects the user and unmounts the component.
     } catch (error: any) {
       console.error('Login error', error)
       const message = error.message || 'Falha na autenticação'
@@ -83,7 +91,6 @@ export default function Login() {
         description: message,
         variant: 'destructive',
       })
-    } finally {
       setIsSubmitting(false)
     }
   }
