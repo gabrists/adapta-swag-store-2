@@ -86,6 +86,23 @@ export interface SlackSettings {
   isEnabled: boolean
 }
 
+export interface Campaign {
+  id: string
+  name: string
+  description?: string
+  status: 'Aberta' | 'Fechada'
+  options: string[]
+  createdAt: string
+}
+
+export interface CampaignResponse {
+  id: string
+  campaignId: string
+  employeeId: string
+  choice: string
+  updatedAt: string
+}
+
 export type Category =
   | 'Todos'
   | 'Vendas'

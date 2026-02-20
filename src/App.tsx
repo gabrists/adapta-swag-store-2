@@ -21,6 +21,9 @@ import Inventory from '@/pages/admin/Inventory'
 import Settings from '@/pages/admin/Settings'
 import Collaborators from '@/pages/admin/Collaborators'
 import ApprovalsPage from '@/pages/admin/Approvals'
+import CampaignsPage from '@/pages/admin/Campaigns'
+import CampaignDashboard from '@/pages/admin/CampaignDashboard'
+import CampaignResponse from '@/pages/CampaignResponse'
 
 const App = () => {
   useEffect(() => {
@@ -41,6 +44,9 @@ const App = () => {
                 <Route path="/login" element={<Login />} />
 
                 <Route element={<RequireAuth />}>
+                  {/* Standalone Route for Employee Campaign Response */}
+                  <Route path="/coleta/:id" element={<CampaignResponse />} />
+
                   <Route element={<Layout />}>
                     {/* Storefront Routes */}
                     <Route path="/" element={<Index />} />
@@ -54,6 +60,11 @@ const App = () => {
                       <Route path="/admin">
                         <Route index element={<Dashboard />} />
                         <Route path="approvals" element={<ApprovalsPage />} />
+                        <Route path="campanhas" element={<CampaignsPage />} />
+                        <Route
+                          path="campanhas/:id"
+                          element={<CampaignDashboard />}
+                        />
                         <Route path="inventory" element={<Inventory />} />
                         <Route
                           path="collaborators"

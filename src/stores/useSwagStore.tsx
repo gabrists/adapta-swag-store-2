@@ -14,6 +14,8 @@ import {
   CartItem,
   Order,
   SlackSettings,
+  Campaign,
+  CampaignResponse,
 } from '@/types'
 import { triggerConfetti } from '@/lib/confetti'
 import { supabase } from '@/lib/supabase/client'
@@ -29,6 +31,8 @@ interface SwagContextType {
   departments: Record<string, string>
   collaborators: string[]
   slackSettings: SlackSettings | null
+  campaigns: Campaign[]
+  campaignResponses: CampaignResponse[]
   addToCart: (product: Product, quantity: number, size?: string) => void
   removeFromCart: (productId: string, size?: string) => void
   updateCartItemQuantity: (
@@ -65,6 +69,21 @@ interface SwagContextType {
   ) => Promise<void>
   saveSlackSettings: (settings: Partial<SlackSettings>) => Promise<void>
   testSlackConnection: () => Promise<void>
+  sendSlackNotification: (text: string) => Promise<void>
+  fetchCampaigns: () => Promise<void>
+  fetchCampaignResponses: () => Promise<void>
+  createCampaign: (
+    data: Omit<Campaign, 'id' | 'createdAt' | 'status'>,
+  ) => Promise<void>
+  updateCampaignStatus: (
+    id: string,
+    status: 'Aberta' | 'Fechada',
+  ) => Promise<void>
+  submitCampaignResponse: (
+    campaignId: string,
+    employeeId: string,
+    choice: string,
+  ) => Promise<void>
   isLoading: boolean
 }
 
@@ -77,8 +96,12 @@ export function SwagProvider({ children }: { children: ReactNode }) {
   const [history, setHistory] = useState<HistoryEntry[]>([])
   const [orders, setOrders] = useState<Order[]>([])
   const [team, setTeam] = useState<Collaborator[]>([])
-  const [departments, setDepartments] = useState<Record<string, string>>({}) // id -> name
+  const [departments, setDepartments] = useState<Record<string, string>>({})
   const [slackSettings, setSlackSettings] = useState<SlackSettings | null>(null)
+  const [campaigns, setCampaigns] = useState<Campaign[]>([])
+  const [campaignResponses, setCampaignResponses] = useState<
+    CampaignResponse[]
+  >([])
   const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()
 
@@ -94,6 +117,8 @@ export function SwagProvider({ children }: { children: ReactNode }) {
           fetchEmployees(),
           fetchOrders(),
           fetchSlackSettings(),
+          fetchCampaigns(),
+          fetchCampaignResponses(),
         ])
         await fetchHistory()
       } catch (error) {
@@ -287,6 +312,100 @@ export function SwagProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const fetchCampaigns = async () => {
+    const { data, error } = await supabase
+      .from('swag_campaigns' as any)
+      .select('*')
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching campaigns:', error)
+      return
+    }
+
+    const mapped: Campaign[] =
+      data?.map((d: any) => ({
+        id: d.id,
+        name: d.name,
+        description: d.description,
+        status: d.status as 'Aberta' | 'Fechada',
+        options: d.options as string[],
+        createdAt: d.created_at,
+      })) || []
+
+    setCampaigns(mapped)
+  }
+
+  const fetchCampaignResponses = async () => {
+    const { data, error } = await supabase
+      .from('campaign_responses' as any)
+      .select('*')
+
+    if (error) {
+      console.error('Error fetching responses:', error)
+      return
+    }
+
+    const mapped: CampaignResponse[] =
+      data?.map((d: any) => ({
+        id: d.id,
+        campaignId: d.campaign_id,
+        employeeId: d.employee_id,
+        choice: d.choice,
+        updatedAt: d.updated_at,
+      })) || []
+
+    setCampaignResponses(mapped)
+  }
+
+  const createCampaign = async (
+    data: Omit<Campaign, 'id' | 'createdAt' | 'status'>,
+  ) => {
+    if (!checkAdminPermission()) return
+    const { error } = await supabase.from('swag_campaigns' as any).insert({
+      name: data.name,
+      description: data.description,
+      options: data.options,
+    })
+    if (error) throw error
+    await fetchCampaigns()
+  }
+
+  const updateCampaignStatus = async (
+    id: string,
+    status: 'Aberta' | 'Fechada',
+  ) => {
+    if (!checkAdminPermission()) return
+    const { error } = await supabase
+      .from('swag_campaigns' as any)
+      .update({ status })
+      .eq('id', id)
+    if (error) throw error
+    await fetchCampaigns()
+  }
+
+  const submitCampaignResponse = async (
+    campaignId: string,
+    employeeId: string,
+    choice: string,
+  ) => {
+    const campaign = campaigns.find((c) => c.id === campaignId)
+    if (campaign?.status !== 'Aberta') throw new Error('Campanha encerrada.')
+
+    const { error } = await supabase.from('campaign_responses' as any).upsert(
+      {
+        campaign_id: campaignId,
+        employee_id: employeeId,
+        choice: choice,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'campaign_id,employee_id' },
+    )
+
+    if (error) throw error
+    await fetchCampaignResponses()
+  }
+
   const sendSlackNotification = async (text: string) => {
     if (!slackSettings?.isEnabled || !slackSettings?.webhookUrl) return
 
@@ -428,7 +547,6 @@ export function SwagProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      // 1. Verify Stock against DB before processing
       const productIds = cart.map((c) => c.productId)
       const { data: dbItems, error: itemsError } = await supabase
         .from('items')
@@ -464,7 +582,6 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      // 2. Create Orders
       const orderInserts = cart.map((item) => ({
         employee_id: user.id,
         item_id: item.productId,
@@ -478,7 +595,6 @@ export function SwagProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error
 
-      // 3. Slack Notification
       for (const item of cart) {
         const message = `🚨 *Novo Pedido de Swag:* ${user.name} solicitou ${item.quantity}x ${item.productName}${item.size ? ` (Tam: ${item.size})` : ''}. Motivo: ${destination}. <${window.location.origin}/admin/approvals|Clique para aprovar>`
         sendSlackNotification(message)
@@ -503,7 +619,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
             : 'Não foi possível enviar o pedido.',
         variant: 'destructive',
       })
-      throw error // Re-throw to handle in component
+      throw error
     }
   }
 
@@ -960,6 +1076,8 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         departments,
         collaborators,
         slackSettings,
+        campaigns,
+        campaignResponses,
         addToCart,
         removeFromCart,
         updateCartItemQuantity,
@@ -978,6 +1096,12 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         registerManualDelivery,
         saveSlackSettings,
         testSlackConnection,
+        sendSlackNotification,
+        fetchCampaigns,
+        fetchCampaignResponses,
+        createCampaign,
+        updateCampaignStatus,
+        submitCampaignResponse,
         isLoading,
       }}
     >

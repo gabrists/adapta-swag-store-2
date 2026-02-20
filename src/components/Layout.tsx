@@ -19,6 +19,7 @@ import {
   Users,
   Clock,
   ClipboardCheck,
+  Megaphone,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -95,6 +96,11 @@ export default function Layout() {
       url: '/admin/approvals',
       icon: ClipboardCheck,
       badge: pendingOrdersCount > 0 ? pendingOrdersCount : undefined,
+    },
+    {
+      title: 'Campanhas',
+      url: '/admin/campanhas',
+      icon: Megaphone,
     },
     {
       title: 'Inventário',
@@ -306,7 +312,6 @@ export default function Layout() {
       </Sidebar>
 
       <SidebarInset className="bg-transparent flex flex-col min-h-screen relative">
-        {/* Full-width header */}
         <header className="sticky top-0 z-40 flex h-16 shrink-0 items-center w-full bg-white/80 dark:bg-[#081a17]/80 backdrop-blur-xl border-b border-gray-200 dark:border-white/5 transition-[width,height] ease-linear">
           <div className="flex items-center justify-between w-full px-4 md:px-6 lg:px-8">
             <div className="flex items-center gap-2">
@@ -353,7 +358,6 @@ export default function Layout() {
           </div>
         </header>
 
-        {/* 1280px Centered Main Content */}
         <div className="flex-1 w-full">
           <main className="w-full max-w-7xl mx-auto p-4 md:p-6 lg:p-8 pt-6 animate-fade-in">
             <Outlet />
