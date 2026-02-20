@@ -292,10 +292,10 @@ export default function Collaborators() {
       </div>
 
       <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
-        <Table>
+        <Table className="min-w-[1100px]">
           <TableHeader>
             <TableRow className="bg-slate-50 hover:bg-slate-50">
-              <TableHead className="w-[300px]">
+              <TableHead className="w-[300px] min-w-[300px]">
                 <Button
                   variant="ghost"
                   onClick={() => handleSort('name')}
@@ -305,7 +305,7 @@ export default function Collaborators() {
                   <SortIcon column="name" />
                 </Button>
               </TableHead>
-              <TableHead>
+              <TableHead className="min-w-[150px]">
                 <Button
                   variant="ghost"
                   onClick={() => handleSort('department')}
@@ -315,7 +315,7 @@ export default function Collaborators() {
                   <SortIcon column="department" />
                 </Button>
               </TableHead>
-              <TableHead>
+              <TableHead className="min-w-[180px]">
                 <Button
                   variant="ghost"
                   onClick={() => handleSort('role')}
@@ -325,7 +325,7 @@ export default function Collaborators() {
                   <SortIcon column="role" />
                 </Button>
               </TableHead>
-              <TableHead className="text-center">
+              <TableHead className="text-center min-w-[160px]">
                 <div className="flex justify-center">
                   <Button
                     variant="ghost"
@@ -337,7 +337,7 @@ export default function Collaborators() {
                   </Button>
                 </div>
               </TableHead>
-              <TableHead className="text-center">
+              <TableHead className="text-center min-w-[160px]">
                 <div className="flex justify-center">
                   <Button
                     variant="ghost"
@@ -349,7 +349,9 @@ export default function Collaborators() {
                   </Button>
                 </div>
               </TableHead>
-              <TableHead className="text-right">Ações</TableHead>
+              <TableHead className="text-right w-[100px] min-w-[100px]">
+                Ações
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -368,7 +370,7 @@ export default function Collaborators() {
             ) : (
               processedTeam.map((collab) => {
                 return (
-                  <TableRow key={collab.id}>
+                  <TableRow key={collab.id} className="whitespace-nowrap">
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar className="h-9 w-9 border border-slate-100">
@@ -381,10 +383,10 @@ export default function Collaborators() {
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
-                          <span className="font-bold text-slate-800 text-sm">
+                          <span className="font-bold text-slate-800 text-sm truncate max-w-[200px]">
                             {collab.name}
                           </span>
-                          <span className="text-xs text-slate-500">
+                          <span className="text-xs text-slate-500 truncate max-w-[200px]">
                             {collab.email}
                           </span>
                         </div>
@@ -402,7 +404,7 @@ export default function Collaborators() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <span className="text-sm text-slate-600 font-medium">
+                      <span className="text-sm text-slate-600 font-medium truncate block max-w-[180px]">
                         {collab.role}
                       </span>
                     </TableCell>
