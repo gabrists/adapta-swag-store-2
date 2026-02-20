@@ -7,7 +7,6 @@ import {
   CheckCircle,
   XCircle,
   Package,
-  Calendar,
   AlertCircle,
   MapPin,
 } from 'lucide-react'
@@ -52,29 +51,29 @@ const OrderList = ({
   }
 
   return (
-    <div className="space-y-5 animate-in slide-in-from-bottom-2 duration-500">
+    <div className="space-y-3 animate-in slide-in-from-bottom-2 duration-500">
       {orders.map((order) => (
         <Card
           key={order.id}
-          className="overflow-hidden glass-panel glass-panel-hover group"
+          className="overflow-hidden glass-panel glass-panel-hover group relative rounded-xl"
         >
           <CardContent className="p-0">
             <div className="flex flex-col sm:flex-row">
               {/* Status Indicator Bar */}
               <div
                 className={cn(
-                  'w-full sm:w-2 h-2 sm:h-auto sm:self-stretch flex-shrink-0',
+                  'w-full sm:w-1.5 h-1.5 sm:h-auto sm:self-stretch flex-shrink-0',
                   order.status === 'Pendente' && 'bg-cyan-500',
                   order.status === 'Entregue' && 'bg-primary',
                   order.status === 'Rejeitado' && 'bg-red-500',
                 )}
               />
 
-              <div className="flex-1 p-5 md:p-6 flex flex-col gap-5">
+              <div className="flex-1 p-3 sm:px-4 sm:py-3.5 flex flex-col gap-2.5">
                 {/* Header: Product Info & ID/Status */}
-                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                  <div className="flex items-center gap-5">
-                    <Avatar className="h-16 w-16 rounded-xl border border-white/10 bg-black/40 shrink-0">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                    <Avatar className="h-10 w-10 sm:h-12 sm:w-12 rounded-lg border border-white/10 bg-black/40 shrink-0">
                       <AvatarImage
                         src={
                           order.productImage?.startsWith('http') ||
@@ -83,95 +82,83 @@ const OrderList = ({
                             : `https://img.usecurling.com/p/100/100?q=${order.productImage}&dpr=2`
                         }
                         alt={order.productName}
-                        className="object-cover rounded-xl"
+                        className="object-cover rounded-lg"
                       />
-                      <AvatarFallback className="rounded-xl bg-white/5 text-white font-bold">
+                      <AvatarFallback className="rounded-lg bg-white/5 text-white font-bold text-xs">
                         {order.productName?.substring(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <div className="min-w-0">
-                      <h3 className="font-semibold text-white text-lg line-clamp-1">
+
+                    <div className="min-w-0 flex-1">
+                      <h3 className="font-semibold text-white text-[15px] sm:text-base leading-tight truncate">
                         {order.productName}
                       </h3>
-                      <div className="flex items-center gap-3 text-sm text-white mt-1.5">
-                        <span className="font-medium bg-white/5 px-2 py-0.5 rounded-md">
-                          Qtd: {order.quantity}
-                        </span>
-                        {order.size && (
-                          <>
-                            <span className="w-1 h-1 bg-white/20 rounded-full" />
-                            <Badge
-                              variant="outline"
-                              className="text-xs h-6 px-2 font-medium bg-transparent text-white border-white/10"
-                            >
-                              {order.size}
-                            </Badge>
-                          </>
-                        )}
+                      <div className="text-xs sm:text-sm text-slate-400 mt-1 truncate">
+                        Qtd: {order.quantity}
+                        {order.size && ` • Tam: ${order.size}`}
+                        {' • '}
+                        {format(parseISO(order.createdAt), 'd MMM, HH:mm', {
+                          locale: ptBR,
+                        })}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-row-reverse sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-3 sm:gap-2">
-                    <span className="text-xs font-mono text-white bg-white/5 px-2 py-1 rounded-md border border-white/5 whitespace-nowrap">
+                  <div className="flex flex-col items-end gap-1.5 shrink-0">
+                    <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">
                       #{order.id.substring(0, 7)}
                     </span>
 
-                    <div className="flex items-center">
-                      {order.status === 'Pendente' && (
-                        <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/30 hover:bg-cyan-500/30 gap-1.5 py-1 px-3 whitespace-nowrap">
-                          <Clock className="w-3.5 h-3.5" />
-                          Pendente
-                        </Badge>
-                      )}
-                      {order.status === 'Entregue' && (
-                        <Badge className="bg-primary/20 text-primary border-primary/30 hover:bg-primary/30 gap-1.5 py-1 px-3 whitespace-nowrap">
-                          <CheckCircle className="w-3.5 h-3.5" />
-                          Entregue
-                        </Badge>
-                      )}
-                      {order.status === 'Rejeitado' && (
-                        <Badge
-                          variant="destructive"
-                          className="bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30 gap-1.5 py-1 px-3 whitespace-nowrap"
-                        >
-                          <XCircle className="w-3.5 h-3.5" />
-                          Rejeitado
-                        </Badge>
-                      )}
-                    </div>
+                    {order.status === 'Pendente' && (
+                      <Badge className="bg-cyan-500/10 text-cyan-400 border-cyan-500/20 gap-1 py-0 px-2 text-[10px] sm:text-xs font-medium">
+                        <Clock className="w-3 h-3" />
+                        Pendente
+                      </Badge>
+                    )}
+                    {order.status === 'Entregue' && (
+                      <Badge className="bg-primary/10 text-primary border-primary/20 gap-1 py-0 px-2 text-[10px] sm:text-xs font-medium">
+                        <CheckCircle className="w-3 h-3" />
+                        Entregue
+                      </Badge>
+                    )}
+                    {order.status === 'Rejeitado' && (
+                      <Badge
+                        variant="destructive"
+                        className="bg-red-500/10 text-red-400 border-red-500/20 gap-1 py-0 px-2 text-[10px] sm:text-xs font-medium"
+                      >
+                        <XCircle className="w-3 h-3" />
+                        Rejeitado
+                      </Badge>
+                    )}
                   </div>
                 </div>
 
                 {/* Additional Info / Instructions */}
-                <div className="flex flex-col gap-4 pt-2 border-t border-white/5">
-                  {/* Status Specific Messages */}
-                  {order.status === 'Entregue' && (
-                    <div className="flex items-start gap-3 p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-xl text-sm text-cyan-200">
-                      <MapPin className="w-4 h-4 text-cyan-400 mt-0.5 shrink-0" />
-                      <div>Retire seu item no RH (Andar 2) das 14h às 17h.</div>
-                    </div>
-                  )}
-
-                  {order.status === 'Rejeitado' && order.rejectionReason && (
-                    <div className="flex items-start gap-3 text-sm text-white bg-white/5 p-3 rounded-xl border border-white/10">
-                      <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
-                      <div>
-                        <span className="font-medium text-white">Motivo:</span>{' '}
-                        {order.rejectionReason}
+                {(order.status === 'Entregue' ||
+                  (order.status === 'Rejeitado' && order.rejectionReason)) && (
+                  <div className="ml-[54px] sm:ml-[62px]">
+                    {order.status === 'Entregue' && (
+                      <div className="flex items-start gap-2 p-2.5 bg-cyan-500/5 border border-cyan-500/10 rounded-lg text-xs text-cyan-200">
+                        <MapPin className="w-3.5 h-3.5 text-cyan-400 mt-0.5 shrink-0" />
+                        <div className="leading-relaxed">
+                          Retire seu item no RH (Andar 2) das 14h às 17h.
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Date Footer */}
-                  <div className="flex items-center gap-2 text-xs font-medium text-white">
-                    <Calendar className="w-4 h-4" />
-                    Solicitado em{' '}
-                    {format(parseISO(order.createdAt), "d 'de' MMMM, HH:mm", {
-                      locale: ptBR,
-                    })}
+                    {order.status === 'Rejeitado' && order.rejectionReason && (
+                      <div className="flex items-start gap-2 text-xs text-slate-300 bg-white/5 p-2.5 rounded-lg border border-white/5">
+                        <AlertCircle className="w-3.5 h-3.5 text-red-400 mt-0.5 shrink-0" />
+                        <div className="leading-relaxed">
+                          <span className="font-medium text-white">
+                            Motivo:
+                          </span>{' '}
+                          {order.rejectionReason}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </CardContent>
@@ -203,9 +190,10 @@ export default function OrdersPage() {
           <div className="h-4 w-64 bg-white/5 rounded animate-pulse" />
         </div>
         <div className="h-12 w-full max-w-md bg-white/5 rounded-xl animate-pulse" />
-        <div className="space-y-4">
-          <div className="h-48 w-full bg-white/5 rounded-2xl animate-pulse" />
-          <div className="h-48 w-full bg-white/5 rounded-2xl animate-pulse" />
+        <div className="space-y-3">
+          <div className="h-24 w-full bg-white/5 rounded-xl animate-pulse" />
+          <div className="h-24 w-full bg-white/5 rounded-xl animate-pulse" />
+          <div className="h-24 w-full bg-white/5 rounded-xl animate-pulse" />
         </div>
       </div>
     )
