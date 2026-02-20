@@ -69,7 +69,7 @@ interface SwagContextType {
   ) => Promise<void>
   saveSlackSettings: (settings: Partial<SlackSettings>) => Promise<void>
   testSlackConnection: () => Promise<void>
-  sendSlackNotification: (text: string) => Promise<void>
+  sendSlackNotification: (text: string, throwError?: boolean) => Promise<void>
   fetchCampaigns: () => Promise<void>
   fetchCampaignResponses: () => Promise<void>
   createCampaign: (
@@ -435,23 +435,30 @@ export function SwagProvider({ children }: { children: ReactNode }) {
     await fetchCampaignResponses()
   }
 
-  const sendSlackNotification = async (text: string) => {
-    if (!slackSettings?.isEnabled || !slackSettings?.webhookUrl) return
+  const sendSlackNotification = async (text: string, throwError = false) => {
+    if (!slackSettings?.webhookUrl) {
+      if (throwError) throw new Error('Webhook não configurado')
+      return
+    }
+
+    if (!slackSettings.isEnabled && !throwError) return
 
     try {
-      const response = await fetch(slackSettings.webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      const { data, error } = await supabase.functions.invoke(
+        'send-slack-notification',
+        {
+          body: {
+            webhook_url: slackSettings.webhookUrl,
+            payload: { text },
+          },
         },
-        body: JSON.stringify({ text }),
-      })
+      )
 
-      if (!response.ok && response.type !== 'opaque') {
-        throw new Error(`Slack API error: ${response.statusText}`)
-      }
+      if (error) throw new Error(error.message)
+      if (data?.error) throw new Error(data.error)
     } catch (error) {
       console.error('Failed to send Slack notification:', error)
+      if (throwError) throw error
     }
   }
 
@@ -492,6 +499,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
     if (!checkAdminPermission()) return
     await sendSlackNotification(
       '🔔 *Teste de Conexão:* O sistema Adapta Swag Store está conectado ao Slack com sucesso!',
+      true,
     )
   }
 
