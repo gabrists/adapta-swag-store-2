@@ -268,6 +268,7 @@ export type Database = {
       }
       slack_settings: {
         Row: {
+          bot_token: string | null
           created_at: string | null
           id: string
           is_enabled: boolean
@@ -275,6 +276,7 @@ export type Database = {
           webhook_url: string
         }
         Insert: {
+          bot_token?: string | null
           created_at?: string | null
           id?: string
           is_enabled?: boolean
@@ -282,6 +284,7 @@ export type Database = {
           webhook_url?: string
         }
         Update: {
+          bot_token?: string | null
           created_at?: string | null
           id?: string
           is_enabled?: boolean
