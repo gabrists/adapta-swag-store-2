@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ShoppingCart, X, Plus, Minus, Trash2 } from 'lucide-react'
 import useSwagStore from '@/stores/useSwagStore'
 import {
@@ -11,26 +12,30 @@ import {
 } from '@/components/ui/sheet'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { CheckoutDialog } from '@/components/CheckoutDialog'
-import { useToast } from '@/hooks/use-toast'
 
 export function CartSheet() {
   const { cart, removeFromCart, updateCartItemQuantity, checkoutCart } =
     useSwagStore()
-  const { toast } = useToast()
+  const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
   const [isCheckoutOpen, setIsCheckoutOpen] = useState(false)
 
   const totalItems = cart.reduce((acc, item) => acc + item.quantity, 0)
 
-  const handleCheckoutConfirm = (values: any) => {
-    // We repurpose checkoutCart to submit orders
-    checkoutCart(values.user, values.destination, values.date)
-    setIsCheckoutOpen(false)
-    setIsOpen(false)
+  const handleCheckoutConfirm = async (values: { destination: string }) => {
+    try {
+      await checkoutCart(values.destination)
+      setIsCheckoutOpen(false)
+      setIsOpen(false)
+      // Redirect to orders page after successful checkout
+      navigate('/orders')
+    } catch (error) {
+      // Error is handled in store (toast displayed there)
+      console.error('Checkout failed', error)
+    }
   }
 
   return (

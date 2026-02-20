@@ -37,11 +37,7 @@ interface SwagContextType {
     size?: string,
   ) => void
   clearCart: () => void
-  checkoutCart: (
-    userName: string,
-    destination: string,
-    date: Date,
-  ) => Promise<void>
+  checkoutCart: (destination: string) => Promise<void>
   addProduct: (
     product: Omit<Product, 'id' | 'stock' | 'isActive'> & {
       stock?: number
@@ -419,19 +415,58 @@ export function SwagProvider({ children }: { children: ReactNode }) {
     setCart([])
   }
 
-  const checkoutCart = async (
-    userName: string,
-    destination: string,
-    date: Date,
-  ) => {
+  const checkoutCart = async (destination: string) => {
     if (cart.length === 0) return
 
-    try {
-      const employee = team.find((c) => c.name === userName)
-      if (!employee) throw new Error('Colaborador não encontrado')
+    if (!user) {
+      toast({
+        title: 'Login Necessário',
+        description: 'Você precisa estar logado para finalizar o pedido.',
+        variant: 'destructive',
+      })
+      return
+    }
 
+    try {
+      // 1. Verify Stock against DB before processing
+      const productIds = cart.map((c) => c.productId)
+      const { data: dbItems, error: itemsError } = await supabase
+        .from('items')
+        .select('*')
+        .in('id', productIds)
+
+      if (itemsError) throw itemsError
+
+      for (const cartItem of cart) {
+        const dbItem = dbItems?.find((i) => i.id === cartItem.productId)
+        if (!dbItem)
+          throw new Error(`Item "${cartItem.productName}" não encontrado.`)
+
+        if (!dbItem.is_active)
+          throw new Error(
+            `Item "${cartItem.productName}" não está mais disponível.`,
+          )
+
+        if (dbItem.has_grid && cartItem.size) {
+          const grid = dbItem.grid as unknown as ProductSizeGrid
+          const available = grid?.[cartItem.size] || 0
+          if (available < cartItem.quantity) {
+            throw new Error(
+              `Estoque insuficiente para "${cartItem.productName}" (Tamanho: ${cartItem.size}). Restam apenas ${available}.`,
+            )
+          }
+        } else {
+          if (dbItem.current_stock < cartItem.quantity) {
+            throw new Error(
+              `Estoque insuficiente para "${cartItem.productName}". Restam apenas ${dbItem.current_stock}.`,
+            )
+          }
+        }
+      }
+
+      // 2. Create Orders
       const orderInserts = cart.map((item) => ({
-        employee_id: employee.id,
+        employee_id: user.id,
         item_id: item.productId,
         quantity: item.quantity,
         size: item.size,
@@ -443,8 +478,9 @@ export function SwagProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error
 
+      // 3. Slack Notification
       for (const item of cart) {
-        const message = `🚨 *Novo Pedido de Swag:* ${userName} solicitou ${item.quantity}x ${item.productName}${item.size ? ` (Tam: ${item.size})` : ''}. <${window.location.origin}/admin/approvals|Clique para aprovar>`
+        const message = `🚨 *Novo Pedido de Swag:* ${user.name} solicitou ${item.quantity}x ${item.productName}${item.size ? ` (Tam: ${item.size})` : ''}. Motivo: ${destination}. <${window.location.origin}/admin/approvals|Clique para aprovar>`
         sendSlackNotification(message)
       }
 
@@ -452,17 +488,22 @@ export function SwagProvider({ children }: { children: ReactNode }) {
       toast({
         title: 'Pedido enviado para aprovação do RH!',
         description: 'Acompanhe o status em "Meus Pedidos".',
-        className: 'bg-yellow-50 border-yellow-200 text-yellow-900',
+        className: 'bg-emerald-50 border-emerald-200 text-emerald-900',
       })
+      triggerConfetti()
 
       await fetchOrders()
-    } catch (error) {
+    } catch (error: any) {
       console.error('Checkout error:', error)
       toast({
         title: 'Erro na Solicitação',
-        description: 'Não foi possível enviar o pedido.',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Não foi possível enviar o pedido.',
         variant: 'destructive',
       })
+      throw error // Re-throw to handle in component
     }
   }
 

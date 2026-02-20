@@ -34,7 +34,7 @@ const formSchema = z.object({
 interface CheckoutDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  onConfirm: (values: { user: string; destination: string; date: Date }) => void
+  onConfirm: (values: { destination: string }) => void
   totalItems: number
 }
 
@@ -67,15 +67,13 @@ export function CheckoutDialog({
 
     setIsSubmitting(true)
 
-    // Simulate a small delay for better UX
-    await new Promise((resolve) => setTimeout(resolve, 500))
-
+    // Call parent handler
     onConfirm({
-      user: user.name,
       destination: values.destination,
-      date: new Date(),
     })
 
+    // Reset submitting state is handled by parent closing the dialog usually,
+    // but we reset here to be safe if dialog stays open (though it shouldn't)
     setIsSubmitting(false)
   }
 
