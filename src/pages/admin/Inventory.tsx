@@ -58,14 +58,19 @@ import {
 } from '@/components/ui/select'
 
 const categoryColors: Record<string, string> = {
-  Vendas: 'bg-blue-500/20 text-blue-400 border border-blue-500/30',
-  RH: 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
-  Marketing: 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30',
-  Tech: 'bg-sky-500/20 text-sky-400 border border-sky-500/30',
-  Institucional: 'bg-slate-500/20 text-slate-300 border border-slate-500/30',
-  Vestuário: 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/30',
-  Utensílios: 'bg-teal-500/20 text-teal-400 border border-teal-500/30',
-  Kits: 'bg-primary/20 text-primary border border-primary/30',
+  Vendas:
+    'bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30',
+  RH: 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30',
+  Marketing:
+    'bg-cyan-100 dark:bg-cyan-500/20 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-500/30',
+  Tech: 'bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-400 border border-sky-200 dark:border-sky-500/30',
+  Institucional:
+    'bg-slate-100 dark:bg-slate-500/20 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-500/30',
+  Vestuário:
+    'bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30',
+  Utensílios:
+    'bg-teal-100 dark:bg-teal-500/20 text-teal-700 dark:text-teal-400 border border-teal-200 dark:border-teal-500/30',
+  Kits: 'bg-primary/10 dark:bg-primary/20 text-primary-700 dark:text-primary border border-primary/20 dark:border-primary/30',
 }
 
 export default function Inventory() {
@@ -198,10 +203,10 @@ export default function Inventory() {
     <div className="w-full max-w-7xl mx-auto space-y-6 pb-12 animate-fade-in-up">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight text-white">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
             Gestão de Inventário
           </h1>
-          <p className="text-base text-[#ADADAD]">
+          <p className="text-base text-gray-500 dark:text-[#ADADAD]">
             Gerencie todos os brindes e estoque da loja.
           </p>
         </div>
@@ -216,7 +221,7 @@ export default function Inventory() {
 
       <div className="flex flex-col md:flex-row md:items-center gap-4 glass-panel p-4 md:p-5 rounded-2xl">
         <div className="relative flex-1 w-full">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#ADADAD]" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-500 dark:text-[#ADADAD]" />
           <Input
             placeholder="Buscar item..."
             value={searchQuery}
@@ -243,7 +248,7 @@ export default function Inventory() {
             </SelectContent>
           </Select>
 
-          <div className="flex items-center space-x-3 border-l pl-5 border-white/10 h-12">
+          <div className="flex items-center space-x-3 border-l pl-5 border-gray-200 dark:border-white/10 h-12">
             <Switch
               id="critical-stock"
               checked={criticalStockFilter}
@@ -251,7 +256,7 @@ export default function Inventory() {
             />
             <Label
               htmlFor="critical-stock"
-              className="text-sm font-medium text-[#ADADAD] cursor-pointer"
+              className="text-sm font-medium text-slate-700 dark:text-[#ADADAD] cursor-pointer"
             >
               Alertas apenas
             </Label>
@@ -262,7 +267,7 @@ export default function Inventory() {
       <div className="glass-panel rounded-2xl overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow className="hover:bg-transparent border-white/10 bg-black/20">
+            <TableRow className="hover:bg-transparent border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-black/20">
               <TableHead className="w-[50px] pl-6">
                 <Checkbox
                   checked={
@@ -272,14 +277,22 @@ export default function Inventory() {
                   onCheckedChange={toggleSelectAll}
                 />
               </TableHead>
-              <TableHead className="w-[300px] text-[#ADADAD]">Item</TableHead>
-              <TableHead className="text-[#ADADAD]">Categoria</TableHead>
-              <TableHead className="text-[#ADADAD]">Custo Unitário</TableHead>
-              <TableHead className="min-w-[200px] text-[#ADADAD]">
+              <TableHead className="w-[300px] text-slate-700 dark:text-[#ADADAD]">
+                Item
+              </TableHead>
+              <TableHead className="text-slate-700 dark:text-[#ADADAD]">
+                Categoria
+              </TableHead>
+              <TableHead className="text-slate-700 dark:text-[#ADADAD]">
+                Custo Unitário
+              </TableHead>
+              <TableHead className="min-w-[200px] text-slate-700 dark:text-[#ADADAD]">
                 Estoque
               </TableHead>
-              <TableHead className="text-[#ADADAD]">Status</TableHead>
-              <TableHead className="text-right pr-6 text-[#ADADAD]">
+              <TableHead className="text-slate-700 dark:text-[#ADADAD]">
+                Status
+              </TableHead>
+              <TableHead className="text-right pr-6 text-slate-700 dark:text-[#ADADAD]">
                 Ações
               </TableHead>
             </TableRow>
@@ -288,9 +301,9 @@ export default function Inventory() {
             {filteredProducts.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="h-64 text-center">
-                  <div className="flex flex-col items-center justify-center space-y-4 text-[#ADADAD]">
-                    <div className="bg-white/5 p-5 rounded-full shadow-inner">
-                      <Folder className="w-10 h-10 text-[#ADADAD]" />
+                  <div className="flex flex-col items-center justify-center space-y-4 text-slate-500 dark:text-[#ADADAD]">
+                    <div className="bg-gray-100 dark:bg-white/5 p-5 rounded-full shadow-inner">
+                      <Folder className="w-10 h-10 text-slate-400 dark:text-[#ADADAD]" />
                     </div>
                     <p className="font-medium text-base">
                       Nenhum item encontrado para este filtro
@@ -302,7 +315,7 @@ export default function Inventory() {
               filteredProducts.map((product) => (
                 <TableRow
                   key={product.id}
-                  className="hover:bg-white/5 border-white/5 transition-colors"
+                  className="hover:bg-gray-50 dark:hover:bg-white/5 border-gray-200 dark:border-white/10 transition-colors"
                 >
                   <TableCell className="pl-6">
                     <Checkbox
@@ -314,7 +327,7 @@ export default function Inventory() {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-4">
-                      <Avatar className="h-12 w-12 border border-white/10 rounded-lg shrink-0 bg-black/40">
+                      <Avatar className="h-12 w-12 border border-gray-200 dark:border-white/10 rounded-lg shrink-0 bg-gray-100 dark:bg-black/40">
                         <AvatarImage
                           src={
                             product.imageQuery.startsWith('http') ||
@@ -325,16 +338,16 @@ export default function Inventory() {
                           alt={product.name}
                           className="object-cover rounded-lg"
                         />
-                        <AvatarFallback className="rounded-lg bg-white/5 text-[#ADADAD]">
+                        <AvatarFallback className="rounded-lg bg-gray-200 dark:bg-white/5 text-slate-600 dark:text-[#ADADAD]">
                           {product.name.substring(0, 2).toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col">
-                        <span className="font-semibold text-white text-sm">
+                        <span className="font-semibold text-slate-900 dark:text-white text-sm">
                           {product.name}
                         </span>
                         {product.stock < 3 && (
-                          <div className="flex items-center text-xs text-sky-400 font-medium mt-1">
+                          <div className="flex items-center text-xs text-sky-600 dark:text-sky-400 font-medium mt-1">
                             <AlertTriangle className="w-3 h-3 mr-1.5" /> Baixo
                             Estoque
                           </div>
@@ -354,7 +367,7 @@ export default function Inventory() {
                       {product.category}
                     </Badge>
                   </TableCell>
-                  <TableCell className="font-medium text-[#ADADAD]">
+                  <TableCell className="font-medium text-slate-700 dark:text-[#ADADAD]">
                     {formatCurrency(product.unitCost)}
                   </TableCell>
                   <TableCell>
@@ -369,15 +382,15 @@ export default function Inventory() {
                               className={cn(
                                 'text-[10px] font-bold',
                                 product.grid![size] === 0
-                                  ? 'text-[#ADADAD]'
-                                  : 'text-[#ADADAD]',
+                                  ? 'text-slate-400 dark:text-[#ADADAD]'
+                                  : 'text-slate-500 dark:text-[#ADADAD]',
                               )}
                             >
                               {size}
                             </span>
-                            <div className="flex items-center gap-0.5 bg-black/20 rounded border border-white/5">
+                            <div className="flex items-center gap-0.5 bg-gray-100 dark:bg-black/20 rounded border border-gray-200 dark:border-white/5">
                               <button
-                                className="w-5 h-5 flex items-center justify-center text-[#ADADAD] hover:text-white hover:bg-white/10 disabled:opacity-30 rounded-l"
+                                className="w-5 h-5 flex items-center justify-center text-slate-600 dark:text-[#ADADAD] hover:text-slate-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/10 disabled:opacity-30 rounded-l transition-colors"
                                 onClick={() =>
                                   handleAdjustStock(product.id, -1, size)
                                 }
@@ -389,14 +402,14 @@ export default function Inventory() {
                                 className={cn(
                                   'text-xs font-semibold w-5 text-center',
                                   product.grid![size] < 3
-                                    ? 'text-sky-400'
-                                    : 'text-[#ADADAD]',
+                                    ? 'text-sky-600 dark:text-sky-400'
+                                    : 'text-slate-900 dark:text-[#ADADAD]',
                                 )}
                               >
                                 {product.grid![size]}
                               </span>
                               <button
-                                className="w-5 h-5 flex items-center justify-center text-[#ADADAD] hover:text-white hover:bg-white/10 rounded-r"
+                                className="w-5 h-5 flex items-center justify-center text-slate-600 dark:text-[#ADADAD] hover:text-slate-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-white/10 rounded-r transition-colors"
                                 onClick={() =>
                                   handleAdjustStock(product.id, 1, size)
                                 }
@@ -412,7 +425,7 @@ export default function Inventory() {
                         <Button
                           variant="outline"
                           size="icon"
-                          className="h-8 w-8 rounded-lg bg-black/20 border-white/10 text-[#ADADAD] hover:bg-white/10 hover:text-white"
+                          className="h-8 w-8 rounded-lg bg-gray-100 dark:bg-black/20 border-gray-200 dark:border-white/10 text-slate-600 dark:text-[#ADADAD] hover:bg-gray-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white"
                           onClick={() => handleAdjustStock(product.id, -1)}
                           disabled={product.stock <= 0}
                         >
@@ -422,8 +435,8 @@ export default function Inventory() {
                           className={cn(
                             'text-base w-10 text-center flex items-center justify-center',
                             product.stock < 3
-                              ? 'text-sky-400 font-bold bg-sky-500/10 px-1 py-0.5 rounded border border-sky-500/20'
-                              : 'text-white font-semibold',
+                              ? 'text-sky-600 dark:text-sky-400 font-bold bg-sky-100 dark:bg-sky-500/10 px-1 py-0.5 rounded border border-sky-200 dark:border-sky-500/20'
+                              : 'text-slate-900 dark:text-white font-semibold',
                           )}
                         >
                           {product.stock}
@@ -431,7 +444,7 @@ export default function Inventory() {
                         <Button
                           variant="outline"
                           size="icon"
-                          className="h-8 w-8 rounded-lg bg-black/20 border-white/10 text-[#ADADAD] hover:bg-white/10 hover:text-white"
+                          className="h-8 w-8 rounded-lg bg-gray-100 dark:bg-black/20 border-gray-200 dark:border-white/10 text-slate-600 dark:text-[#ADADAD] hover:bg-gray-200 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white"
                           onClick={() => handleAdjustStock(product.id, 1)}
                         >
                           <ArrowUp className="h-4 w-4" />
@@ -451,8 +464,8 @@ export default function Inventory() {
                         className={cn(
                           'text-xs font-medium px-2 py-0.5 rounded border',
                           product.isActive
-                            ? 'bg-primary/20 text-primary border-primary/30'
-                            : 'bg-white/5 text-[#ADADAD] border-white/10',
+                            ? 'bg-primary/10 dark:bg-primary/20 text-primary border-primary/20 dark:border-primary/30'
+                            : 'bg-gray-100 dark:bg-white/5 text-slate-600 dark:text-[#ADADAD] border-gray-200 dark:border-white/10',
                         )}
                       >
                         {product.isActive ? 'Ativo' : 'Inativo'}
@@ -464,10 +477,10 @@ export default function Inventory() {
                       <DropdownMenuTrigger asChild>
                         <Button
                           variant="ghost"
-                          className="h-8 w-8 p-0 rounded-lg hover:bg-white/10"
+                          className="h-8 w-8 p-0 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10"
                         >
                           <span className="sr-only">Menu</span>
-                          <MoreHorizontal className="h-4 w-4 text-[#ADADAD]" />
+                          <MoreHorizontal className="h-4 w-4 text-slate-600 dark:text-[#ADADAD]" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
@@ -479,7 +492,7 @@ export default function Inventory() {
                         <DropdownMenuSeparator />
                         <DropdownMenuItem
                           onClick={() => handleDelete(product)}
-                          className="text-[#ADADAD] focus:text-[#ADADAD] focus:bg-white/5"
+                          className="text-red-600 dark:text-[#ADADAD] focus:text-red-700 dark:focus:text-white focus:bg-red-50 dark:focus:bg-white/5"
                         >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Excluir Item
@@ -507,13 +520,13 @@ export default function Inventory() {
       >
         <AlertDialogContent className="rounded-2xl glass-panel">
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-white">
+            <AlertDialogTitle className="text-slate-900 dark:text-white">
               Tem certeza absoluta?
             </AlertDialogTitle>
-            <AlertDialogDescription className="text-[#ADADAD]">
+            <AlertDialogDescription className="text-slate-600 dark:text-[#ADADAD]">
               Essa ação não pode ser desfeita. Isso excluirá permanentemente o
               item
-              <span className="font-bold text-white">
+              <span className="font-bold text-slate-900 dark:text-white">
                 {' '}
                 {deleteProductData?.name}{' '}
               </span>
@@ -521,7 +534,7 @@ export default function Inventory() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl border-white/10 bg-transparent text-white hover:bg-white/5">
+            <AlertDialogCancel className="rounded-xl border-gray-200 dark:border-white/10 bg-transparent text-slate-700 dark:text-white hover:bg-gray-100 dark:hover:bg-white/5">
               Cancelar
             </AlertDialogCancel>
             <AlertDialogAction
