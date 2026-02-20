@@ -187,17 +187,17 @@ export default function CampaignDashboard() {
         <span className="font-medium">Detalhes da Campanha</span>
       </div>
 
-      <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6 glass-panel p-6 rounded-2xl">
-        <div className="flex items-start gap-4 flex-1">
+      <div className="flex flex-col xl:flex-row xl:items-start justify-between gap-6 glass-panel p-6 rounded-2xl w-full">
+        <div className="flex items-start gap-4 flex-1 min-w-0 w-full">
           <Avatar className="w-16 h-16 rounded-xl border border-slate-200 dark:border-white/10 shadow-sm shrink-0 mt-1">
             <AvatarImage src={campaign.imageUrl} className="object-cover" />
             <AvatarFallback className="bg-primary/10 text-primary rounded-xl">
               <Megaphone className="w-8 h-8" />
             </AvatarFallback>
           </Avatar>
-          <div className="space-y-2 flex-1 min-w-0">
+          <div className="space-y-3 flex-1 min-w-0 w-full">
             <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white truncate max-w-full">
                 {campaign.name}
               </h1>
               <Badge
@@ -212,16 +212,16 @@ export default function CampaignDashboard() {
               </Badge>
             </div>
             {campaign.description && (
-              <p className="text-slate-600 dark:text-[#ADADAD] max-w-2xl">
+              <p className="text-slate-600 dark:text-[#ADADAD] max-w-2xl break-words">
                 {campaign.description}
               </p>
             )}
-            <div className="flex items-center gap-2 mt-2 p-2 bg-slate-50 dark:bg-white/5 rounded-lg border border-slate-200 dark:border-white/10 w-fit max-w-full overflow-hidden">
+            <div className="flex items-center gap-2 mt-2 p-2 bg-slate-50 dark:bg-white/5 rounded-lg border border-slate-200 dark:border-white/10 w-full lg:w-max max-w-full">
               <LinkIcon className="w-4 h-4 text-slate-400 shrink-0" />
-              <span className="text-sm text-slate-600 dark:text-[#ADADAD] truncate select-all">
+              <span className="text-sm text-slate-600 dark:text-[#ADADAD] truncate select-all flex-1 min-w-0">
                 {campaignUrl}
               </span>
-              <div className="flex gap-1 shrink-0 ml-2">
+              <div className="flex gap-1 shrink-0 ml-auto sm:ml-2">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -245,10 +245,10 @@ export default function CampaignDashboard() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 flex-wrap lg:justify-end shrink-0">
+        <div className="flex flex-wrap items-center gap-3 xl:justify-end shrink-0 w-full xl:w-auto pt-2 xl:pt-0">
           <Button
             variant="outline"
-            className="gap-2 bg-white dark:bg-black/20"
+            className="gap-2 bg-white dark:bg-black/20 flex-1 sm:flex-none justify-center"
             onClick={handleToggleStatus}
           >
             {campaign.status === 'Aberta' ? (
@@ -266,7 +266,7 @@ export default function CampaignDashboard() {
 
           <Button
             variant="outline"
-            className="gap-2 bg-white dark:bg-black/20"
+            className="gap-2 bg-white dark:bg-black/20 flex-1 sm:flex-none justify-center"
             onClick={handleExportCSV}
           >
             <Download className="w-4 h-4" />
@@ -274,7 +274,7 @@ export default function CampaignDashboard() {
           </Button>
 
           <Button
-            className="btn-primary-glow gap-2"
+            className="btn-primary-glow gap-2 flex-1 sm:flex-none justify-center"
             onClick={handleNotifySlack}
           >
             <BellRing className="w-4 h-4" />
