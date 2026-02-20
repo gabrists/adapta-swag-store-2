@@ -34,7 +34,7 @@ VALUES ('Garrafa Térmica', 'Garrafa preta 500ml', 'Utensílios', 25.00, 200, 't
 ON CONFLICT (id) DO UPDATE SET unit_cost = 25.00;
 
 -- 4. Assign Employees to Departments and Insert Movements
-DO $
+DO $$
 DECLARE
   -- Department IDs
   dept_vendas UUID;
@@ -140,5 +140,4 @@ BEGIN
   VALUES 
   (gen_random_uuid(), item_mochila, emp_vendas, 'OUT', 2, 'Antigo', prev_month_ts),
   (gen_random_uuid(), item_garrafa, emp_eng, 'OUT', 5, 'Antigo', prev_month_ts);
-END $;
-
+END $$;
