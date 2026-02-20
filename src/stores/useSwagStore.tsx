@@ -172,6 +172,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         supplierUrl: item.supplier_url || '',
         isSingleQuota: item.is_single_quota || false,
         isActive: item.is_active ?? true,
+        criticalLevel: item.critical_level,
       })) || []
 
     setProducts(mappedProducts)
@@ -873,7 +874,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
       grid: productData.grid ? JSON.stringify(productData.grid) : null,
       current_stock: finalStock,
       is_single_quota: productData.isSingleQuota,
-      critical_level: 5,
+      critical_level: productData.criticalLevel ?? 5,
       is_active: true,
     }
 

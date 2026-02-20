@@ -23,6 +23,7 @@ export interface Product {
   supplierUrl?: string // Added for Restock
   isSingleQuota: boolean // Added for Single Quota Feature
   isActive: boolean // Added for Active/Inactive status
+  criticalLevel?: number // Added for Stock Alert
 }
 
 export interface CartItem {

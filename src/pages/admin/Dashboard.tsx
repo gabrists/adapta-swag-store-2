@@ -95,13 +95,26 @@ export default function Dashboard() {
     [filteredHistory],
   )
 
-  const criticalStockCount = useMemo(
+  const allLowStockProducts = useMemo(
     () =>
       products.filter((p) => {
         const stock = Number(p.stock)
-        return !isNaN(stock) && stock < 5
-      }).length,
+        const criticalLevel = p.criticalLevel ?? 5 // Fallback to 5 if undefined
+        return !isNaN(stock) && stock <= criticalLevel
+      }),
     [products],
+  )
+
+  const criticalStockCount = allLowStockProducts.length
+
+  const hasZeroStock = useMemo(
+    () => allLowStockProducts.some((p) => Number(p.stock) === 0),
+    [allLowStockProducts],
+  )
+
+  const lowStockProducts = useMemo(
+    () => allLowStockProducts.slice(0, 8),
+    [allLowStockProducts],
   )
 
   const topConsumingArea = useMemo(() => {
@@ -164,17 +177,6 @@ export default function Dashboard() {
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value)
   }, [filteredHistory, team])
-
-  const lowStockProducts = useMemo(
-    () =>
-      products
-        .filter((p) => {
-          const stock = Number(p.stock)
-          return !isNaN(stock) && stock < 5
-        })
-        .slice(0, 8),
-    [products],
-  )
 
   const recentTransactions = useMemo(() => {
     return filteredHistory.slice(0, 10).map((entry) => {
@@ -323,7 +325,9 @@ export default function Dashboard() {
           className={cn(
             'transition-colors bg-white dark:bg-[#081a17]/80 shadow-sm dark:shadow-none',
             criticalStockCount > 0
-              ? 'border-sky-500/50 dark:shadow-[0_0_15px_rgba(6,182,212,0.15)] shadow-[0_0_15px_rgba(6,182,212,0.1)]'
+              ? hasZeroStock
+                ? 'border-red-500/50 dark:shadow-[0_0_15px_rgba(239,68,68,0.15)] shadow-[0_0_15px_rgba(239,68,68,0.1)]'
+                : 'border-amber-500/50 dark:shadow-[0_0_15px_rgba(245,158,11,0.15)] shadow-[0_0_15px_rgba(245,158,11,0.1)]'
               : 'border-slate-200 dark:border-white/10 hover:border-primary/30',
           )}
         >
@@ -335,7 +339,9 @@ export default function Dashboard() {
               className={cn(
                 'h-4 w-4',
                 criticalStockCount > 0
-                  ? 'text-sky-500 dark:text-sky-400'
+                  ? hasZeroStock
+                    ? 'text-red-500 dark:text-red-400'
+                    : 'text-amber-500 dark:text-amber-400'
                   : 'text-slate-900 dark:text-white',
               )}
             />
@@ -345,14 +351,16 @@ export default function Dashboard() {
               className={cn(
                 'text-3xl font-bold',
                 criticalStockCount > 0
-                  ? 'text-sky-600 dark:text-sky-400'
+                  ? hasZeroStock
+                    ? 'text-red-600 dark:text-red-400'
+                    : 'text-amber-600 dark:text-amber-400'
                   : 'text-slate-900 dark:text-white',
               )}
             >
               {criticalStockCount}
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-              Itens com &lt; 5 unidades
+              Itens em nível crítico
             </p>
           </CardContent>
         </Card>
@@ -632,51 +640,77 @@ export default function Dashboard() {
               </div>
             ) : (
               <div className="space-y-4">
-                {lowStockProducts.map((product) => (
-                  <div
-                    key={product.id}
-                    className="flex flex-col gap-3 p-4 rounded-xl bg-sky-50 dark:bg-sky-500/5 border border-sky-100 dark:border-sky-500/20 shadow-sm"
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5">
-                        <AlertTriangle className="h-5 w-5 text-sky-500 dark:text-sky-400" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-1">
-                          {product.name}
-                        </h4>
-                        <p className="text-xs text-sky-600 dark:text-sky-300 mt-1">
-                          Restam apenas{' '}
-                          <span className="font-bold">
-                            {Number(product.stock) || 0}
-                          </span>{' '}
-                          unidades
-                        </p>
-                      </div>
-                    </div>
+                {lowStockProducts.map((product) => {
+                  const stock = Number(product.stock) || 0
+                  const isZeroStock = stock === 0
 
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="w-full text-xs h-8 bg-sky-100 dark:bg-sky-500/10 hover:bg-sky-200 dark:hover:bg-sky-500/20 border-sky-200 dark:border-sky-500/30 text-sky-700 dark:text-sky-300 gap-2 mt-1"
-                      disabled={!product.supplierUrl}
-                      onClick={() => {
-                        if (product.supplierUrl) {
-                          window.open(product.supplierUrl, '_blank')
-                        }
-                      }}
-                    >
-                      {product.supplierUrl ? (
-                        <>
-                          Repor Estoque
-                          <ExternalLink className="h-3 w-3" />
-                        </>
-                      ) : (
-                        'Sem URL do Fornecedor'
+                  return (
+                    <div
+                      key={product.id}
+                      className={cn(
+                        'flex flex-col gap-3 p-4 rounded-xl border shadow-sm transition-colors',
+                        isZeroStock
+                          ? 'bg-red-50 dark:bg-red-500/5 border-red-200 dark:border-red-500/20'
+                          : 'bg-amber-50 dark:bg-amber-500/5 border-amber-200 dark:border-amber-500/20',
                       )}
-                    </Button>
-                  </div>
-                ))}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5">
+                          <AlertTriangle
+                            className={cn(
+                              'h-5 w-5',
+                              isZeroStock
+                                ? 'text-red-500 dark:text-red-400'
+                                : 'text-amber-500 dark:text-amber-400',
+                            )}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-semibold text-slate-900 dark:text-white line-clamp-1">
+                            {product.name}
+                          </h4>
+                          <p
+                            className={cn(
+                              'text-xs mt-1',
+                              isZeroStock
+                                ? 'text-red-600 dark:text-red-300'
+                                : 'text-amber-600 dark:text-amber-300',
+                            )}
+                          >
+                            Restam apenas{' '}
+                            <span className="font-bold">{stock}</span> unidades
+                          </p>
+                        </div>
+                      </div>
+
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className={cn(
+                          'w-full text-xs h-8 gap-2 mt-1',
+                          isZeroStock
+                            ? 'bg-red-100 dark:bg-red-500/10 hover:bg-red-200 dark:hover:bg-red-500/20 border-red-200 dark:border-red-500/30 text-red-700 dark:text-red-300'
+                            : 'bg-amber-100 dark:bg-amber-500/10 hover:bg-amber-200 dark:hover:bg-amber-500/20 border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-300',
+                        )}
+                        disabled={!product.supplierUrl}
+                        onClick={() => {
+                          if (product.supplierUrl) {
+                            window.open(product.supplierUrl, '_blank')
+                          }
+                        }}
+                      >
+                        {product.supplierUrl ? (
+                          <>
+                            Repor Estoque
+                            <ExternalLink className="h-3 w-3" />
+                          </>
+                        ) : (
+                          'Sem URL do Fornecedor'
+                        )}
+                      </Button>
+                    </div>
+                  )
+                })}
               </div>
             )}
           </CardContent>
