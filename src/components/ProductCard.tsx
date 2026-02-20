@@ -218,7 +218,7 @@ export function ProductCard({
 
         {isOutOfStock && isAdmin ? (
           <Button
-            className="flex-1 font-medium active:scale-[0.98] transition-all rounded-xl shadow-md min-w-0 bg-transparent border border-orange-500 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-500/10"
+            className="flex-1 font-medium active:scale-[0.98] transition-all rounded-xl shadow-md bg-transparent border border-orange-500 text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-500/10 px-3 sm:px-4 gap-1.5 sm:gap-2"
             onClick={() => {
               if (!product.supplierUrl) {
                 toast({
@@ -231,8 +231,10 @@ export function ProductCard({
               }
             }}
           >
-            <ExternalLink className="w-4 h-4 mr-1 sm:mr-2 shrink-0" />
-            <span className="truncate text-xs sm:text-sm">Repor Estoque</span>
+            <ExternalLink className="w-4 h-4 shrink-0" />
+            <span className="text-xs sm:text-sm whitespace-nowrap">
+              Repor Estoque
+            </span>
           </Button>
         ) : (
           <Button
@@ -245,33 +247,39 @@ export function ProductCard({
                 : 'default'
             }
             className={cn(
-              'flex-1 font-medium active:scale-[0.98] transition-all duration-300 rounded-xl min-w-0 border',
+              'flex-1 font-medium active:scale-[0.98] transition-all duration-300 rounded-xl border px-3 sm:px-4 gap-1.5 sm:gap-2',
               hasOrdered && product.isSingleQuota
                 ? 'bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-white cursor-not-allowed hover:bg-slate-100 dark:hover:bg-white/10 shadow-none border-slate-200 dark:border-white/5'
                 : isOutOfStock
                   ? 'bg-slate-200 dark:bg-gray-700 text-slate-500 dark:text-gray-300 cursor-not-allowed hover:bg-slate-200 dark:hover:bg-gray-700 shadow-none border-transparent'
                   : product.hasGrid && !selectedSize
                     ? 'text-slate-600 dark:text-slate-300 shadow-sm border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/20 hover:bg-slate-100 dark:hover:bg-white/10 disabled:opacity-100 cursor-default'
-                    : 'bg-[#0E9C8B] text-white hover:bg-[#09695d] dark:btn-primary-glow shadow-md border-transparent disabled:opacity-50',
+                    : 'bg-[#0E9C8B] text-white hover:bg-[#0E9C8B] shadow-[0_0_15px_rgba(14,156,139,0.2)] hover:shadow-[0_0_25px_rgba(14,156,139,0.4)] dark:btn-primary-glow border-transparent disabled:opacity-50',
             )}
             onClick={handleAddToCartClick}
             disabled={isDisabled}
           >
             {product.isSingleQuota && hasOrdered ? (
               <>
-                <Check className="w-4 h-4 mr-1 sm:mr-2 shrink-0" />
-                <span className="truncate text-xs sm:text-sm">Resgatado</span>
+                <Check className="w-4 h-4 shrink-0" />
+                <span className="text-xs sm:text-sm whitespace-nowrap">
+                  Resgatado
+                </span>
               </>
             ) : isOutOfStock ? (
-              <span className="truncate text-xs sm:text-sm">Indisponível</span>
+              <span className="text-xs sm:text-sm whitespace-nowrap">
+                Indisponível
+              </span>
             ) : product.hasGrid && !selectedSize ? (
-              <span className="truncate text-xs sm:text-sm">
+              <span className="text-xs sm:text-sm whitespace-nowrap">
                 Selec. Tamanho
               </span>
             ) : (
               <>
-                <ShoppingCart className="w-4 h-4 mr-1 sm:mr-2 shrink-0" />
-                <span className="truncate text-xs sm:text-sm">Adicionar</span>
+                <ShoppingCart className="w-4 h-4 shrink-0" />
+                <span className="text-xs sm:text-sm whitespace-nowrap">
+                  Adicionar
+                </span>
               </>
             )}
           </Button>
