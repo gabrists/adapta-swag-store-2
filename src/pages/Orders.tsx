@@ -146,7 +146,7 @@ const OrderList = ({
                 {/* Additional Info / Instructions */}
                 <div className="flex flex-col gap-4 pt-2 border-t border-white/5">
                   {/* Status Specific Messages */}
-                  {order.status === 'Pendente' && (
+                  {order.status === 'Entregue' && (
                     <div className="flex items-start gap-3 p-3 bg-cyan-500/10 border border-cyan-500/20 rounded-xl text-sm text-cyan-200">
                       <MapPin className="w-4 h-4 text-cyan-400 mt-0.5 shrink-0" />
                       <div>Retire seu item no RH (Andar 2) das 14h às 17h.</div>
