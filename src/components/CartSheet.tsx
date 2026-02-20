@@ -39,6 +39,11 @@ export function CartSheet() {
     }
   }
 
+  const handleGoToStore = () => {
+    setIsOpen(false)
+    navigate('/')
+  }
+
   return (
     <>
       <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -50,9 +55,9 @@ export function CartSheet() {
           >
             <ShoppingCart className="h-5 w-5 text-slate-700" />
             {totalItems > 0 && (
-              <span className="absolute -top-2 -right-2 bg-[#0E9C8B] text-white text-[10px] font-bold h-5 w-5 flex items-center justify-center rounded-full shadow-sm border border-white">
+              <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center rounded-full p-0 text-[10px] bg-[#0E9C8B] hover:bg-[#0E9C8B] border border-white shadow-sm pointer-events-none text-white">
                 {totalItems}
-              </span>
+              </Badge>
             )}
           </Button>
         </SheetTrigger>
@@ -79,7 +84,7 @@ export function CartSheet() {
                 </div>
                 <Button
                   variant="outline"
-                  onClick={() => setIsOpen(false)}
+                  onClick={handleGoToStore}
                   className="mt-4 border-slate-200 text-slate-700 hover:bg-slate-50"
                 >
                   Voltar para a Vitrine
@@ -188,7 +193,7 @@ export function CartSheet() {
                   </span>
                 </div>
                 <Button
-                  className="w-full h-12 text-base font-semibold shadow-md bg-[#0E9C8B] hover:bg-[#0E9C8B]/90 transition-all active:scale-[0.99]"
+                  className="w-full h-12 text-base font-semibold shadow-md bg-[#0E9C8B] hover:bg-[#0E9C8B]/90 transition-all active:scale-[0.99] text-white"
                   onClick={() => setIsCheckoutOpen(true)}
                 >
                   Finalizar Solicitação

@@ -279,7 +279,7 @@ export default function Layout() {
           </div>
 
           <div className="ml-auto flex items-center gap-2">
-            {!isAdmin && <CartSheet />}
+            <CartSheet />
 
             {/* Admin Add Product button removed as per requirements */}
             {!isAdmin && (
