@@ -9,11 +9,13 @@ import {
   Loader2,
   Upload,
   ImageIcon,
+  Pencil,
 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 
+import { Campaign } from '@/types'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
@@ -55,9 +57,11 @@ const formSchema = z.object({
 })
 
 export default function CampaignsPage() {
-  const { campaigns, campaignResponses, team, createCampaign } = useSwagStore()
+  const { campaigns, campaignResponses, team, createCampaign, updateCampaign } =
+    useSwagStore()
   const [searchQuery, setSearchQuery] = useState('')
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null)
   const [options, setOptions] = useState<string[]>([])
   const [optionInput, setOptionInput] = useState('')
   const [isUploadingImage, setIsUploadingImage] = useState(false)
@@ -116,6 +120,17 @@ export default function CampaignsPage() {
     }
   }
 
+  const handleEdit = (campaign: Campaign) => {
+    setEditingCampaign(campaign)
+    form.reset({
+      name: campaign.name,
+      description: campaign.description || '',
+      imageUrl: campaign.imageUrl || '',
+    })
+    setOptions(campaign.options)
+    setIsDialogOpen(true)
+  }
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     if (options.length === 0) {
       toast({
@@ -127,23 +142,39 @@ export default function CampaignsPage() {
     }
 
     try {
-      await createCampaign({
-        name: values.name,
-        description: values.description,
-        imageUrl: values.imageUrl,
-        options,
-      })
-      toast({
-        title: 'Campanha Criada',
-        description: 'A campanha de coleta foi iniciada com sucesso.',
-      })
+      if (editingCampaign) {
+        await updateCampaign(editingCampaign.id, {
+          name: values.name,
+          description: values.description,
+          imageUrl: values.imageUrl,
+          options,
+        })
+        toast({
+          title: 'Campanha Atualizada',
+          description: 'As alterações foram salvas com sucesso.',
+          className: 'bg-emerald-50 border-emerald-200 text-emerald-900',
+        })
+      } else {
+        await createCampaign({
+          name: values.name,
+          description: values.description,
+          imageUrl: values.imageUrl,
+          options,
+        })
+        toast({
+          title: 'Campanha Criada',
+          description: 'A campanha de coleta foi iniciada com sucesso.',
+          className: 'bg-emerald-50 border-emerald-200 text-emerald-900',
+        })
+      }
       setIsDialogOpen(false)
       form.reset()
       setOptions([])
+      setEditingCampaign(null)
     } catch (error) {
       toast({
         title: 'Erro',
-        description: 'Não foi possível criar a campanha.',
+        description: 'Não foi possível salvar a campanha.',
         variant: 'destructive',
       })
     }
@@ -157,12 +188,14 @@ export default function CampaignsPage() {
             Campanhas de Coleta
           </h1>
           <p className="text-base text-gray-500 dark:text-[#ADADAD]">
-            Crie campanhas para coletar tamanhos e opções de brindes do time.
+            Crie e edite campanhas para coletar tamanhos e opções de brindes do
+            time.
           </p>
         </div>
         <Button
           onClick={() => {
-            form.reset()
+            setEditingCampaign(null)
+            form.reset({ name: '', description: '', imageUrl: '' })
             setOptions([])
             setIsDialogOpen(true)
           }}
@@ -297,11 +330,21 @@ export default function CampaignsPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right pr-6">
-                      <Link to={`/admin/campanhas/${campaign.id}`}>
-                        <Button variant="outline" size="sm">
-                          Ver Detalhes
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEdit(campaign)}
+                          className="hover:bg-slate-200 dark:hover:bg-white/10"
+                        >
+                          <Pencil className="h-4 w-4 text-slate-500 dark:text-[#ADADAD] hover:text-primary dark:hover:text-primary transition-colors" />
                         </Button>
-                      </Link>
+                        <Link to={`/admin/campanhas/${campaign.id}`}>
+                          <Button variant="outline" size="sm">
+                            Ver Detalhes
+                          </Button>
+                        </Link>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )
@@ -314,10 +357,13 @@ export default function CampaignsPage() {
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Nova Campanha de Coleta</DialogTitle>
+            <DialogTitle>
+              {editingCampaign ? 'Editar Campanha' : 'Nova Campanha de Coleta'}
+            </DialogTitle>
             <DialogDescription>
-              Crie um link para os colaboradores enviarem as escolhas de tamanho
-              para o próximo kit.
+              {editingCampaign
+                ? 'Atualize os detalhes e as opções disponíveis desta campanha.'
+                : 'Crie um link para os colaboradores enviarem as escolhas de tamanho para o próximo kit.'}
             </DialogDescription>
           </DialogHeader>
 
@@ -459,7 +505,7 @@ export default function CampaignsPage() {
                   ) : (
                     <CheckCircle className="h-4 w-4 mr-2" />
                   )}
-                  Salvar Campanha
+                  {editingCampaign ? 'Salvar Alterações' : 'Salvar Campanha'}
                 </Button>
               </DialogFooter>
             </form>

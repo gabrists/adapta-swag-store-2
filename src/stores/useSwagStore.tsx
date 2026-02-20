@@ -75,6 +75,10 @@ interface SwagContextType {
   createCampaign: (
     data: Omit<Campaign, 'id' | 'createdAt' | 'status'>,
   ) => Promise<void>
+  updateCampaign: (
+    id: string,
+    data: Partial<Omit<Campaign, 'id' | 'createdAt'>>,
+  ) => Promise<void>
   updateCampaignStatus: (
     id: string,
     status: 'Aberta' | 'Fechada',
@@ -369,6 +373,28 @@ export function SwagProvider({ children }: { children: ReactNode }) {
       image_url: data.imageUrl,
       options: data.options,
     })
+    if (error) throw error
+    await fetchCampaigns()
+  }
+
+  const updateCampaign = async (
+    id: string,
+    data: Partial<Omit<Campaign, 'id' | 'createdAt'>>,
+  ) => {
+    if (!checkAdminPermission()) return
+
+    const updates: any = {}
+    if (data.name !== undefined) updates.name = data.name
+    if (data.description !== undefined) updates.description = data.description
+    if (data.imageUrl !== undefined) updates.image_url = data.imageUrl
+    if (data.options !== undefined) updates.options = data.options
+    if (data.status !== undefined) updates.status = data.status
+
+    const { error } = await supabase
+      .from('swag_campaigns' as any)
+      .update(updates)
+      .eq('id', id)
+
     if (error) throw error
     await fetchCampaigns()
   }
@@ -1102,6 +1128,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         fetchCampaigns,
         fetchCampaignResponses,
         createCampaign,
+        updateCampaign,
         updateCampaignStatus,
         submitCampaignResponse,
         isLoading,
