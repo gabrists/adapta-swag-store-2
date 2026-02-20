@@ -37,24 +37,24 @@ export function HistoryCard({ entry }: HistoryCardProps) {
     <Accordion
       type="single"
       collapsible
-      className="w-full glass-panel rounded-2xl hover:border-primary/30 transition-all"
+      className="w-full glass-panel rounded-2xl hover:border-primary/30 dark:hover:border-primary/30 transition-all"
     >
       <AccordionItem value={entry.id} className="border-none">
-        <AccordionTrigger className="px-5 py-4 hover:bg-white/5 hover:no-underline rounded-t-2xl data-[state=open]:bg-white/5 transition-all text-white">
+        <AccordionTrigger className="px-5 py-4 hover:bg-gray-50 dark:hover:bg-white/5 hover:no-underline rounded-t-2xl data-[state=open]:bg-gray-50 dark:data-[state=open]:bg-white/5 transition-all text-slate-900 dark:text-white group">
           <div className="flex flex-col md:flex-row md:items-center w-full text-left gap-4 pr-4">
             {/* User Info Section */}
             <div className="flex items-center gap-4 md:w-1/4 min-w-[220px]">
-              <Avatar className="h-12 w-12 border border-white/10 shadow-sm">
+              <Avatar className="h-12 w-12 border border-gray-200 dark:border-white/10 shadow-sm">
                 <AvatarImage src={userAvatarUrl} alt={entry.user} />
-                <AvatarFallback className="bg-primary/20 text-primary font-bold">
+                <AvatarFallback className="bg-primary/10 text-primary dark:bg-primary/20 font-bold">
                   {entry.user.substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col">
-                <span className="font-semibold text-base text-white line-clamp-1">
+                <span className="font-semibold text-base text-slate-900 dark:text-white line-clamp-1">
                   {entry.user}
                 </span>
-                <span className="text-xs text-white font-mono mt-0.5 bg-black/20 px-2 py-0.5 rounded border border-white/5 w-fit">
+                <span className="text-xs font-mono mt-0.5 bg-gray-100 text-slate-600 border border-gray-200 dark:bg-black/20 dark:text-white dark:border-white/5 px-2 py-0.5 rounded w-fit">
                   ID: {entry.id.substring(0, 8)}
                 </span>
               </div>
@@ -62,7 +62,10 @@ export function HistoryCard({ entry }: HistoryCardProps) {
 
             {/* Summary Text Section */}
             <div className="flex-1 min-w-0 hidden md:block">
-              <p className="text-sm text-white truncate" title={summaryText}>
+              <p
+                className="text-sm text-slate-700 dark:text-white truncate"
+                title={summaryText}
+              >
                 {summaryText}
               </p>
             </div>
@@ -72,26 +75,26 @@ export function HistoryCard({ entry }: HistoryCardProps) {
               <span className="font-bold text-base text-primary">
                 {formattedTotalValue}
               </span>
-              <span className="text-xs text-white font-medium bg-black/20 px-2 py-1 rounded-md border border-white/5">
+              <span className="text-xs font-medium bg-gray-100 text-slate-600 border border-gray-200 dark:bg-black/20 dark:text-white dark:border-white/5 px-2 py-1 rounded-md">
                 {format(date, 'd MMM, HH:mm', { locale: ptBR })}
               </span>
             </div>
 
             {/* Mobile Only Summary */}
             <div className="md:hidden w-full pt-2">
-              <p className="text-sm text-white truncate bg-black/20 p-2 rounded-lg border border-white/5">
+              <p className="text-sm text-slate-700 bg-gray-50 border border-gray-200 dark:bg-black/20 dark:text-white dark:border-white/5 p-2 rounded-lg truncate">
                 {summaryText}
               </p>
             </div>
           </div>
         </AccordionTrigger>
 
-        <AccordionContent className="px-5 pb-5 pt-4 bg-black/20 rounded-b-2xl border-t border-white/5">
+        <AccordionContent className="px-5 pb-5 pt-4 bg-gray-50 dark:bg-black/20 rounded-b-2xl border-t border-gray-200 dark:border-white/5">
           <div className="space-y-4 mt-2">
-            <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <span className="w-4 h-px bg-slate-600"></span>
+            <h4 className="text-xs font-bold text-slate-500 dark:text-white uppercase tracking-wider flex items-center gap-2">
+              <span className="w-4 h-px bg-slate-300 dark:bg-slate-600"></span>
               Detalhes da Retirada
-              <span className="flex-1 h-px bg-slate-600/30"></span>
+              <span className="flex-1 h-px bg-slate-300/50 dark:bg-slate-600/30"></span>
             </h4>
             <div className="grid gap-3">
               {entry.items.map((item, idx) => {
@@ -104,9 +107,9 @@ export function HistoryCard({ entry }: HistoryCardProps) {
                 return (
                   <div
                     key={`${entry.id}-${idx}`}
-                    className="flex items-center gap-4 p-4 bg-white/5 rounded-xl border border-white/5 hover:border-white/10 transition-colors"
+                    className="flex items-center gap-4 p-4 bg-white dark:bg-white/5 rounded-xl border border-gray-100 dark:border-white/5 hover:border-gray-300 dark:hover:border-white/10 transition-colors"
                   >
-                    <Avatar className="h-12 w-12 border border-white/10 rounded-lg shrink-0 bg-black/40">
+                    <Avatar className="h-12 w-12 border border-gray-200 dark:border-white/10 rounded-lg shrink-0 bg-gray-100 dark:bg-black/40">
                       <AvatarImage
                         src={
                           item.productImageQuery.startsWith('http') ||
@@ -117,35 +120,35 @@ export function HistoryCard({ entry }: HistoryCardProps) {
                         alt={item.productName}
                         className="object-cover rounded-lg"
                       />
-                      <AvatarFallback className="rounded-lg bg-white/5 text-white">
+                      <AvatarFallback className="rounded-lg bg-gray-100 text-slate-600 dark:bg-white/5 dark:text-white">
                         {item.productName.substring(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
 
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white truncate">
+                      <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">
                         {item.productName}
                       </p>
                       <div className="flex items-center gap-2 mt-1.5">
                         {item.size && (
                           <Badge
                             variant="secondary"
-                            className="text-[10px] h-5 px-1.5 rounded-md bg-black/40 text-white border border-white/10"
+                            className="text-[10px] h-5 px-1.5 rounded-md bg-gray-100 text-slate-600 border border-gray-200 dark:bg-black/40 dark:text-white dark:border-white/10"
                           >
                             {item.size}
                           </Badge>
                         )}
-                        <span className="text-xs font-medium text-white bg-black/20 px-2 py-0.5 rounded-md border border-white/5">
+                        <span className="text-xs font-medium bg-gray-100 text-slate-600 border border-gray-200 dark:bg-black/20 dark:text-white dark:border-white/5 px-2 py-0.5 rounded-md">
                           Qtd: {item.quantity}
                         </span>
                       </div>
                     </div>
 
                     <div className="text-right">
-                      <span className="text-sm font-bold text-white block">
+                      <span className="text-sm font-bold text-slate-900 dark:text-white block">
                         {formattedItemTotal}
                       </span>
-                      <div className="text-[10px] text-white mt-1">
+                      <div className="text-[10px] text-slate-500 dark:text-white/70 mt-1">
                         Unid: {item.unitCost.toFixed(2)}
                       </div>
                     </div>
