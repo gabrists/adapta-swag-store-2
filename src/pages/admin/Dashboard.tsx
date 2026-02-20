@@ -267,12 +267,10 @@ export default function Dashboard() {
           <h1 className="text-3xl font-bold tracking-tight text-white">
             Dashboard Analítico
           </h1>
-          <p className="text-[#ADADAD] mt-1">
-            Visão geral da Neura Swag Store.
-          </p>
+          <p className="text-white mt-1">Visão geral da Neura Swag Store.</p>
         </div>
         <Select value={dateRange} onValueChange={setDateRange}>
-          <SelectTrigger className="w-[200px] bg-black/20 border-white/10 h-12">
+          <SelectTrigger className="w-[200px] bg-black/20 border-white/10 h-12 text-white">
             <SelectValue placeholder="Selecione o período" />
           </SelectTrigger>
           <SelectContent>
@@ -287,14 +285,14 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="hover:border-primary/30 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-[#ADADAD]">
+            <CardTitle className="text-sm font-medium text-white">
               Total de Saídas
             </CardTitle>
             <TrendingUp className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-white">{totalOutputs}</div>
-            <p className="text-xs text-[#ADADAD] mt-2">
+            <p className="text-xs text-white mt-2">
               Itens retirados no período
             </p>
           </CardContent>
@@ -302,7 +300,7 @@ export default function Dashboard() {
 
         <Card className="hover:border-primary/30 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-[#ADADAD]">
+            <CardTitle className="text-sm font-medium text-white">
               Custo Total Mensal
             </CardTitle>
             <DollarSign className="h-4 w-4 text-primary" />
@@ -311,7 +309,7 @@ export default function Dashboard() {
             <div className="text-3xl font-bold text-white">
               {formatCurrency(monthlyTotalCost)}
             </div>
-            <p className="text-xs text-[#ADADAD] mt-2">Gasto no mês atual</p>
+            <p className="text-xs text-white mt-2">Gasto no mês atual</p>
           </CardContent>
         </Card>
 
@@ -324,13 +322,13 @@ export default function Dashboard() {
           )}
         >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-[#ADADAD]">
+            <CardTitle className="text-sm font-medium text-white">
               Estoque Crítico
             </CardTitle>
             <AlertTriangle
               className={cn(
                 'h-4 w-4',
-                criticalStockCount > 0 ? 'text-sky-400' : 'text-[#ADADAD]',
+                criticalStockCount > 0 ? 'text-sky-400' : 'text-white',
               )}
             />
           </CardHeader>
@@ -343,15 +341,13 @@ export default function Dashboard() {
             >
               {criticalStockCount}
             </div>
-            <p className="text-xs text-[#ADADAD] mt-2">
-              Itens com &lt; 5 unidades
-            </p>
+            <p className="text-xs text-white mt-2">Itens com &lt; 5 unidades</p>
           </CardContent>
         </Card>
 
         <Card className="hover:border-primary/30 transition-colors">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-[#ADADAD]">
+            <CardTitle className="text-sm font-medium text-white">
               Área que mais Consome
             </CardTitle>
             <Users className="h-4 w-4 text-primary" />
@@ -360,7 +356,7 @@ export default function Dashboard() {
             <div className="text-2xl font-bold text-white truncate min-h-[36px] flex items-center">
               {topConsumingArea}
             </div>
-            <p className="text-xs text-[#ADADAD] mt-2">
+            <p className="text-xs text-white mt-2">
               Departamento com mais retiradas
             </p>
           </CardContent>
@@ -489,7 +485,7 @@ export default function Dashboard() {
                   verticalAlign="bottom"
                   height={40}
                   content={({ payload }) => (
-                    <div className="flex flex-wrap justify-center gap-4 mt-6 text-sm text-[#ADADAD]">
+                    <div className="flex flex-wrap justify-center gap-4 mt-6 text-sm text-white">
                       {payload?.map((entry: any, index: number) => (
                         <div
                           key={`legend-${index}`}
@@ -527,16 +523,12 @@ export default function Dashboard() {
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent border-white/10 bg-black/20">
-                    <TableHead className="pl-6 text-[#ADADAD]">Data</TableHead>
-                    <TableHead className="text-[#ADADAD]">
-                      Colaborador
-                    </TableHead>
-                    <TableHead className="text-[#ADADAD]">
-                      Item Retirado
-                    </TableHead>
-                    <TableHead className="text-[#ADADAD]">Qtd</TableHead>
-                    <TableHead className="text-[#ADADAD]">Depto</TableHead>
-                    <TableHead className="text-right pr-6 text-[#ADADAD]">
+                    <TableHead className="pl-6 text-white">Data</TableHead>
+                    <TableHead className="text-white">Colaborador</TableHead>
+                    <TableHead className="text-white">Item Retirado</TableHead>
+                    <TableHead className="text-white">Qtd</TableHead>
+                    <TableHead className="text-white">Depto</TableHead>
+                    <TableHead className="text-right pr-6 text-white">
                       Valor Total
                     </TableHead>
                   </TableRow>
@@ -546,7 +538,7 @@ export default function Dashboard() {
                     <TableRow>
                       <TableCell
                         colSpan={6}
-                        className="h-32 text-center text-[#ADADAD]"
+                        className="h-32 text-center text-white"
                       >
                         Nenhuma transação encontrada no período.
                       </TableCell>
@@ -557,7 +549,7 @@ export default function Dashboard() {
                         key={tx.id}
                         className="hover:bg-white/5 border-white/5 transition-colors"
                       >
-                        <TableCell className="pl-6 font-medium text-[#ADADAD] text-xs whitespace-nowrap">
+                        <TableCell className="pl-6 font-medium text-white text-xs whitespace-nowrap">
                           {new Date(tx.date).toLocaleDateString('pt-BR')}
                         </TableCell>
                         <TableCell>
@@ -567,17 +559,17 @@ export default function Dashboard() {
                                 src={tx.collaborator?.avatarUrl}
                                 alt={tx.user}
                               />
-                              <AvatarFallback className="text-xs bg-white/5 text-[#ADADAD]">
+                              <AvatarFallback className="text-xs bg-white/5 text-white">
                                 {tx.user.substring(0, 2).toUpperCase()}
                               </AvatarFallback>
                             </Avatar>
-                            <span className="text-sm text-[#ADADAD] font-medium truncate max-w-[120px]">
+                            <span className="text-sm text-white font-medium truncate max-w-[120px]">
                               {tx.user}
                             </span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <span className="text-sm text-[#ADADAD] truncate block max-w-[180px]">
+                          <span className="text-sm text-white truncate block max-w-[180px]">
                             {tx.mainItemName}
                             {tx.moreItemsCount > 0 && (
                               <span className="text-xs text-primary ml-2 bg-primary/10 px-1.5 py-0.5 rounded">
@@ -586,7 +578,7 @@ export default function Dashboard() {
                             )}
                           </span>
                         </TableCell>
-                        <TableCell className="text-sm text-[#ADADAD]">
+                        <TableCell className="text-sm text-white">
                           {tx.totalQuantity}
                         </TableCell>
                         <TableCell>
@@ -624,7 +616,7 @@ export default function Dashboard() {
           </CardHeader>
           <CardContent className="flex-1 overflow-y-auto max-h-[420px] pr-2">
             {lowStockProducts.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center text-[#ADADAD] h-full bg-black/20 rounded-xl border border-white/5">
+              <div className="flex flex-col items-center justify-center py-12 text-center text-white h-full bg-black/20 rounded-xl border border-white/5">
                 <Package className="h-12 w-12 text-primary/40 mb-3" />
                 <p className="text-sm">Estoque saudável!</p>
               </div>

@@ -93,19 +93,19 @@ export function CheckoutDialog({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="space-y-4 py-2">
               <div className="grid grid-cols-4 items-center gap-4">
-                <span className="text-sm font-medium text-slate-500 text-right col-span-1">
+                <span className="text-sm font-medium text-white text-right col-span-1">
                   Solicitante
                 </span>
-                <span className="text-sm font-semibold text-slate-900 col-span-3">
+                <span className="text-sm font-semibold text-white col-span-3">
                   {user?.name}
                 </span>
               </div>
 
               <div className="grid grid-cols-4 items-center gap-4">
-                <span className="text-sm font-medium text-slate-500 text-right col-span-1">
+                <span className="text-sm font-medium text-white text-right col-span-1">
                   Data
                 </span>
-                <span className="text-sm font-semibold text-slate-900 col-span-3">
+                <span className="text-sm font-semibold text-white col-span-3">
                   {format(new Date(), 'dd/MM/yyyy')}
                 </span>
               </div>

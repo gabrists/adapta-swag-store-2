@@ -152,7 +152,7 @@ export function CollaboratorDialog({
                     src={avatarPreview || undefined}
                     className="object-cover"
                   />
-                  <AvatarFallback className="text-2xl bg-slate-100 text-[#ADADAD]">
+                  <AvatarFallback className="text-2xl bg-slate-100 text-white">
                     <User className="h-10 w-10" />
                   </AvatarFallback>
                 </Avatar>
@@ -237,7 +237,7 @@ export function CollaboratorDialog({
                       value={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="text-white">
                           <SelectValue placeholder="Selecione" />
                         </SelectTrigger>
                       </FormControl>
@@ -283,7 +283,7 @@ export function CollaboratorDialog({
                     value={field.value}
                   >
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="text-white">
                         <SelectValue placeholder="Status do Kit" />
                       </SelectTrigger>
                     </FormControl>

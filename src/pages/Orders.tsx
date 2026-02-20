@@ -32,14 +32,14 @@ const OrderList = ({
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center glass-panel rounded-2xl animate-in fade-in zoom-in-95 duration-300">
         <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-6 shadow-inner">
-          <Package className="w-10 h-10 text-slate-400" />
+          <Package className="w-10 h-10 text-white" />
         </div>
         <h3 className="text-xl font-semibold text-white">
           {statusLabel === 'Todos'
             ? 'Nenhuma solicitação encontrada'
             : 'Nenhuma solicitação com este status'}
         </h3>
-        <p className="text-slate-400 text-sm mt-2 max-w-sm mb-8">
+        <p className="text-white text-sm mt-2 max-w-sm mb-8">
           {statusLabel === 'Todos'
             ? 'Visite a vitrine para solicitar novos brindes e eles aparecerão aqui.'
             : `Você ainda não tem solicitações com status "${statusLabel}".`}
@@ -85,7 +85,7 @@ const OrderList = ({
                         alt={order.productName}
                         className="object-cover rounded-xl"
                       />
-                      <AvatarFallback className="rounded-xl bg-white/5 text-slate-400 font-bold">
+                      <AvatarFallback className="rounded-xl bg-white/5 text-white font-bold">
                         {order.productName?.substring(0, 2).toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
@@ -93,7 +93,7 @@ const OrderList = ({
                       <h3 className="font-semibold text-white text-lg line-clamp-1">
                         {order.productName}
                       </h3>
-                      <div className="flex items-center gap-3 text-sm text-slate-400 mt-1.5">
+                      <div className="flex items-center gap-3 text-sm text-white mt-1.5">
                         <span className="font-medium bg-white/5 px-2 py-0.5 rounded-md">
                           Qtd: {order.quantity}
                         </span>
@@ -102,7 +102,7 @@ const OrderList = ({
                             <span className="w-1 h-1 bg-white/20 rounded-full" />
                             <Badge
                               variant="outline"
-                              className="text-xs h-6 px-2 font-medium bg-transparent text-slate-300 border-white/10"
+                              className="text-xs h-6 px-2 font-medium bg-transparent text-white border-white/10"
                             >
                               {order.size}
                             </Badge>
@@ -113,7 +113,7 @@ const OrderList = ({
                   </div>
 
                   <div className="flex flex-row-reverse sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-3 sm:gap-2">
-                    <span className="text-xs font-mono text-slate-500 bg-white/5 px-2 py-1 rounded-md border border-white/5 whitespace-nowrap">
+                    <span className="text-xs font-mono text-white bg-white/5 px-2 py-1 rounded-md border border-white/5 whitespace-nowrap">
                       #{order.id.substring(0, 7)}
                     </span>
 
@@ -154,7 +154,7 @@ const OrderList = ({
                   )}
 
                   {order.status === 'Rejeitado' && order.rejectionReason && (
-                    <div className="flex items-start gap-3 text-sm text-slate-300 bg-white/5 p-3 rounded-xl border border-white/10">
+                    <div className="flex items-start gap-3 text-sm text-white bg-white/5 p-3 rounded-xl border border-white/10">
                       <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
                       <div>
                         <span className="font-medium text-white">Motivo:</span>{' '}
@@ -164,7 +164,7 @@ const OrderList = ({
                   )}
 
                   {/* Date Footer */}
-                  <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                  <div className="flex items-center gap-2 text-xs font-medium text-white">
                     <Calendar className="w-4 h-4" />
                     Solicitado em{' '}
                     {format(parseISO(order.createdAt), "d 'de' MMMM, HH:mm", {
@@ -217,7 +217,7 @@ export default function OrdersPage() {
         <h1 className="text-3xl font-bold tracking-tight text-white">
           Meus Pedidos
         </h1>
-        <p className="text-base text-slate-400">
+        <p className="text-base text-white">
           Acompanhe o status das suas solicitações de brindes.
         </p>
       </div>
@@ -226,13 +226,13 @@ export default function OrdersPage() {
         <TabsList className="bg-black/20 p-1.5 mb-8 w-full sm:w-auto overflow-x-auto flex sm:inline-flex justify-start border border-white/5 rounded-xl">
           <TabsTrigger
             value="all"
-            className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:border-primary/50 border border-transparent transition-all px-5 py-2 rounded-lg text-slate-400 font-medium"
+            className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:border-primary/50 border border-transparent transition-all px-5 py-2 rounded-lg text-white font-medium"
           >
             Todos
           </TabsTrigger>
           <TabsTrigger
             value="pending"
-            className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:border-primary/50 border border-transparent transition-all px-5 py-2 rounded-lg text-slate-400 font-medium"
+            className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:border-primary/50 border border-transparent transition-all px-5 py-2 rounded-lg text-white font-medium"
           >
             Pendentes
             {pendingOrders.length > 0 && (
@@ -243,13 +243,13 @@ export default function OrdersPage() {
           </TabsTrigger>
           <TabsTrigger
             value="delivered"
-            className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:border-primary/50 border border-transparent transition-all px-5 py-2 rounded-lg text-slate-400 font-medium"
+            className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:border-primary/50 border border-transparent transition-all px-5 py-2 rounded-lg text-white font-medium"
           >
             Entregues
           </TabsTrigger>
           <TabsTrigger
             value="rejected"
-            className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:border-primary/50 border border-transparent transition-all px-5 py-2 rounded-lg text-slate-400 font-medium"
+            className="data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:border-primary/50 border border-transparent transition-all px-5 py-2 rounded-lg text-white font-medium"
           >
             Rejeitados
           </TabsTrigger>

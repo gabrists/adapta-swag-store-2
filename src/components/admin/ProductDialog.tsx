@@ -273,7 +273,7 @@ export function ProductDialog({
                       value={field.value}
                     >
                       <FormControl>
-                        <SelectTrigger className="rounded-lg">
+                        <SelectTrigger className="rounded-lg text-white">
                           <SelectValue placeholder="Selecione" />
                         </SelectTrigger>
                       </FormControl>
@@ -341,10 +341,12 @@ export function ProductDialog({
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm bg-slate-50">
+              <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm bg-black/20 border-white/5">
                 <div className="space-y-0.5">
-                  <FormLabel className="text-base">Controle de Grade</FormLabel>
-                  <FormDescription className="text-xs">
+                  <FormLabel className="text-base text-white">
+                    Controle de Grade
+                  </FormLabel>
+                  <FormDescription className="text-xs text-white">
                     Este produto possui variação de tamanhos?
                   </FormDescription>
                 </div>
@@ -364,10 +366,12 @@ export function ProductDialog({
                 />
               </div>
 
-              <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm bg-slate-50">
+              <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm bg-black/20 border-white/5">
                 <div className="space-y-0.5">
-                  <FormLabel className="text-base">Item Cota Única</FormLabel>
-                  <FormDescription className="text-xs">
+                  <FormLabel className="text-base text-white">
+                    Item Cota Única
+                  </FormLabel>
+                  <FormDescription className="text-xs text-white">
                     Limitar a 1 unidade por pessoa?
                   </FormDescription>
                 </div>
@@ -389,8 +393,8 @@ export function ProductDialog({
             </div>
 
             {hasGrid ? (
-              <div className="space-y-2 border rounded-lg p-3 bg-white">
-                <FormLabel>Grade de Estoque</FormLabel>
+              <div className="space-y-2 border rounded-lg p-3 bg-black/20 border-white/5">
+                <FormLabel className="text-white">Grade de Estoque</FormLabel>
                 <div className="grid grid-cols-5 gap-2">
                   {['PP', 'P', 'M', 'G', 'GG'].map((size) => (
                     <FormField
@@ -399,7 +403,7 @@ export function ProductDialog({
                       name={`grid${size}` as any}
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-xs text-center block">
+                          <FormLabel className="text-xs text-center block text-white">
                             {size}
                           </FormLabel>
                           <FormControl>
@@ -441,7 +445,7 @@ export function ProductDialog({
               <FormLabel>Imagem do Produto</FormLabel>
               <div className="flex flex-col gap-4">
                 {imagePreview ? (
-                  <div className="relative w-full h-40 bg-slate-100 rounded-lg overflow-hidden border border-slate-200 group">
+                  <div className="relative w-full h-40 bg-black/20 rounded-lg overflow-hidden border border-white/5 group">
                     <img
                       src={imagePreview}
                       alt="Preview"
@@ -471,23 +475,21 @@ export function ProductDialog({
                       !isUploading && fileInputRef.current?.click()
                     }
                     className={cn(
-                      'w-full h-32 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center transition-colors',
+                      'w-full h-32 border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center transition-colors',
                       isUploading
-                        ? 'cursor-wait bg-slate-50'
-                        : 'cursor-pointer hover:bg-slate-50',
+                        ? 'cursor-wait bg-black/10'
+                        : 'cursor-pointer hover:bg-black/10',
                     )}
                   >
                     {isUploading ? (
                       <div className="flex flex-col items-center gap-2">
                         <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                        <span className="text-sm text-[#ADADAD]">
-                          Enviando...
-                        </span>
+                        <span className="text-sm text-white">Enviando...</span>
                       </div>
                     ) : (
                       <>
-                        <CloudUpload className="w-8 h-8 text-[#ADADAD] mb-2" />
-                        <span className="text-sm text-[#ADADAD]">
+                        <CloudUpload className="w-8 h-8 text-white mb-2" />
+                        <span className="text-sm text-white">
                           Clique para fazer upload
                         </span>
                       </>
@@ -509,7 +511,7 @@ export function ProductDialog({
                     <FormItem>
                       <FormControl>
                         <div className="relative">
-                          <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#ADADAD]" />
+                          <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white" />
                           <Input
                             placeholder="Ex: black backpack"
                             className="pl-9 rounded-lg"
@@ -569,7 +571,7 @@ export function ProductDialog({
               <Button
                 type="submit"
                 disabled={isUploading || form.formState.isSubmitting}
-                className="rounded-lg gap-2"
+                className="rounded-lg gap-2 btn-primary-glow"
               >
                 {form.formState.isSubmitting || isUploading ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
