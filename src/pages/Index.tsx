@@ -49,18 +49,21 @@ export default function Index() {
     return (
       <div className="space-y-6 w-full max-w-7xl mx-auto">
         <div className="flex gap-4">
-          <Skeleton className="h-12 w-full rounded-xl bg-white/5" />
+          <Skeleton className="h-12 w-full rounded-xl bg-slate-200 dark:bg-white/5" />
         </div>
         <div className="flex gap-2 pb-2">
           {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-9 w-24 rounded-full bg-white/5" />
+            <Skeleton
+              key={i}
+              className="h-9 w-24 rounded-full bg-slate-200 dark:bg-white/5"
+            />
           ))}
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[...Array(8)].map((_, i) => (
             <Skeleton
               key={i}
-              className="h-[350px] w-full rounded-2xl bg-white/5"
+              className="h-[350px] w-full rounded-2xl bg-slate-200 dark:bg-white/5"
             />
           ))}
         </div>
@@ -71,12 +74,12 @@ export default function Index() {
   return (
     <div className="space-y-6 md:space-y-8 w-full max-w-7xl mx-auto pb-12">
       {/* Header Section */}
-      <section className="glass-panel p-4 -mx-4 md:mx-0 md:rounded-xl">
+      <section className="glass-panel p-4 -mx-4 md:mx-0 md:rounded-xl bg-white dark:bg-[#081a17]/60">
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-white" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 dark:text-white" />
           <Input
             placeholder="O que você procura hoje?"
-            className="pl-11 h-12 text-lg rounded-xl bg-black/20 border-white/10 focus-visible:border-primary/50 focus-visible:ring-primary/50"
+            className="pl-11 h-12 text-lg rounded-xl bg-white dark:bg-black/20 border-slate-200 dark:border-white/10 focus-visible:border-[#0E9C8B] dark:focus-visible:border-primary/50 focus-visible:ring-[#0E9C8B]/50 dark:focus-visible:ring-primary/50 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -92,8 +95,8 @@ export default function Index() {
             className={cn(
               'px-5 py-2.5 rounded-full text-sm font-medium whitespace-nowrap transition-all duration-300 border',
               selectedCategory === category
-                ? 'btn-primary-glow'
-                : 'bg-white/5 text-white border-white/10 hover:bg-white/10 hover:text-white',
+                ? 'bg-[#0E9C8B] text-white border-[#0E9C8B] dark:btn-primary-glow shadow-md'
+                : 'bg-white dark:bg-white/5 text-slate-700 dark:text-white border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/10 hover:text-slate-900 dark:hover:text-white',
             )}
           >
             {category}
@@ -104,12 +107,12 @@ export default function Index() {
       {/* Products Grid */}
       <section>
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-white tracking-tight">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">
             Todos os itens
           </h2>
           <Badge
             variant="secondary"
-            className="bg-white/10 text-white rounded-md px-3 py-1"
+            className="bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-white border border-slate-200 dark:border-transparent rounded-md px-3 py-1"
           >
             {filteredProducts.length} itens
           </Badge>
@@ -144,15 +147,15 @@ export default function Index() {
             })}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-24 text-center space-y-4 glass-panel rounded-2xl">
-            <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center shadow-inner">
-              <Search className="w-10 h-10 text-white" />
+          <div className="flex flex-col items-center justify-center py-24 text-center space-y-4 glass-panel rounded-2xl bg-white dark:bg-[#081a17]/60 border-slate-200 dark:border-white/5">
+            <div className="w-20 h-20 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center shadow-inner border border-slate-200 dark:border-transparent">
+              <Search className="w-10 h-10 text-slate-400 dark:text-white" />
             </div>
             <div>
-              <h3 className="text-xl font-semibold text-white">
+              <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
                 Nenhum item encontrado
               </h3>
-              <p className="text-white text-sm mt-2 max-w-sm mx-auto">
+              <p className="text-slate-500 dark:text-slate-400 text-sm mt-2 max-w-sm mx-auto">
                 Tente mudar a busca ou a categoria para encontrar o que procura.
               </p>
             </div>
