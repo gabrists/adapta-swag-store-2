@@ -44,6 +44,7 @@ const formSchema = z.object({
   department: z.string().min(1, 'Selecione um departamento'),
   role: z.string().min(2, 'Cargo é obrigatório'),
   avatarUrl: z.string().optional(),
+  onboardingKitStatus: z.enum(['Pendente', 'Entregue']),
 })
 
 interface CollaboratorDialogProps {
@@ -70,6 +71,7 @@ export function CollaboratorDialog({
       department: '',
       role: '',
       avatarUrl: '',
+      onboardingKitStatus: 'Pendente',
     },
   })
 
@@ -82,6 +84,7 @@ export function CollaboratorDialog({
           department: collaborator.department,
           role: collaborator.role,
           avatarUrl: collaborator.avatarUrl || '',
+          onboardingKitStatus: collaborator.onboardingKitStatus,
         })
         setAvatarPreview(collaborator.avatarUrl || null)
       } else {
@@ -91,6 +94,7 @@ export function CollaboratorDialog({
           department: '',
           role: '',
           avatarUrl: '',
+          onboardingKitStatus: 'Pendente',
         })
         setAvatarPreview(null)
       }
@@ -124,7 +128,7 @@ export function CollaboratorDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] rounded-xl">
+      <DialogContent className="sm:max-w-[500px] rounded-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {isEditing ? 'Editar Colaborador' : 'Novo Colaborador'}
@@ -266,6 +270,32 @@ export function CollaboratorDialog({
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="onboardingKitStatus"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Kit Onboarding</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Status do Kit" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Pendente">Pendente</SelectItem>
+                      <SelectItem value="Entregue">Entregue</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <DialogFooter className="pt-2">
               <Button

@@ -26,6 +26,7 @@ interface SwagContextType {
   history: HistoryEntry[]
   orders: Order[]
   team: Collaborator[]
+  departments: Record<string, string>
   collaborators: string[]
   slackSettings: SlackSettings | null
   addToCart: (product: Product, quantity: number, size?: string) => void
@@ -167,6 +168,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         department: emp.departments?.name || 'Geral',
         role: emp.role || 'Colaborador',
         avatarUrl: emp.avatar_url,
+        onboardingKitStatus: emp.onboarding_kit_status || 'Pendente',
       })) || []
 
     setTeam(mappedTeam)
@@ -856,6 +858,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
       department_id: deptId,
       role: data.role,
       avatar_url: data.avatarUrl,
+      onboarding_kit_status: data.onboardingKitStatus || 'Pendente',
     }
 
     const { error } = await supabase.from('employees').insert(newEmp)
@@ -885,6 +888,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
       department_id: deptId,
       role: data.role,
       avatar_url: data.avatarUrl,
+      onboarding_kit_status: data.onboardingKitStatus,
     }
 
     const { error } = await supabase
@@ -912,6 +916,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         history,
         orders,
         team,
+        departments,
         collaborators,
         slackSettings,
         addToCart,

@@ -77,6 +77,7 @@ export interface Collaborator {
   department: string
   role: string
   avatarUrl?: string
+  onboardingKitStatus: 'Pendente' | 'Entregue'
 }
 
 export interface SlackSettings {

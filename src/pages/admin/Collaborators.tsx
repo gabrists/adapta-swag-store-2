@@ -7,6 +7,7 @@ import {
   Pencil,
   Users,
   Eye,
+  Gift,
 } from 'lucide-react'
 import useSwagStore from '@/stores/useSwagStore'
 import { Collaborator } from '@/types'
@@ -43,8 +44,21 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { CollaboratorDialog } from '@/components/admin/CollaboratorDialog'
 import { CollaboratorProfile } from '@/components/admin/CollaboratorProfile'
+import { ManualDeliveryDialog } from '@/components/admin/ManualDeliveryDialog'
 
 const departmentColors: Record<string, string> = {
   Marketing: 'bg-pink-100 text-pink-800',
@@ -57,25 +71,49 @@ const departmentColors: Record<string, string> = {
 }
 
 export default function Collaborators() {
-  const { team, addCollaborator, updateCollaborator, deleteCollaborator } =
-    useSwagStore()
+  const {
+    team,
+    orders,
+    addCollaborator,
+    updateCollaborator,
+    deleteCollaborator,
+  } = useSwagStore()
   const { toast } = useToast()
 
   const [searchQuery, setSearchQuery] = useState('')
+  const [departmentFilter, setDepartmentFilter] = useState('Todas')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [profileOpen, setProfileOpen] = useState(false)
+  const [manualDeliveryEmpId, setManualDeliveryEmpId] = useState<string | null>(
+    null,
+  )
   const [selectedCollab, setSelectedCollab] = useState<Collaborator | null>(
     null,
   )
   const [deleteCollab, setDeleteCollab] = useState<Collaborator | null>(null)
 
+  // Get distinct departments for filter
+  const departments = useMemo(() => {
+    const depts = Array.from(new Set(team.map((c) => c.department)))
+    return ['Todas', ...depts.sort()]
+  }, [team])
+
   const filteredTeam = useMemo(() => {
-    return team.filter(
-      (collab) =>
+    return team.filter((collab) => {
+      const matchesSearch =
         collab.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        collab.department.toLowerCase().includes(searchQuery.toLowerCase()),
-    )
-  }, [team, searchQuery])
+        collab.department.toLowerCase().includes(searchQuery.toLowerCase())
+      const matchesDept =
+        departmentFilter === 'Todas' || collab.department === departmentFilter
+      return matchesSearch && matchesDept
+    })
+  }, [team, searchQuery, departmentFilter])
+
+  const getRedeemedCount = (employeeId: string) => {
+    return orders
+      .filter((o) => o.employeeId === employeeId && o.status === 'Entregue')
+      .reduce((acc, o) => acc + o.quantity, 0)
+  }
 
   const handleCreate = () => {
     setSelectedCollab(null)
@@ -94,6 +132,10 @@ export default function Collaborators() {
   const handleViewProfile = (collab: Collaborator) => {
     setSelectedCollab(collab)
     setProfileOpen(true)
+  }
+
+  const handleManualDelivery = (collab: Collaborator) => {
+    setManualDeliveryEmpId(collab.id)
   }
 
   const confirmDelete = () => {
@@ -154,14 +196,30 @@ export default function Collaborators() {
         </Button>
       </div>
 
-      <div className="flex items-center space-x-2 bg-white p-1 rounded-lg border border-slate-200 shadow-sm max-w-sm">
-        <Search className="w-4 h-4 text-slate-400 ml-2" />
-        <Input
-          placeholder="Buscar por nome ou área..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="border-none shadow-none focus-visible:ring-0"
-        />
+      <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex items-center space-x-2 bg-white p-1 rounded-lg border border-slate-200 shadow-sm max-w-sm flex-1">
+          <Search className="w-4 h-4 text-slate-400 ml-2" />
+          <Input
+            placeholder="Buscar por nome ou área..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="border-none shadow-none focus-visible:ring-0"
+          />
+        </div>
+        <div className="w-[200px]">
+          <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+            <SelectTrigger className="bg-white border-slate-200 shadow-sm">
+              <SelectValue placeholder="Filtrar por Área" />
+            </SelectTrigger>
+            <SelectContent>
+              {departments.map((dept) => (
+                <SelectItem key={dept} value={dept}>
+                  {dept}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="rounded-xl border bg-white shadow-sm overflow-hidden">
@@ -171,6 +229,8 @@ export default function Collaborators() {
               <TableHead className="w-[300px]">Colaborador</TableHead>
               <TableHead>Área/Time</TableHead>
               <TableHead>Cargo</TableHead>
+              <TableHead className="text-center">Itens Resgatados</TableHead>
+              <TableHead className="text-center">Kit Onboarding</TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -178,7 +238,7 @@ export default function Collaborators() {
             {filteredTeam.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={4}
+                  colSpan={6}
                   className="h-32 text-center text-slate-500"
                 >
                   <div className="flex flex-col items-center justify-center gap-2">
@@ -188,83 +248,144 @@ export default function Collaborators() {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredTeam.map((collab) => (
-                <TableRow key={collab.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-9 w-9 border border-slate-100">
-                        <AvatarImage src={collab.avatarUrl} alt={collab.name} />
-                        <AvatarFallback className="text-xs font-bold text-primary bg-primary/10">
-                          {collab.name.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col">
-                        <span className="font-bold text-slate-800 text-sm">
-                          {collab.name}
-                        </span>
-                        <span className="text-xs text-slate-500">
-                          {collab.email}
-                        </span>
+              filteredTeam.map((collab) => {
+                const redeemedCount = getRedeemedCount(collab.id)
+                return (
+                  <TableRow key={collab.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-9 w-9 border border-slate-100">
+                          <AvatarImage
+                            src={collab.avatarUrl}
+                            alt={collab.name}
+                          />
+                          <AvatarFallback className="text-xs font-bold text-primary bg-primary/10">
+                            {collab.name.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <span className="font-bold text-slate-800 text-sm">
+                            {collab.name}
+                          </span>
+                          <span className="text-xs text-slate-500">
+                            {collab.email}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="secondary"
-                      className={cn(
-                        'font-medium rounded-md hover:bg-opacity-80',
-                        departmentColors[collab.department] || 'bg-slate-100',
-                      )}
-                    >
-                      {collab.department}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-sm text-slate-600 font-medium">
-                      {collab.role}
-                    </span>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleViewProfile(collab)}
-                        className="h-8 w-8 p-0 text-slate-500 hover:text-[#0E9C8B] hover:bg-[#0E9C8B]/10 rounded-md"
-                        title="Ver Perfil"
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="secondary"
+                        className={cn(
+                          'font-medium rounded-md hover:bg-opacity-80',
+                          departmentColors[collab.department] || 'bg-slate-100',
+                        )}
                       >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            className="h-8 w-8 p-0 rounded-md"
+                        {collab.department}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-slate-600 font-medium">
+                        {collab.role}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge
+                        variant={redeemedCount > 0 ? 'default' : 'secondary'}
+                        className={cn(
+                          'rounded-full px-2 min-w-[2rem] justify-center',
+                          redeemedCount === 0 &&
+                            'bg-slate-100 text-slate-500 hover:bg-slate-100',
+                          redeemedCount > 0 &&
+                            'bg-[#0E9C8B] hover:bg-[#0E9C8B]/90',
+                        )}
+                      >
+                        {redeemedCount}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      <Badge
+                        variant="outline"
+                        className={cn(
+                          'font-normal rounded-md border-0',
+                          collab.onboardingKitStatus === 'Entregue'
+                            ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                            : 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200',
+                        )}
+                      >
+                        {collab.onboardingKitStatus || 'Pendente'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end items-center gap-1">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleManualDelivery(collab)}
+                              className="h-8 w-8 p-0 text-slate-500 hover:text-[#0E9C8B] hover:bg-[#0E9C8B]/10 rounded-md"
+                            >
+                              <Gift className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Enviar Brinde Manual</p>
+                          </TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleViewProfile(collab)}
+                              className="h-8 w-8 p-0 text-slate-500 hover:text-[#0E9C8B] hover:bg-[#0E9C8B]/10 rounded-md"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Visualizar Perfil</p>
+                          </TooltipContent>
+                        </Tooltip>
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              className="h-8 w-8 p-0 rounded-md"
+                            >
+                              <span className="sr-only">Menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            align="end"
+                            className="rounded-lg"
                           >
-                            <span className="sr-only">Menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="rounded-lg">
-                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => handleEdit(collab)}>
-                            <Pencil className="h-4 w-4" />
-                            Editar
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() => handleDelete(collab)}
-                            className="text-red-600 focus:text-red-600"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                            Excluir
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
+                            <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                            <DropdownMenuItem
+                              onClick={() => handleEdit(collab)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() => handleDelete(collab)}
+                              className="text-red-600 focus:text-red-600"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                              Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )
+              })
             )}
           </TableBody>
         </Table>
@@ -282,6 +403,17 @@ export default function Collaborators() {
         onOpenChange={setProfileOpen}
         collaborator={selectedCollab}
       />
+
+      {manualDeliveryEmpId && (
+        <ManualDeliveryDialog
+          open={!!manualDeliveryEmpId}
+          onOpenChange={(open) => !open && setManualDeliveryEmpId(null)}
+          employeeId={manualDeliveryEmpId}
+          onSuccess={() => {
+            setManualDeliveryEmpId(null)
+          }}
+        />
+      )}
 
       <AlertDialog
         open={!!deleteCollab}
