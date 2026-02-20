@@ -293,9 +293,7 @@ export default function Dashboard() {
             <TrendingUp className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-white">
-              {totalItems ? totalOutputs : 0}
-            </div>
+            <div className="text-3xl font-bold text-white">{totalOutputs}</div>
             <p className="text-xs text-slate-500 mt-2">
               Itens retirados no período
             </p>
