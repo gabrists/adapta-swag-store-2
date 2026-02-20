@@ -8,6 +8,9 @@ import {
   Users,
   Eye,
   Gift,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react'
 import useSwagStore from '@/stores/useSwagStore'
 import { Collaborator } from '@/types'
@@ -70,6 +73,19 @@ const departmentColors: Record<string, string> = {
   Financeiro: 'bg-emerald-100 text-emerald-800',
 }
 
+type SortKey =
+  | 'name'
+  | 'department'
+  | 'role'
+  | 'redeemedCount'
+  | 'onboardingKitStatus'
+type SortDirection = 'asc' | 'desc'
+
+interface SortConfig {
+  key: SortKey
+  direction: SortDirection
+}
+
 export default function Collaborators() {
   const {
     team,
@@ -91,6 +107,10 @@ export default function Collaborators() {
     null,
   )
   const [deleteCollab, setDeleteCollab] = useState<Collaborator | null>(null)
+  const [sortConfig, setSortConfig] = useState<SortConfig>({
+    key: 'name',
+    direction: 'asc',
+  })
 
   // Get distinct departments for filter
   const departments = useMemo(() => {
@@ -98,21 +118,61 @@ export default function Collaborators() {
     return ['Todas', ...depts.sort()]
   }, [team])
 
-  const filteredTeam = useMemo(() => {
-    return team.filter((collab) => {
-      const matchesSearch =
-        collab.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        collab.department.toLowerCase().includes(searchQuery.toLowerCase())
-      const matchesDept =
-        departmentFilter === 'Todas' || collab.department === departmentFilter
-      return matchesSearch && matchesDept
-    })
-  }, [team, searchQuery, departmentFilter])
+  // Process team data: calculate counts, filter, and sort
+  const processedTeam = useMemo(() => {
+    // 1. Pre-calculate redeemed counts for performance
+    const counts = orders.reduce(
+      (acc, order) => {
+        if (order.status === 'Entregue') {
+          acc[order.employeeId] = (acc[order.employeeId] || 0) + order.quantity
+        }
+        return acc
+      },
+      {} as Record<string, number>,
+    )
 
-  const getRedeemedCount = (employeeId: string) => {
-    return orders
-      .filter((o) => o.employeeId === employeeId && o.status === 'Entregue')
-      .reduce((acc, o) => acc + o.quantity, 0)
+    // 2. Extend team data with counts
+    let data = team.map((collab) => ({
+      ...collab,
+      redeemedCount: counts[collab.id] || 0,
+    }))
+
+    // 3. Filter
+    if (searchQuery || departmentFilter !== 'Todas') {
+      const lowerQuery = searchQuery.toLowerCase()
+      data = data.filter((collab) => {
+        const matchesSearch =
+          collab.name.toLowerCase().includes(lowerQuery) ||
+          collab.email.toLowerCase().includes(lowerQuery) ||
+          collab.department.toLowerCase().includes(lowerQuery) ||
+          collab.role.toLowerCase().includes(lowerQuery)
+
+        const matchesDept =
+          departmentFilter === 'Todas' || collab.department === departmentFilter
+
+        return matchesSearch && matchesDept
+      })
+    }
+
+    // 4. Sort
+    data.sort((a, b) => {
+      const aValue = a[sortConfig.key]
+      const bValue = b[sortConfig.key]
+
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1
+      return 0
+    })
+
+    return data
+  }, [team, orders, searchQuery, departmentFilter, sortConfig])
+
+  const handleSort = (key: SortKey) => {
+    setSortConfig((current) => ({
+      key,
+      direction:
+        current.key === key && current.direction === 'asc' ? 'desc' : 'asc',
+    }))
   }
 
   const handleCreate = () => {
@@ -154,8 +214,6 @@ export default function Collaborators() {
     // Simulate delay
     await new Promise((resolve) => setTimeout(resolve, 500))
 
-    if (selectedCollab && !dialogOpen) return // Should not happen
-
     if (selectedCollab) {
       updateCollaborator({
         ...selectedCollab,
@@ -174,6 +232,17 @@ export default function Collaborators() {
         className: 'bg-emerald-50 border-emerald-200 text-emerald-900',
       })
     }
+  }
+
+  const SortIcon = ({ column }: { column: SortKey }) => {
+    if (sortConfig.key !== column) {
+      return <ArrowUpDown className="ml-2 h-4 w-4 text-slate-400" />
+    }
+    return sortConfig.direction === 'asc' ? (
+      <ArrowUp className="ml-2 h-4 w-4 text-primary" />
+    ) : (
+      <ArrowDown className="ml-2 h-4 w-4 text-primary" />
+    )
   }
 
   return (
@@ -200,7 +269,7 @@ export default function Collaborators() {
         <div className="flex items-center space-x-2 bg-white p-1 rounded-lg border border-slate-200 shadow-sm max-w-sm flex-1">
           <Search className="w-4 h-4 text-slate-400 ml-2" />
           <Input
-            placeholder="Buscar por nome ou área..."
+            placeholder="Buscar por nome, email ou área..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="border-none shadow-none focus-visible:ring-0"
@@ -226,16 +295,65 @@ export default function Collaborators() {
         <Table>
           <TableHeader>
             <TableRow className="bg-slate-50 hover:bg-slate-50">
-              <TableHead className="w-[300px]">Colaborador</TableHead>
-              <TableHead>Área/Time</TableHead>
-              <TableHead>Cargo</TableHead>
-              <TableHead className="text-center">Itens Resgatados</TableHead>
-              <TableHead className="text-center">Kit Onboarding</TableHead>
+              <TableHead className="w-[300px]">
+                <Button
+                  variant="ghost"
+                  onClick={() => handleSort('name')}
+                  className="-ml-4 h-8 hover:bg-transparent hover:text-primary font-semibold text-slate-700 data-[state=open]:bg-transparent"
+                >
+                  Colaborador
+                  <SortIcon column="name" />
+                </Button>
+              </TableHead>
+              <TableHead>
+                <Button
+                  variant="ghost"
+                  onClick={() => handleSort('department')}
+                  className="-ml-4 h-8 hover:bg-transparent hover:text-primary font-semibold text-slate-700 data-[state=open]:bg-transparent"
+                >
+                  Área/Time
+                  <SortIcon column="department" />
+                </Button>
+              </TableHead>
+              <TableHead>
+                <Button
+                  variant="ghost"
+                  onClick={() => handleSort('role')}
+                  className="-ml-4 h-8 hover:bg-transparent hover:text-primary font-semibold text-slate-700 data-[state=open]:bg-transparent"
+                >
+                  Cargo
+                  <SortIcon column="role" />
+                </Button>
+              </TableHead>
+              <TableHead className="text-center">
+                <div className="flex justify-center">
+                  <Button
+                    variant="ghost"
+                    onClick={() => handleSort('redeemedCount')}
+                    className="h-8 hover:bg-transparent hover:text-primary font-semibold text-slate-700 data-[state=open]:bg-transparent"
+                  >
+                    Itens Resgatados
+                    <SortIcon column="redeemedCount" />
+                  </Button>
+                </div>
+              </TableHead>
+              <TableHead className="text-center">
+                <div className="flex justify-center">
+                  <Button
+                    variant="ghost"
+                    onClick={() => handleSort('onboardingKitStatus')}
+                    className="h-8 hover:bg-transparent hover:text-primary font-semibold text-slate-700 data-[state=open]:bg-transparent"
+                  >
+                    Kit Onboarding
+                    <SortIcon column="onboardingKitStatus" />
+                  </Button>
+                </div>
+              </TableHead>
               <TableHead className="text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredTeam.length === 0 ? (
+            {processedTeam.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={6}
@@ -248,8 +366,7 @@ export default function Collaborators() {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredTeam.map((collab) => {
-                const redeemedCount = getRedeemedCount(collab.id)
+              processedTeam.map((collab) => {
                 return (
                   <TableRow key={collab.id}>
                     <TableCell>
@@ -291,16 +408,18 @@ export default function Collaborators() {
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge
-                        variant={redeemedCount > 0 ? 'default' : 'secondary'}
+                        variant={
+                          collab.redeemedCount > 0 ? 'default' : 'secondary'
+                        }
                         className={cn(
                           'rounded-full px-2 min-w-[2rem] justify-center',
-                          redeemedCount === 0 &&
+                          collab.redeemedCount === 0 &&
                             'bg-slate-100 text-slate-500 hover:bg-slate-100',
-                          redeemedCount > 0 &&
+                          collab.redeemedCount > 0 &&
                             'bg-[#0E9C8B] hover:bg-[#0E9C8B]/90',
                         )}
                       >
-                        {redeemedCount}
+                        {collab.redeemedCount}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center">

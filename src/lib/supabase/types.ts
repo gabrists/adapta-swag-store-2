@@ -41,6 +41,7 @@ export type Database = {
           email: string
           id: string
           name: string
+          onboarding_kit_status: string | null
           role: string | null
         }
         Insert: {
@@ -50,6 +51,7 @@ export type Database = {
           email: string
           id?: string
           name: string
+          onboarding_kit_status?: string | null
           role?: string | null
         }
         Update: {
@@ -59,6 +61,7 @@ export type Database = {
           email?: string
           id?: string
           name?: string
+          onboarding_kit_status?: string | null
           role?: string | null
         }
         Relationships: [
