@@ -322,18 +322,18 @@ export default function ApprovalsPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="h-9 px-4 text-xs font-semibold border-gray-200 dark:border-white/10 text-gray-600 dark:text-[#ADADAD] hover:text-red-600 dark:hover:text-red-400 hover:border-red-600 dark:hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all duration-300"
+                        className="h-9 px-4 flex items-center justify-center gap-1.5 text-xs font-semibold border border-gray-200 dark:border-white/10 text-gray-600 dark:text-[#ADADAD] hover:text-red-600 dark:hover:text-red-400 hover:border-red-600 dark:hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all duration-300"
                         onClick={() => handleBulkRejectClick(group)}
                       >
-                        <X className="w-3.5 h-3.5 mr-1.5" />
+                        <X className="w-3.5 h-3.5" />
                         Rejeitar Tudo
                       </Button>
                       <Button
                         size="sm"
-                        className="h-9 px-4 text-xs font-semibold bg-[#0E9C8B] hover:bg-[#0E9C8B]/90 text-white border-transparent transition-all duration-300 shadow-sm hover:shadow-[0_0_15px_rgba(14,156,139,0.3)]"
+                        className="h-9 px-4 flex items-center justify-center gap-1.5 text-xs font-semibold bg-[#0E9C8B] hover:bg-[#0E9C8B]/90 text-white border border-[#0E9C8B] transition-all duration-300 shadow-sm hover:shadow-[0_0_15px_rgba(14,156,139,0.3)]"
                         onClick={() => handleBulkApproveClick(group)}
                       >
-                        <Check className="w-3.5 h-3.5 mr-1.5" />
+                        <Check className="w-3.5 h-3.5" />
                         Aprovar Tudo
                       </Button>
                     </div>
@@ -409,7 +409,7 @@ export default function ApprovalsPage() {
                                 <Button
                                   variant="outline"
                                   size="icon"
-                                  className="h-8 w-8 rounded-full border-gray-200 dark:border-white/10 text-gray-500 dark:text-[#ADADAD] hover:text-red-600 dark:hover:text-red-400 hover:border-red-600 dark:hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+                                  className="h-8 w-8 flex items-center justify-center rounded-full border border-gray-200 dark:border-white/10 text-gray-500 dark:text-[#ADADAD] hover:text-red-600 dark:hover:text-red-400 hover:border-red-600 dark:hover:border-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
                                   onClick={() => handleRejectClick(item)}
                                 >
                                   <X className="w-4 h-4" />
@@ -417,7 +417,7 @@ export default function ApprovalsPage() {
                                 <Button
                                   variant="outline"
                                   size="icon"
-                                  className="h-8 w-8 rounded-full border-gray-200 dark:border-white/10 text-gray-500 dark:text-[#ADADAD] hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-600 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all"
+                                  className="h-8 w-8 flex items-center justify-center rounded-full border border-gray-200 dark:border-white/10 text-gray-500 dark:text-[#ADADAD] hover:text-emerald-600 dark:hover:text-emerald-400 hover:border-emerald-600 dark:hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all"
                                   onClick={() => handleApproveClick(item)}
                                 >
                                   <Check className="w-4 h-4" />
