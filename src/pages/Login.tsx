@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { Package2, Loader2, ArrowRight, AlertCircle } from 'lucide-react'
+import { Package2, Loader2, ArrowRight, AlertCircle, Info } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -120,6 +120,21 @@ export default function Login() {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              <div className="mb-6 flex flex-col items-center justify-center rounded-xl border border-primary/20 bg-primary/10 p-4 text-center relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent"></div>
+                <div className="flex items-center justify-center gap-1.5 mb-1.5">
+                  <Info className="w-3.5 h-3.5 text-primary" />
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                    Apenas para validação do projeto
+                  </p>
+                </div>
+                <p className="text-sm text-white/90 font-medium leading-relaxed">
+                  Use seu e-mail cadastrado no Slack e a senha{' '}
+                  <span className="font-bold text-white">&quot;123&quot;</span>{' '}
+                  para entrar.
+                </p>
+              </div>
+
               {errorMessage && (
                 <Alert variant="destructive" className="mb-6">
                   <AlertCircle className="h-4 w-4" />
