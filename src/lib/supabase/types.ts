@@ -302,6 +302,8 @@ export type Database = {
           name: string
           options: Json
           status: string
+          target_ids: string[] | null
+          target_type: string
         }
         Insert: {
           created_at?: string | null
@@ -311,6 +313,8 @@ export type Database = {
           name: string
           options?: Json
           status?: string
+          target_ids?: string[] | null
+          target_type?: string
         }
         Update: {
           created_at?: string | null
@@ -320,6 +324,8 @@ export type Database = {
           name?: string
           options?: Json
           status?: string
+          target_ids?: string[] | null
+          target_type?: string
         }
         Relationships: []
       }
@@ -541,6 +547,8 @@ export const Constants = {
 //   options: jsonb (not null, default: '[]'::jsonb)
 //   created_at: timestamp with time zone (nullable, default: CURRENT_TIMESTAMP)
 //   image_url: text (nullable)
+//   target_type: text (not null, default: 'all'::text)
+//   target_ids: _uuid (nullable)
 
 // --- CONSTRAINTS ---
 // Table: campaign_responses
@@ -572,6 +580,7 @@ export const Constants = {
 // Table: swag_campaigns
 //   PRIMARY KEY swag_campaigns_pkey: PRIMARY KEY (id)
 //   CHECK swag_campaigns_status_check: CHECK ((status = ANY (ARRAY['Aberta'::text, 'Fechada'::text])))
+//   CHECK swag_campaigns_target_type_check: CHECK ((target_type = ANY (ARRAY['all'::text, 'departments'::text, 'employees'::text])))
 
 // --- DATABASE FUNCTIONS ---
 // FUNCTION update_stock_after_movement()

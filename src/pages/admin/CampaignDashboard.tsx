@@ -137,7 +137,7 @@ export default function CampaignDashboard() {
   const handleNotifySlack = async () => {
     if (!campaign) return
     const link = `${window.location.origin}/coleta/${campaign.id}`
-    const msg = `👕 *O RH precisa da sua ajuda!* Escolha seu tamanho para a campanha *${campaign.name}*. Clique aqui para responder: ${link}`
+    const msg = `🎁 *Surpresa! Tem mimo novo pra você!*\nVocê foi selecionado(a) para a nossa nova campanha: *${campaign.name}*. \nPara a gente preparar tudo certinho e mandar pro fornecedor, precisamos que você escolha o seu tamanho/preferência. É jogo rápido!\n👉 *Garanta o seu aqui:* ${link}\n⏳ *Responda o quanto antes para não ficar de fora!*`
 
     try {
       if (campaign.targetType === 'all') {
