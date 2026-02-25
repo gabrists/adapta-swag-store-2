@@ -290,9 +290,11 @@ export function SwagProvider({ children }: { children: ReactNode }) {
     const { data, error } = await supabase
       .from('slack_settings')
       .select('*')
-      .single()
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
 
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
       console.error('Error fetching slack settings:', error)
       return
     }
@@ -309,7 +311,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         .from('slack_settings')
         .insert({ webhook_url: '', is_enabled: false } as any)
         .select()
-        .single()
+        .maybeSingle()
 
       if (!newError && newData) {
         setSlackSettings({
