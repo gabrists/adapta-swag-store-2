@@ -478,7 +478,7 @@ export default function CampaignsPage() {
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[700px] md:max-w-[750px] w-[95vw] overflow-x-hidden">
           <DialogHeader>
             <DialogTitle>
               {editingCampaign ? 'Editar Campanha' : 'Nova Campanha de Coleta'}
@@ -497,7 +497,7 @@ export default function CampaignsPage() {
                   <FormLabel>Link de Compartilhamento</FormLabel>
                   <div className="flex items-center gap-2 p-2 bg-slate-50 dark:bg-white/5 rounded-lg border border-slate-200 dark:border-white/10 w-full overflow-hidden">
                     <LinkIcon className="w-4 h-4 text-slate-400 shrink-0" />
-                    <span className="text-sm text-slate-600 dark:text-[#ADADAD] truncate select-all">
+                    <span className="text-sm text-slate-600 dark:text-[#ADADAD] truncate select-all min-w-0 flex-1">
                       {`${window.location.origin}/coleta/${editingCampaign.id}`}
                     </span>
                     <div className="flex gap-1 shrink-0 ml-auto">
@@ -627,9 +627,9 @@ export default function CampaignsPage() {
                           form.setValue('targetIds', [])
                         }}
                         defaultValue={field.value}
-                        className="grid grid-cols-1 sm:grid-cols-3 gap-2"
+                        className="grid grid-cols-1 sm:grid-cols-3 gap-3"
                       >
-                        <FormItem className="flex flex-col items-center justify-center p-3 border border-slate-200 dark:border-white/10 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-colors space-y-2 text-center relative group has-[:checked]:border-primary/50 has-[:checked]:bg-primary/5">
+                        <FormItem className="flex flex-col items-center justify-center p-4 border border-slate-200 dark:border-white/10 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-colors space-y-2 text-center relative group has-[:checked]:border-primary/50 has-[:checked]:bg-primary/5">
                           <FormControl>
                             <RadioGroupItem
                               value="all"
@@ -640,7 +640,7 @@ export default function CampaignsPage() {
                             Toda a Empresa
                           </FormLabel>
                         </FormItem>
-                        <FormItem className="flex flex-col items-center justify-center p-3 border border-slate-200 dark:border-white/10 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-colors space-y-2 text-center relative group has-[:checked]:border-primary/50 has-[:checked]:bg-primary/5">
+                        <FormItem className="flex flex-col items-center justify-center p-4 border border-slate-200 dark:border-white/10 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-colors space-y-2 text-center relative group has-[:checked]:border-primary/50 has-[:checked]:bg-primary/5">
                           <FormControl>
                             <RadioGroupItem
                               value="departments"
@@ -651,7 +651,7 @@ export default function CampaignsPage() {
                             Por Departamento
                           </FormLabel>
                         </FormItem>
-                        <FormItem className="flex flex-col items-center justify-center p-3 border border-slate-200 dark:border-white/10 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-colors space-y-2 text-center relative group has-[:checked]:border-primary/50 has-[:checked]:bg-primary/5">
+                        <FormItem className="flex flex-col items-center justify-center p-4 border border-slate-200 dark:border-white/10 rounded-lg cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-colors space-y-2 text-center relative group has-[:checked]:border-primary/50 has-[:checked]:bg-primary/5">
                           <FormControl>
                             <RadioGroupItem
                               value="employees"
@@ -894,7 +894,7 @@ export default function CampaignsPage() {
                       <button
                         type="button"
                         onClick={() => removeOption(idx)}
-                        className="hover:text-red-500 ml-1 transition-colors focus:outline-none"
+                        className="hover:text-red-500 ml-1 transition-colors focus:outline-none shrink-0"
                       >
                         <X className="w-3 h-3" />
                       </button>
@@ -913,18 +913,19 @@ export default function CampaignsPage() {
                 </FormDescription>
               </div>
 
-              <DialogFooter className="pt-2">
+              <DialogFooter className="pt-2 gap-2 sm:gap-0">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setIsDialogOpen(false)}
+                  className="w-full sm:w-auto"
                 >
                   Cancelar
                 </Button>
                 <Button
                   type="submit"
                   disabled={form.formState.isSubmitting || isUploadingImage}
-                  className="bg-[#0E9C8B] hover:bg-[#0E9C8B]/90 text-white"
+                  className="bg-[#0E9C8B] hover:bg-[#0E9C8B]/90 text-white w-full sm:w-auto"
                 >
                   {form.formState.isSubmitting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
