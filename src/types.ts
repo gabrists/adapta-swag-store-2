@@ -109,6 +109,20 @@ export interface CampaignResponse {
   updatedAt: string
 }
 
+export interface KitItem {
+  id: string
+  kitId: string
+  itemId: string
+  quantity: number
+}
+
+export interface Kit {
+  id: string
+  name: string
+  createdAt: string
+  items: KitItem[]
+}
+
 export type Category =
   | 'Todos'
   | 'Vendas'

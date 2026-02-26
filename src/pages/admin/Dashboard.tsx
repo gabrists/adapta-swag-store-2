@@ -6,6 +6,7 @@ import {
   TrendingUp,
   DollarSign,
   ExternalLink,
+  Calendar,
 } from 'lucide-react'
 import {
   startOfQuarter,
@@ -117,25 +118,7 @@ export default function Dashboard() {
     [allLowStockProducts],
   )
 
-  const topConsumingArea = useMemo(() => {
-    const departmentCounts: Record<string, number> = {}
-
-    filteredHistory.forEach((entry) => {
-      const collaborator = team.find((c) => c.name === entry.user)
-      const dept = collaborator?.department || 'Outros'
-      const qty = Number(entry.totalQuantity)
-      const safeQty = isNaN(qty) ? 0 : qty
-
-      departmentCounts[dept] = (departmentCounts[dept] || 0) + safeQty
-    })
-
-    const sortedDepts = Object.entries(departmentCounts).sort(
-      (a, b) => b[1] - a[1],
-    )
-    return sortedDepts.length > 0 ? sortedDepts[0][0] : 'N/A'
-  }, [filteredHistory, team])
-
-  const monthlyTotalCost = useMemo(() => {
+  const { internalMonthlyCost, eventMonthlyCost } = useMemo(() => {
     const now = new Date()
     const start = startOfMonth(now)
     const end = endOfMonth(now)
@@ -146,12 +129,21 @@ export default function Dashboard() {
       return isValid(entryDate) && isWithinInterval(entryDate, { start, end })
     })
 
-    return currentMonthHistory.reduce((acc, entry) => acc + entry.totalValue, 0)
+    const internalCost = currentMonthHistory
+      .filter((e) => !e.destination?.startsWith('Evento:'))
+      .reduce((acc, entry) => acc + entry.totalValue, 0)
+
+    const eventCost = currentMonthHistory
+      .filter((e) => e.destination?.startsWith('Evento:'))
+      .reduce((acc, entry) => acc + entry.totalValue, 0)
+
+    return { internalMonthlyCost: internalCost, eventMonthlyCost: eventCost }
   }, [history])
 
   const departmentData = useMemo(() => {
     const deptCounts: Record<string, number> = {}
     filteredHistory.forEach((entry) => {
+      if (entry.destination?.startsWith('Evento:')) return // Skip events for dept chart
       const collaborator = team.find((c) => c.name === entry.user)
       const dept = collaborator?.department || 'Outros'
       const qty = Number(entry.totalQuantity)
@@ -168,6 +160,7 @@ export default function Dashboard() {
     const deptCosts: Record<string, number> = {}
 
     filteredHistory.forEach((entry) => {
+      if (entry.destination?.startsWith('Evento:')) return // Skip events for dept chart
       const collaborator = team.find((c) => c.name === entry.user)
       const dept = collaborator?.department || 'Outros'
       deptCosts[dept] = (deptCosts[dept] || 0) + entry.totalValue
@@ -185,6 +178,7 @@ export default function Dashboard() {
       const mainItemName = items[0]?.productName || 'Item Removido'
       const moreItemsCount = Math.max(0, items.length - 1)
       const qty = Number(entry.totalQuantity)
+      const isEvent = entry.destination?.startsWith('Evento:')
 
       return {
         ...entry,
@@ -192,6 +186,7 @@ export default function Dashboard() {
         collaborator,
         mainItemName,
         moreItemsCount,
+        isEvent,
       }
     })
   }, [filteredHistory, team])
@@ -213,6 +208,8 @@ export default function Dashboard() {
         return 'bg-sky-100 text-sky-800 border-sky-200 dark:bg-sky-500/20 dark:text-sky-400 dark:border-sky-500/30'
       case 'RH':
         return 'bg-emerald-100 text-emerald-800 border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-400 dark:border-emerald-500/30'
+      case 'Eventos':
+        return 'bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-500/20 dark:text-amber-400 dark:border-amber-500/30'
       default:
         return 'bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-500/20 dark:text-slate-300 dark:border-slate-500/30'
     }
@@ -307,16 +304,33 @@ export default function Dashboard() {
         <Card className="hover:border-primary/30 transition-colors bg-white dark:bg-[#081a17]/80 border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-slate-900 dark:text-white">
-              Custo Total Mensal
+              Custo Interno Mensal
             </CardTitle>
             <DollarSign className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-slate-900 dark:text-white">
-              {formatCurrency(monthlyTotalCost)}
+              {formatCurrency(internalMonthlyCost)}
             </div>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-              Gasto no mês atual
+              Consumo da equipe
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:border-primary/30 transition-colors bg-white dark:bg-[#081a17]/80 border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium text-slate-900 dark:text-white">
+              Custo Eventos Mensal
+            </CardTitle>
+            <Calendar className="h-4 w-4 text-primary" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-3xl font-bold text-slate-900 dark:text-white">
+              {formatCurrency(eventMonthlyCost)}
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+              Saídas para eventos externos
             </p>
           </CardContent>
         </Card>
@@ -364,23 +378,6 @@ export default function Dashboard() {
             </p>
           </CardContent>
         </Card>
-
-        <Card className="hover:border-primary/30 transition-colors bg-white dark:bg-[#081a17]/80 border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-900 dark:text-white">
-              Área que mais Consome
-            </CardTitle>
-            <Users className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-slate-900 dark:text-white truncate min-h-[36px] flex items-center">
-              {topConsumingArea}
-            </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
-              Departamento com mais retiradas
-            </p>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Charts Section */}
@@ -388,7 +385,7 @@ export default function Dashboard() {
         <Card className="bg-white dark:bg-[#081a17]/80 border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-slate-900 dark:text-white">
-              Custo por Departamento (R$)
+              Custo Interno por Departamento (R$)
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -448,7 +445,7 @@ export default function Dashboard() {
         <Card className="bg-white dark:bg-[#081a17]/80 border-slate-200 dark:border-white/10 shadow-sm dark:shadow-none">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-slate-900 dark:text-white">
-              Distribuição por Departamento (Qtd)
+              Distribuição Interna por Departamento (Qtd)
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -535,7 +532,7 @@ export default function Dashboard() {
                       Data
                     </TableHead>
                     <TableHead className="text-slate-600 dark:text-slate-300">
-                      Colaborador
+                      Responsável / Origem
                     </TableHead>
                     <TableHead className="text-slate-600 dark:text-slate-300">
                       Item Retirado
@@ -573,16 +570,24 @@ export default function Dashboard() {
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <Avatar className="h-8 w-8 border border-slate-200 dark:border-white/10">
-                              <AvatarImage
-                                src={tx.collaborator?.avatarUrl}
-                                alt={tx.user}
-                              />
-                              <AvatarFallback className="text-xs bg-slate-100 dark:bg-white/5 text-slate-900 dark:text-white">
-                                {tx.user.substring(0, 2).toUpperCase()}
-                              </AvatarFallback>
+                              {tx.isEvent ? (
+                                <AvatarFallback className="text-xs bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400">
+                                  EV
+                                </AvatarFallback>
+                              ) : (
+                                <>
+                                  <AvatarImage
+                                    src={tx.collaborator?.avatarUrl}
+                                    alt={tx.user}
+                                  />
+                                  <AvatarFallback className="text-xs bg-slate-100 dark:bg-white/5 text-slate-900 dark:text-white">
+                                    {tx.user.substring(0, 2).toUpperCase()}
+                                  </AvatarFallback>
+                                </>
+                              )}
                             </Avatar>
                             <span className="text-sm text-slate-900 dark:text-white font-medium truncate max-w-[120px]">
-                              {tx.user}
+                              {tx.isEvent ? tx.destination : tx.user}
                             </span>
                           </div>
                         </TableCell>
@@ -605,11 +610,15 @@ export default function Dashboard() {
                             className={cn(
                               'text-[10px] font-medium',
                               getDepartmentBadgeStyles(
-                                tx.collaborator?.department,
+                                tx.isEvent
+                                  ? 'Eventos'
+                                  : tx.collaborator?.department,
                               ),
                             )}
                           >
-                            {tx.collaborator?.department || 'N/A'}
+                            {tx.isEvent
+                              ? 'Eventos Externos'
+                              : tx.collaborator?.department || 'N/A'}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right pr-6 text-sm font-medium text-primary">

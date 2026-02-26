@@ -16,6 +16,7 @@ import {
   SlackSettings,
   Campaign,
   CampaignResponse,
+  Kit,
 } from '@/types'
 import { triggerConfetti } from '@/lib/confetti'
 import { supabase } from '@/lib/supabase/client'
@@ -33,6 +34,7 @@ interface SwagContextType {
   slackSettings: SlackSettings | null
   campaigns: Campaign[]
   campaignResponses: CampaignResponse[]
+  kits: Kit[]
   addToCart: (product: Product, quantity: number, size?: string) => void
   removeFromCart: (productId: string, size?: string) => void
   updateCartItemQuantity: (
@@ -91,6 +93,18 @@ interface SwagContextType {
     employeeId: string,
     choice: string,
   ) => Promise<void>
+  fetchKits: () => Promise<void>
+  createKit: (
+    name: string,
+    items: { itemId: string; quantity: number }[],
+  ) => Promise<void>
+  deleteKit: (id: string) => Promise<void>
+  checkoutEventKit: (
+    kitId: string,
+    eventName: string,
+    quantity: number,
+    date: Date,
+  ) => Promise<void>
   isLoading: boolean
 }
 
@@ -109,6 +123,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
   const [campaignResponses, setCampaignResponses] = useState<
     CampaignResponse[]
   >([])
+  const [kits, setKits] = useState<Kit[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const { toast } = useToast()
 
@@ -126,6 +141,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
           fetchSlackSettings(),
           fetchCampaigns(),
           fetchCampaignResponses(),
+          fetchKits(),
         ])
         await fetchHistory()
       } catch (error) {
@@ -257,11 +273,12 @@ export function SwagProvider({ children }: { children: ReactNode }) {
 
     data?.forEach((row: any) => {
       if (!groups[row.group_id]) {
+        const isEvent = row.destination?.startsWith('Evento:')
         groups[row.group_id] = {
           id: row.group_id,
           items: [],
-          user: row.employees?.name || 'Desconhecido',
-          userAvatar: row.employees?.avatar_url,
+          user: isEvent ? 'Evento Externo' : row.employees?.name || 'Sistema',
+          userAvatar: isEvent ? undefined : row.employees?.avatar_url,
           destination: row.destination || '',
           date: row.created_at,
           totalQuantity: 0,
@@ -374,6 +391,125 @@ export function SwagProvider({ children }: { children: ReactNode }) {
     setCampaignResponses(mapped)
   }
 
+  const fetchKits = async () => {
+    const { data, error } = await supabase
+      .from('kits' as any)
+      .select(
+        `
+        id, name, created_at,
+        kit_items (id, kit_id, item_id, quantity)
+      `,
+      )
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching kits:', error)
+      return
+    }
+
+    const mappedKits: Kit[] =
+      data?.map((k: any) => ({
+        id: k.id,
+        name: k.name,
+        createdAt: k.created_at,
+        items:
+          k.kit_items?.map((ki: any) => ({
+            id: ki.id,
+            kitId: ki.kit_id,
+            itemId: ki.item_id,
+            quantity: ki.quantity,
+          })) || [],
+      })) || []
+
+    setKits(mappedKits)
+  }
+
+  const createKit = async (
+    name: string,
+    items: { itemId: string; quantity: number }[],
+  ) => {
+    if (!checkAdminPermission()) return
+
+    const { data: newKit, error: kitError } = await supabase
+      .from('kits' as any)
+      .insert({ name })
+      .select()
+      .single()
+
+    if (kitError) throw kitError
+
+    const inserts = items.map((i) => ({
+      kit_id: newKit.id,
+      item_id: i.itemId,
+      quantity: i.quantity,
+    }))
+
+    const { error: itemsError } = await supabase
+      .from('kit_items' as any)
+      .insert(inserts)
+
+    if (itemsError) throw itemsError
+
+    await fetchKits()
+  }
+
+  const deleteKit = async (id: string) => {
+    if (!checkAdminPermission()) return
+    const { error } = await supabase
+      .from('kits' as any)
+      .delete()
+      .eq('id', id)
+    if (error) throw error
+    setKits((prev) => prev.filter((k) => k.id !== id))
+  }
+
+  const checkoutEventKit = async (
+    kitId: string,
+    eventName: string,
+    quantity: number,
+    date: Date,
+  ) => {
+    if (!checkAdminPermission()) return
+
+    const kit = kits.find((k) => k.id === kitId)
+    if (!kit) throw new Error('Kit não encontrado.')
+
+    for (const kitItem of kit.items) {
+      const product = products.find((p) => p.id === kitItem.itemId)
+      const needed = kitItem.quantity * quantity
+      if (!product || product.stock < needed) {
+        throw new Error(
+          `Estoque insuficiente para "${product?.name || 'item'}". Necessário: ${needed}, Disponível: ${product?.stock || 0}`,
+        )
+      }
+    }
+
+    const groupId = crypto.randomUUID()
+    const movements = kit.items.map((item) => ({
+      group_id: groupId,
+      item_id: item.itemId,
+      type: 'OUT',
+      quantity: item.quantity * quantity,
+      destination: `Evento: ${eventName}`,
+      created_at: date.toISOString(),
+    }))
+
+    const { error } = await supabase
+      .from('inventory_movements')
+      .insert(movements)
+    if (error) throw error
+
+    await fetchItems()
+    await fetchHistory()
+
+    toast({
+      title: 'Saída Registrada',
+      description: `Kits debitados do estoque para o evento ${eventName}.`,
+      className: 'bg-emerald-50 border-emerald-200 text-emerald-900',
+    })
+    triggerConfetti()
+  }
+
   const createCampaign = async (
     data: Omit<Campaign, 'id' | 'createdAt' | 'status'>,
   ) => {
@@ -465,11 +601,6 @@ export function SwagProvider({ children }: { children: ReactNode }) {
   const notifySlackChannel = async (text: string) => {
     const payloadInfo = { type: 'webhook', text }
     console.log('Sending Slack Channel Notification:', payloadInfo)
-
-    toast({
-      title: 'Slack Notificação',
-      description: 'Notificação enviada no canal do RH',
-    })
 
     if (!slackSettings?.webhookUrl || !slackSettings?.isEnabled) {
       console.log('Slack Webhook Missing or Disabled. Payload:', payloadInfo)
@@ -1288,6 +1419,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         slackSettings,
         campaigns,
         campaignResponses,
+        kits,
         addToCart,
         removeFromCart,
         updateCartItemQuantity,
@@ -1316,6 +1448,10 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         updateCampaignStatus,
         deleteCampaign,
         submitCampaignResponse,
+        fetchKits,
+        createKit,
+        deleteKit,
+        checkoutEventKit,
         isLoading,
       }}
     >

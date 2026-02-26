@@ -24,6 +24,7 @@ import ApprovalsPage from '@/pages/admin/Approvals'
 import CampaignsPage from '@/pages/admin/Campaigns'
 import CampaignDashboard from '@/pages/admin/CampaignDashboard'
 import CampaignResponse from '@/pages/CampaignResponse'
+import KitsEvents from '@/pages/admin/KitsEvents'
 
 const App = () => {
   useEffect(() => {
@@ -65,6 +66,7 @@ const App = () => {
                           path="campanhas/:id"
                           element={<CampaignDashboard />}
                         />
+                        <Route path="kits" element={<KitsEvents />} />
                         <Route path="inventory" element={<Inventory />} />
                         <Route
                           path="collaborators"

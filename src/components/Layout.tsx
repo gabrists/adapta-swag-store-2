@@ -19,6 +19,7 @@ import {
   Clock,
   ClipboardCheck,
   Megaphone,
+  Layers,
 } from 'lucide-react'
 import {
   Sidebar,
@@ -100,6 +101,11 @@ export default function Layout() {
       title: 'Campanhas',
       url: '/admin/campanhas',
       icon: Megaphone,
+    },
+    {
+      title: 'Kits & Eventos',
+      url: '/admin/kits',
+      icon: Layers,
     },
     {
       title: 'Inventário',
