@@ -46,6 +46,7 @@ const formSchema = z.object({
   supplierUrl: z.string().url('URL inválida').optional().or(z.literal('')),
   hasGrid: z.boolean(),
   isSingleQuota: z.boolean(),
+  isPublic: z.boolean(),
   stock: z.coerce.number().min(0).optional(),
   gridPP: z.coerce.number().min(0).optional(),
   gridP: z.coerce.number().min(0).optional(),
@@ -83,6 +84,7 @@ export function ProductDialog({
       supplierUrl: '',
       hasGrid: false,
       isSingleQuota: false,
+      isPublic: true,
       stock: 0,
       gridPP: 0,
       gridP: 0,
@@ -106,6 +108,7 @@ export function ProductDialog({
           supplierUrl: product.supplierUrl || '',
           hasGrid: product.hasGrid,
           isSingleQuota: product.isSingleQuota || false,
+          isPublic: product.isPublic ?? true,
           stock: product.stock,
           gridPP: product.grid?.PP || 0,
           gridP: product.grid?.P || 0,
@@ -134,6 +137,7 @@ export function ProductDialog({
           supplierUrl: '',
           hasGrid: false,
           isSingleQuota: false,
+          isPublic: true,
           stock: 0,
           gridPP: 0,
           gridP: 0,
@@ -208,6 +212,7 @@ export function ProductDialog({
       supplierUrl: values.supplierUrl,
       hasGrid: values.hasGrid,
       isSingleQuota: values.isSingleQuota,
+      isPublic: values.isPublic,
       stock: values.hasGrid ? 0 : values.stock,
       grid: values.hasGrid
         ? {
@@ -335,6 +340,33 @@ export function ProductDialog({
                       />
                     </FormControl>
                     <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border p-3 shadow-sm bg-slate-50 dark:bg-black/20 border-slate-200 dark:border-white/5">
+              <div className="space-y-0.5 pr-4">
+                <FormLabel className="text-base text-slate-900 dark:text-white">
+                  Visível na Vitrine de Colaboradores
+                </FormLabel>
+                <FormDescription className="text-xs text-slate-500 dark:text-slate-400">
+                  Desative para itens exclusivos de eventos ou campanhas
+                  fechadas. Eles continuarão disponíveis para montar Kits e
+                  gerenciar estoque, mas colaboradores não poderão solicitá-los.
+                </FormDescription>
+              </div>
+              <FormField
+                control={form.control}
+                name="isPublic"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
                   </FormItem>
                 )}
               />

@@ -371,9 +371,19 @@ export default function Inventory() {
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex flex-col">
-                          <span className="font-semibold text-slate-900 dark:text-white text-sm">
-                            {product.name}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-slate-900 dark:text-white text-sm">
+                              {product.name}
+                            </span>
+                            {!product.isPublic && (
+                              <Badge
+                                variant="secondary"
+                                className="bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/10 text-[10px] h-5 px-1.5 font-medium"
+                              >
+                                Exclusivo/Oculto
+                              </Badge>
+                            )}
+                          </div>
                           {isZeroStock ? (
                             <div className="flex items-center text-xs text-red-600 dark:text-red-400 font-medium mt-1">
                               <AlertTriangle className="w-3 h-3 mr-1.5" /> Sem

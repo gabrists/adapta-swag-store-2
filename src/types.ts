@@ -23,6 +23,7 @@ export interface Product {
   supplierUrl?: string
   isSingleQuota: boolean
   isActive: boolean
+  isPublic: boolean
   criticalLevel?: number
 }
 

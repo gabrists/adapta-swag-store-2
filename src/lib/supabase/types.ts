@@ -218,6 +218,60 @@ export type Database = {
         }
         Relationships: []
       }
+      kit_items: {
+        Row: {
+          id: string
+          item_id: string
+          kit_id: string
+          quantity: number
+        }
+        Insert: {
+          id?: string
+          item_id: string
+          kit_id: string
+          quantity?: number
+        }
+        Update: {
+          id?: string
+          item_id?: string
+          kit_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'kit_items_item_id_fkey'
+            columns: ['item_id']
+            isOneToOne: false
+            referencedRelation: 'items'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'kit_items_kit_id_fkey'
+            columns: ['kit_id']
+            isOneToOne: false
+            referencedRelation: 'kits'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      kits: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string | null
@@ -523,6 +577,15 @@ export const Constants = {
 //   supplier_url: text (nullable)
 //   is_single_quota: boolean (not null, default: false)
 //   is_active: boolean (not null, default: true)
+// Table: kit_items
+//   id: uuid (not null, default: gen_random_uuid())
+//   kit_id: uuid (not null)
+//   item_id: uuid (not null)
+//   quantity: integer (not null, default: 1)
+// Table: kits
+//   id: uuid (not null, default: gen_random_uuid())
+//   name: text (not null)
+//   created_at: timestamp with time zone (not null, default: now())
 // Table: orders
 //   id: uuid (not null, default: gen_random_uuid())
 //   employee_id: uuid (not null)
@@ -570,6 +633,13 @@ export const Constants = {
 //   CHECK inventory_movements_type_check: CHECK ((type = ANY (ARRAY['IN'::text, 'OUT'::text])))
 // Table: items
 //   PRIMARY KEY items_pkey: PRIMARY KEY (id)
+// Table: kit_items
+//   FOREIGN KEY kit_items_item_id_fkey: FOREIGN KEY (item_id) REFERENCES items(id) ON DELETE CASCADE
+//   FOREIGN KEY kit_items_kit_id_fkey: FOREIGN KEY (kit_id) REFERENCES kits(id) ON DELETE CASCADE
+//   PRIMARY KEY kit_items_pkey: PRIMARY KEY (id)
+// Table: kits
+//   UNIQUE kits_name_key: UNIQUE (name)
+//   PRIMARY KEY kits_pkey: PRIMARY KEY (id)
 // Table: orders
 //   FOREIGN KEY orders_employee_id_fkey: FOREIGN KEY (employee_id) REFERENCES employees(id)
 //   FOREIGN KEY orders_item_id_fkey: FOREIGN KEY (item_id) REFERENCES items(id)
@@ -614,3 +684,5 @@ export const Constants = {
 //   CREATE UNIQUE INDEX departments_name_key ON public.departments USING btree (name)
 // Table: employees
 //   CREATE UNIQUE INDEX employees_email_key ON public.employees USING btree (email)
+// Table: kits
+//   CREATE UNIQUE INDEX kits_name_key ON public.kits USING btree (name)

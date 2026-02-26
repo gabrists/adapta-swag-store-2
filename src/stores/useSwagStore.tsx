@@ -191,6 +191,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         supplierUrl: item.supplier_url || '',
         isSingleQuota: item.is_single_quota || false,
         isActive: item.is_active ?? true,
+        isPublic: (item as any).is_public ?? true,
         criticalLevel: item.critical_level,
       })) || []
 
@@ -1188,6 +1189,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
       is_single_quota: productData.isSingleQuota,
       critical_level: productData.criticalLevel ?? 5,
       is_active: true,
+      is_public: productData.isPublic ?? true,
     }
 
     const { error } = await supabase.from('items').insert(newItem as any)
@@ -1224,6 +1226,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
       current_stock: finalStock,
       is_single_quota: updatedProduct.isSingleQuota,
       is_active: updatedProduct.isActive,
+      is_public: updatedProduct.isPublic,
     }
 
     const { error } = await supabase

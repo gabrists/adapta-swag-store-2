@@ -25,6 +25,9 @@ export default function Index() {
       // Filter out inactive products for the storefront
       if (!product.isActive) return false
 
+      // Filter out products not meant for the public storefront
+      if (!product.isPublic) return false
+
       const matchesSearch = product.name
         .toLowerCase()
         .includes(searchQuery.toLowerCase())
