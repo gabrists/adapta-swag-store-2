@@ -42,31 +42,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const mapSupabaseUserToAppUser = async (
     sbUser: SupabaseUser,
   ): Promise<User> => {
-    try {
-      // Slack Workspace Validation
-      const slackIdentity = sbUser.identities?.find(
-        (id) => id.provider === 'slack',
-      )
-      if (slackIdentity) {
-        const teamId =
-          slackIdentity.identity_data?.team_id || sbUser.user_metadata?.team_id
-        const allowedTeamId = import.meta.env.VITE_ALLOWED_SLACK_TEAM_ID
-        if (
-          allowedTeamId &&
-          allowedTeamId !== 'placeholder' &&
-          teamId &&
-          teamId !== allowedTeamId
-        ) {
-          throw new Error(
-            'Acesso negado. Você não faz parte do Workspace oficial da Adapta no Slack.',
-          )
-        }
+    // 1. Slack Workspace Validation
+    const slackIdentity = sbUser.identities?.find(
+      (id) => id.provider === 'slack',
+    )
+
+    if (slackIdentity) {
+      const teamId =
+        slackIdentity.identity_data?.team_id || sbUser.user_metadata?.team_id
+      const allowedTeamId = import.meta.env.VITE_ALLOWED_SLACK_TEAM_ID
+
+      if (
+        allowedTeamId &&
+        allowedTeamId !== 'placeholder' &&
+        teamId &&
+        teamId !== allowedTeamId
+      ) {
+        throw new Error(
+          'Acesso negado. Você não faz parte do Workspace oficial da Adapta no Slack.',
+        )
       }
+    }
 
-      // Auto-registration and Upsert Logic
-      let employee = null
+    // 2. Data Extraction
+    const nameFromProvider =
+      sbUser.user_metadata?.full_name ||
+      sbUser.user_metadata?.name ||
+      sbUser.email?.split('@')[0] ||
+      'Usuário'
+    const avatarFromProvider = sbUser.user_metadata?.avatar_url || null
 
-      // Find existing employee safely
+    let employee = null
+
+    // 3. Auto-registration and Upsert Logic
+    try {
+      // Find existing employee safely by ID
       let { data: empById } = await supabase
         .from('employees')
         .select('*')
@@ -75,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       employee = empById
 
+      // Find by Email if ID not found
       if (!employee && sbUser.email) {
         const { data: empByEmail } = await supabase
           .from('employees')
@@ -89,9 +100,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (employee) {
         // Update existing employee with Slack profile data if provided
         const updates: any = {}
-        const nameFromProvider =
-          sbUser.user_metadata?.full_name || sbUser.user_metadata?.name
-        const avatarFromProvider = sbUser.user_metadata?.avatar_url
 
         if (nameFromProvider && employee.name !== nameFromProvider) {
           updates.name = nameFromProvider
@@ -111,70 +119,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } else if (sbUser.email) {
         // Insert new employee for this Slack user
-        const name =
-          sbUser.user_metadata?.full_name ||
-          sbUser.user_metadata?.name ||
-          sbUser.email.split('@')[0]
-        const avatarUrl = sbUser.user_metadata?.avatar_url || null
-
         const { data: newEmp } = await supabase
           .from('employees')
           .insert({
             id: sbUser.id,
             email: sbUser.email,
-            name: name,
-            avatar_url: avatarUrl,
+            name: nameFromProvider,
+            avatar_url: avatarFromProvider,
             role: 'Colaborador',
           })
           .select()
           .maybeSingle()
         if (newEmp) employee = newEmp
       }
+    } catch (dbError) {
+      console.error('Error during employee upsert/fetch:', dbError)
+      // We log but do not throw here, proceeding with fallback user data below
+    }
 
-      let role: 'admin' | 'user' = 'user'
+    // 4. Role & Mapping
+    let role: 'admin' | 'user' = 'user'
 
-      // Check role from database
-      if (employee?.role === 'admin') {
-        role = 'admin'
-      }
+    // Check role from database
+    if (employee?.role === 'admin') {
+      role = 'admin'
+    }
 
-      // Fallback: Ensure admin@adapta.org is always admin (useful for first login/recovery)
-      if (sbUser.email === 'admin@adapta.org') {
-        role = 'admin'
-      }
+    // Fallback: Ensure admin@adapta.org is always admin
+    if (sbUser.email === 'admin@adapta.org') {
+      role = 'admin'
+    }
 
-      const nameToUse =
-        employee?.name ||
-        sbUser.user_metadata?.full_name ||
-        sbUser.user_metadata?.name ||
-        sbUser.email?.split('@')[0].replace('.', ' ') ||
-        'Usuário'
+    const nameToUse = employee?.name || nameFromProvider
+    const avatarToUse =
+      employee?.avatar_url ||
+      avatarFromProvider ||
+      `https://img.usecurling.com/ppl/medium?gender=male&seed=${sbUser.email}`
 
-      const avatarToUse =
-        employee?.avatar_url ||
-        sbUser.user_metadata?.avatar_url ||
-        `https://img.usecurling.com/ppl/medium?gender=male&seed=${sbUser.email}`
-
-      return {
-        id: employee?.id || sbUser.id,
-        name: nameToUse.charAt(0).toUpperCase() + nameToUse.slice(1),
-        email: employee?.email || sbUser.email || '',
-        avatar: avatarToUse,
-        role,
-      }
-    } catch (error: any) {
-      console.error('Error mapping user:', error)
-      if (error.message.includes('Acesso negado')) {
-        throw error // Propagate explicitly to be caught by the unhandled promise rejection
-      }
-      // Fallback safe user
-      return {
-        id: sbUser.id,
-        name: 'Usuário',
-        email: sbUser.email || '',
-        avatar: '',
-        role: 'user',
-      }
+    return {
+      id: employee?.id || sbUser.id,
+      name: nameToUse.charAt(0).toUpperCase() + nameToUse.slice(1),
+      email: employee?.email || sbUser.email || '',
+      avatar: avatarToUse,
+      role,
     }
   }
 
@@ -267,7 +254,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           redirectTo: `${window.location.origin}/`,
         },
       })
-      return { data, error }
+      if (error) throw error
+      return { data, error: null }
     } catch (error: any) {
       return { error }
     }

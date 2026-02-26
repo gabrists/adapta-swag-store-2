@@ -72,11 +72,21 @@ export default function Login() {
   const handleSlackLogin = async () => {
     try {
       const { error } = await loginWithSlack()
-      if (error) throw error
+      if (error) {
+        console.error('Slack OAuth Init Error:', error)
+        toast({
+          title: 'Erro de Autenticação',
+          description:
+            'Não foi possível iniciar o login com o Slack. Verifique sua conexão e tente novamente.',
+          variant: 'destructive',
+        })
+      }
     } catch (error: any) {
+      console.error('Unexpected Slack login error:', error)
       toast({
         title: 'Erro no Slack',
-        description: error.message || 'Não foi possível conectar com o Slack.',
+        description:
+          'Ocorreu um erro inesperado ao conectar com o Slack. Tente novamente mais tarde.',
         variant: 'destructive',
       })
     }
