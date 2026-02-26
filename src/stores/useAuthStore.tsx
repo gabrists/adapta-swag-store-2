@@ -7,6 +7,7 @@ import {
 } from 'react'
 import { Session, User as SupabaseUser, AuthError } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase/client'
+import { toast } from '@/hooks/use-toast'
 
 export interface User {
   id: string
@@ -24,6 +25,7 @@ interface AuthContextType {
     email: string,
     password?: string,
   ) => Promise<{ data?: any; error: AuthError | Error | null }>
+  loginWithSlack: () => Promise<{ data?: any; error: AuthError | Error | null }>
   logout: () => Promise<void>
   isLoading: boolean
   updateProfile: (data: { name: string; avatar?: string }) => void
@@ -41,26 +43,92 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     sbUser: SupabaseUser,
   ): Promise<User> => {
     try {
-      // First try to find by ID to ensure consistency if email changed
-      let { data: employee, error } = await supabase
+      // Slack Workspace Validation
+      const slackIdentity = sbUser.identities?.find(
+        (id) => id.provider === 'slack',
+      )
+      if (slackIdentity) {
+        const teamId =
+          slackIdentity.identity_data?.team_id || sbUser.user_metadata?.team_id
+        const allowedTeamId = import.meta.env.VITE_ALLOWED_SLACK_TEAM_ID
+        if (
+          allowedTeamId &&
+          allowedTeamId !== 'placeholder' &&
+          teamId &&
+          teamId !== allowedTeamId
+        ) {
+          throw new Error(
+            'Acesso negado. Você não faz parte do Workspace oficial da Adapta no Slack.',
+          )
+        }
+      }
+
+      // Auto-registration and Upsert Logic
+      let employee = null
+
+      // Find existing employee safely
+      let { data: empById } = await supabase
         .from('employees')
         .select('*')
         .eq('id', sbUser.id)
-        .single()
+        .maybeSingle()
 
-      // Fallback to email if not found by ID
-      if (!employee) {
-        const { data: employeeByEmail } = await supabase
+      employee = empById
+
+      if (!employee && sbUser.email) {
+        const { data: empByEmail } = await supabase
           .from('employees')
           .select('*')
           .eq('email', sbUser.email)
-          .single()
+          .limit(1)
+          .maybeSingle()
 
-        employee = employeeByEmail
+        employee = empByEmail
       }
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching employee data:', error)
+      if (employee) {
+        // Update existing employee with Slack profile data if provided
+        const updates: any = {}
+        const nameFromProvider =
+          sbUser.user_metadata?.full_name || sbUser.user_metadata?.name
+        const avatarFromProvider = sbUser.user_metadata?.avatar_url
+
+        if (nameFromProvider && employee.name !== nameFromProvider) {
+          updates.name = nameFromProvider
+        }
+        if (avatarFromProvider && employee.avatar_url !== avatarFromProvider) {
+          updates.avatar_url = avatarFromProvider
+        }
+
+        if (Object.keys(updates).length > 0) {
+          const { data: updatedEmp } = await supabase
+            .from('employees')
+            .update(updates)
+            .eq('id', employee.id)
+            .select()
+            .maybeSingle()
+          if (updatedEmp) employee = updatedEmp
+        }
+      } else if (sbUser.email) {
+        // Insert new employee for this Slack user
+        const name =
+          sbUser.user_metadata?.full_name ||
+          sbUser.user_metadata?.name ||
+          sbUser.email.split('@')[0]
+        const avatarUrl = sbUser.user_metadata?.avatar_url || null
+
+        const { data: newEmp } = await supabase
+          .from('employees')
+          .insert({
+            id: sbUser.id,
+            email: sbUser.email,
+            name: name,
+            avatar_url: avatarUrl,
+            role: 'Colaborador',
+          })
+          .select()
+          .maybeSingle()
+        if (newEmp) employee = newEmp
       }
 
       let role: 'admin' | 'user' = 'user'
@@ -75,26 +143,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role = 'admin'
       }
 
-      const name =
+      const nameToUse =
         employee?.name ||
+        sbUser.user_metadata?.full_name ||
         sbUser.user_metadata?.name ||
         sbUser.email?.split('@')[0].replace('.', ' ') ||
         'Usuário'
 
-      const avatar =
+      const avatarToUse =
         employee?.avatar_url ||
         sbUser.user_metadata?.avatar_url ||
         `https://img.usecurling.com/ppl/medium?gender=male&seed=${sbUser.email}`
 
       return {
         id: employee?.id || sbUser.id,
-        name: name.charAt(0).toUpperCase() + name.slice(1),
+        name: nameToUse.charAt(0).toUpperCase() + nameToUse.slice(1),
         email: employee?.email || sbUser.email || '',
-        avatar,
+        avatar: avatarToUse,
         role,
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error mapping user:', error)
+      if (error.message.includes('Acesso negado')) {
+        throw error // Propagate explicitly to be caught by the unhandled promise rejection
+      }
       // Fallback safe user
       return {
         id: sbUser.id,
@@ -115,10 +187,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         setIsAuthenticated(true)
         setIsLoading(true)
-        mapSupabaseUserToAppUser(session.user).then((appUser) => {
-          setUser(appUser)
-          setIsLoading(false)
-        })
+        mapSupabaseUserToAppUser(session.user)
+          .then((appUser) => {
+            setUser(appUser)
+            setIsLoading(false)
+          })
+          .catch((err) => {
+            supabase.auth.signOut().then(() => {
+              setUser(null)
+              setIsAuthenticated(false)
+              setIsLoading(false)
+              toast({
+                title: 'Acesso Negado',
+                description: err.message,
+                variant: 'destructive',
+              })
+            })
+          })
       } else {
         setUser(null)
         setIsAuthenticated(false)
@@ -132,10 +217,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (session?.user) {
         setIsAuthenticated(true)
         setIsLoading(true)
-        mapSupabaseUserToAppUser(session.user).then((appUser) => {
-          setUser(appUser)
-          setIsLoading(false)
-        })
+        mapSupabaseUserToAppUser(session.user)
+          .then((appUser) => {
+            setUser(appUser)
+            setIsLoading(false)
+          })
+          .catch((err) => {
+            supabase.auth.signOut().then(() => {
+              setUser(null)
+              setIsAuthenticated(false)
+              setIsLoading(false)
+              toast({
+                title: 'Acesso Negado',
+                description: err.message,
+                variant: 'destructive',
+              })
+            })
+          })
       } else {
         setIsLoading(false)
       }
@@ -155,6 +253,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         password,
       })
 
+      return { data, error }
+    } catch (error: any) {
+      return { error }
+    }
+  }
+
+  const loginWithSlack = async () => {
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'slack',
+        options: {
+          redirectTo: `${window.location.origin}/`,
+        },
+      })
       return { data, error }
     } catch (error: any) {
       return { error }
@@ -198,6 +310,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         session,
         login,
+        loginWithSlack,
         logout,
         isLoading,
         updateProfile,

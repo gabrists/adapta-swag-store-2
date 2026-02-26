@@ -3,7 +3,14 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { Package2, Loader2, ArrowRight, AlertCircle, Info } from 'lucide-react'
+import {
+  Package2,
+  Loader2,
+  ArrowRight,
+  AlertCircle,
+  Info,
+  Slack,
+} from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -33,7 +40,8 @@ const formSchema = z.object({
 })
 
 export default function Login() {
-  const { login, isAuthenticated, user, isLoading } = useAuthStore()
+  const { login, loginWithSlack, isAuthenticated, user, isLoading } =
+    useAuthStore()
   const navigate = useNavigate()
   const location = useLocation()
   const { toast } = useToast()
@@ -60,6 +68,19 @@ export default function Login() {
       password: '',
     },
   })
+
+  const handleSlackLogin = async () => {
+    try {
+      const { error } = await loginWithSlack()
+      if (error) throw error
+    } catch (error: any) {
+      toast({
+        title: 'Erro no Slack',
+        description: error.message || 'Não foi possível conectar com o Slack.',
+        variant: 'destructive',
+      })
+    }
+  }
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true)
@@ -116,7 +137,7 @@ export default function Login() {
                 Acesse sua conta
               </CardTitle>
               <CardDescription className="text-center text-[#ADADAD] text-base">
-                Entre com seu e-mail corporativo para acessar a loja
+                Faça login para acessar os benefícios da Adapta
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -125,13 +146,12 @@ export default function Login() {
                 <div className="flex items-center justify-center gap-1.5 mb-1.5">
                   <Info className="w-3.5 h-3.5 text-primary" />
                   <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                    Apenas para validação do projeto
+                    Acesso Exclusivo
                   </p>
                 </div>
                 <p className="text-sm text-white/90 font-medium leading-relaxed">
-                  Use seu e-mail cadastrado no Slack e a senha{' '}
-                  <span className="font-bold text-white">&quot;123&quot;</span>{' '}
-                  para entrar.
+                  Utilize sua conta do <strong>Slack da Adapta</strong> para
+                  acessar a loja e solicitar seus brindes.
                 </p>
               </div>
 
@@ -142,6 +162,24 @@ export default function Login() {
                   <AlertDescription>{errorMessage}</AlertDescription>
                 </Alert>
               )}
+
+              <Button
+                type="button"
+                onClick={handleSlackLogin}
+                className="w-full h-12 text-base font-bold bg-[#4A154B] hover:bg-[#4A154B]/90 text-white mb-6 border-none shadow-lg hover:shadow-[#4A154B]/50 transition-all"
+              >
+                <Slack className="mr-2 h-5 w-5" />
+                Entrar com Slack
+              </Button>
+
+              <div className="flex items-center gap-4 mb-6">
+                <div className="h-px bg-white/10 flex-1"></div>
+                <span className="text-xs text-[#ADADAD] uppercase font-bold tracking-wider">
+                  Ou entre com e-mail
+                </span>
+                <div className="h-px bg-white/10 flex-1"></div>
+              </div>
+
               <Form {...form}>
                 <form
                   onSubmit={form.handleSubmit(onSubmit)}
