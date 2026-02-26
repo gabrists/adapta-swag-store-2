@@ -17,6 +17,7 @@ import {
   Campaign,
   CampaignResponse,
   Kit,
+  ProductReview,
 } from '@/types'
 import { triggerConfetti } from '@/lib/confetti'
 import { supabase } from '@/lib/supabase/client'
@@ -105,6 +106,7 @@ interface SwagContextType {
     quantity: number,
     date: Date,
   ) => Promise<void>
+  fetchProductReviews: (productId: string) => Promise<ProductReview[]>
   isLoading: boolean
 }
 
@@ -423,6 +425,49 @@ export function SwagProvider({ children }: { children: ReactNode }) {
       })) || []
 
     setKits(mappedKits)
+  }
+
+  const fetchProductReviews = async (
+    productId: string,
+  ): Promise<ProductReview[]> => {
+    const { data, error } = await supabase
+      .from('product_reviews' as any)
+      .select(
+        `
+        id,
+        product_id,
+        employee_id,
+        rating,
+        comment,
+        created_at,
+        employees (
+          name,
+          avatar_url,
+          departments (
+            name
+          )
+        )
+      `,
+      )
+      .eq('product_id', productId)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching product reviews:', error)
+      return []
+    }
+
+    return (data || []).map((row: any) => ({
+      id: row.id,
+      productId: row.product_id,
+      employeeId: row.employee_id,
+      rating: row.rating,
+      comment: row.comment,
+      createdAt: row.created_at,
+      employeeName: row.employees?.name || 'Adapters',
+      employeeAvatar: row.employees?.avatar_url,
+      employeeDepartment: row.employees?.departments?.name || 'Adapta',
+    }))
   }
 
   const createKit = async (
@@ -1455,6 +1500,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         createKit,
         deleteKit,
         checkoutEventKit,
+        fetchProductReviews,
         isLoading,
       }}
     >

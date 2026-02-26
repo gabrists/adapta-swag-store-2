@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Product } from '@/types'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -72,7 +73,10 @@ export function ProductCard({
 
   return (
     <Card className="overflow-hidden border-slate-200 dark:border-white/5 bg-white dark:bg-[#081a17]/60 glass-panel glass-panel-hover flex flex-col h-full rounded-2xl group">
-      <div className="aspect-[4/3] relative overflow-hidden bg-slate-100 dark:bg-black/40">
+      <Link
+        to={`/produto/${product.id}`}
+        className="block aspect-[4/3] relative overflow-hidden bg-slate-100 dark:bg-black/40"
+      >
         <img
           src={imageUrl}
           alt={product.name}
@@ -85,7 +89,7 @@ export function ProductCard({
         {/* Subtle inner shadow overlay */}
         <div className="absolute inset-0 shadow-[inset_0_-20px_40px_rgba(0,0,0,0.1)] dark:shadow-[inset_0_-20px_40px_rgba(0,0,0,0.5)] pointer-events-none" />
 
-        <div className="absolute top-3 left-3">
+        <div className="absolute top-3 left-3 pointer-events-none">
           <Badge
             variant="secondary"
             className="bg-white/90 dark:bg-black/50 text-slate-900 dark:text-white backdrop-blur-md shadow-sm font-medium border border-slate-200 dark:border-white/10"
@@ -94,19 +98,24 @@ export function ProductCard({
           </Badge>
         </div>
         {product.isSingleQuota && (
-          <div className="absolute top-3 right-3">
+          <div className="absolute top-3 right-3 pointer-events-none">
             <Badge className="bg-[#00CA7E]/90 dark:bg-primary/90 text-white backdrop-blur-md shadow-[0_0_10px_rgba(0,202,126,0.3)] dark:shadow-[0_0_10px_rgba(0,202,126,0.3)] font-medium border-none">
               Cota Única
             </Badge>
           </div>
         )}
-      </div>
+      </Link>
 
-      <CardContent className="p-5 space-y-4 flex-grow">
+      <CardContent className="p-5 space-y-4 flex-grow relative z-10">
         <div className="flex justify-between items-start gap-2">
-          <h3 className="font-semibold text-lg leading-tight text-slate-900 dark:text-white line-clamp-2 min-h-[3rem]">
-            {product.name}
-          </h3>
+          <Link
+            to={`/produto/${product.id}`}
+            className="hover:text-primary transition-colors"
+          >
+            <h3 className="font-semibold text-lg leading-tight text-slate-900 dark:text-white line-clamp-2 min-h-[3rem]">
+              {product.name}
+            </h3>
+          </Link>
         </div>
 
         {product.hasGrid && product.grid && (
@@ -174,7 +183,7 @@ export function ProductCard({
         </div>
       </CardContent>
 
-      <CardFooter className="p-5 pt-0 mt-auto flex flex-row items-center w-full">
+      <CardFooter className="p-5 pt-0 mt-auto flex flex-row items-center w-full relative z-10">
         {/* Quantity Stepper - Hidden when out of stock or size not selected */}
         {!isOutOfStock && (
           <div

@@ -176,6 +176,7 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean
+          is_public: boolean
           is_single_quota: boolean
           name: string
           price: number | null
@@ -193,6 +194,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_public?: boolean
           is_single_quota?: boolean
           name: string
           price?: number | null
@@ -210,6 +212,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           is_active?: boolean
+          is_public?: boolean
           is_single_quota?: boolean
           name?: string
           price?: number | null
@@ -577,6 +580,7 @@ export const Constants = {
 //   supplier_url: text (nullable)
 //   is_single_quota: boolean (not null, default: false)
 //   is_active: boolean (not null, default: true)
+//   is_public: boolean (not null, default: true)
 // Table: kit_items
 //   id: uuid (not null, default: gen_random_uuid())
 //   kit_id: uuid (not null)

@@ -16,6 +16,7 @@ import Login from '@/pages/Login'
 import Profile from '@/pages/Profile'
 import NotFound from '@/pages/NotFound'
 import OrdersPage from '@/pages/Orders'
+import ProductDetail from '@/pages/ProductDetail'
 import Dashboard from '@/pages/admin/Dashboard'
 import Inventory from '@/pages/admin/Inventory'
 import Settings from '@/pages/admin/Settings'
@@ -51,6 +52,7 @@ const App = () => {
                   <Route element={<Layout />}>
                     {/* Storefront Routes */}
                     <Route path="/" element={<Index />} />
+                    <Route path="/produto/:id" element={<ProductDetail />} />
                     <Route path="/orders" element={<OrdersPage />} />
                     <Route path="/profile" element={<Profile />} />
 

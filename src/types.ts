@@ -124,6 +124,18 @@ export interface Kit {
   items: KitItem[]
 }
 
+export interface ProductReview {
+  id: string
+  productId: string
+  employeeId: string
+  employeeName: string
+  employeeAvatar?: string
+  employeeDepartment: string
+  rating: number
+  comment: string
+  createdAt: string
+}
+
 export type Category =
   | 'Todos'
   | 'Vendas'
