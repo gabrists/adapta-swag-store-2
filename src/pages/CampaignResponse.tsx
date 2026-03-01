@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { CheckCircle, Loader2, ImageIcon } from 'lucide-react'
+import { CheckCircle, Loader2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Label } from '@/components/ui/label'
 import useSwagStore from '@/stores/useSwagStore'
@@ -108,12 +107,13 @@ export default function CampaignResponse() {
       <div className="max-w-md w-full glass-panel p-6 sm:p-8 rounded-3xl border-white/10 shadow-2xl animate-fade-in-up">
         <div className="text-center mb-8">
           {campaign.imageUrl ? (
-            <Avatar className="mx-auto w-full max-w-[380px] aspect-square mb-6 rounded-2xl border border-slate-200 dark:border-white/10 shadow-lg">
-              <AvatarImage src={campaign.imageUrl} className="object-cover" />
-              <AvatarFallback className="bg-slate-100 dark:bg-white/5 rounded-2xl">
-                <ImageIcon className="w-16 h-16 text-slate-400" />
-              </AvatarFallback>
-            </Avatar>
+            <div className="mx-auto w-[380px] h-[380px] max-w-full mb-6 rounded-2xl border border-slate-200 dark:border-white/10 shadow-lg overflow-hidden flex items-center justify-center bg-white dark:bg-white/5">
+              <img
+                src={campaign.imageUrl}
+                alt={campaign.name}
+                className="w-full h-full object-contain"
+              />
+            </div>
           ) : (
             <Badge
               variant="outline"
