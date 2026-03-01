@@ -80,7 +80,7 @@ export default function CampaignResponse() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-[#061412] p-4">
         <div className="max-w-md w-full glass-panel p-8 text-center rounded-3xl animate-in zoom-in-95 duration-300 border-white/10 shadow-2xl">
-          <CheckCircle className="w-20 h-20 text-emerald-500 mx-auto mb-6" />
+          <CheckCircle className="w-20 h-20 text-emerald-50 mx-auto mb-6" />
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight">
             ✅ Resposta registrada!
           </h2>
@@ -111,7 +111,7 @@ export default function CampaignResponse() {
               <img
                 src={campaign.imageUrl}
                 alt={campaign.name}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-cover"
               />
             </div>
           ) : (
