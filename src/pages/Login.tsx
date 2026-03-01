@@ -43,7 +43,6 @@ export default function Login() {
 
   const from = location.state?.from?.pathname || '/'
 
-  // Handle successful login redirection based on auth state
   useEffect(() => {
     if (isAuthenticated && !isLoading && user) {
       if (user.role === 'admin') {
@@ -104,8 +103,6 @@ export default function Login() {
         title: 'Bem-vindo de volta!',
         description: 'Login realizado com sucesso.',
       })
-      // Do not call setIsSubmitting(false) here.
-      // The button will remain in a loading state until the useEffect redirects the user and unmounts the component.
     } catch (error: any) {
       console.error('Login error', error)
       const message = error.message || 'Falha na autenticação'

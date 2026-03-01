@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ): Promise<User> => {
     // 1. Slack Workspace Validation
     const slackIdentity = sbUser.identities?.find(
-      (id) => id.provider === 'slack',
+      (id) => id.provider === 'slack' || id.provider === 'slack_oidc',
     )
 
     if (slackIdentity) {
@@ -70,13 +70,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sbUser.user_metadata?.name ||
       sbUser.email?.split('@')[0] ||
       'Usuário'
-    const avatarFromProvider = sbUser.user_metadata?.avatar_url || null
+    const avatarFromProvider =
+      sbUser.user_metadata?.avatar_url || sbUser.user_metadata?.picture || null
 
     let employee = null
 
     // 3. Auto-registration and Upsert Logic
     try {
-      // Find existing employee safely by ID
       let { data: empById } = await supabase
         .from('employees')
         .select('*')
@@ -85,7 +85,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       employee = empById
 
-      // Find by Email if ID not found
       if (!employee && sbUser.email) {
         const { data: empByEmail } = await supabase
           .from('employees')
@@ -98,7 +97,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (employee) {
-        // Update existing employee with Slack profile data if provided
         const updates: any = {}
 
         if (nameFromProvider && employee.name !== nameFromProvider) {
@@ -118,7 +116,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (updatedEmp) employee = updatedEmp
         }
       } else if (sbUser.email) {
-        // Insert new employee for this Slack user
         const { data: newEmp } = await supabase
           .from('employees')
           .insert({
@@ -134,18 +131,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (dbError) {
       console.error('Error during employee upsert/fetch:', dbError)
-      // We log but do not throw here, proceeding with fallback user data below
     }
 
     // 4. Role & Mapping
     let role: 'admin' | 'user' = 'user'
 
-    // Check role from database
     if (employee?.role === 'admin') {
       role = 'admin'
     }
 
-    // Fallback: Ensure admin@adapta.org is always admin
     if (sbUser.email === 'admin@adapta.org') {
       role = 'admin'
     }
@@ -166,7 +160,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -198,7 +191,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     })
 
-    // Check initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session)
       if (session?.user) {
@@ -249,7 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loginWithSlack = async () => {
     try {
       const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'slack',
+        provider: 'slack_oidc',
         options: {
           redirectTo: `${window.location.origin}/`,
         },
