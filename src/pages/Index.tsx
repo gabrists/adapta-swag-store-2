@@ -85,7 +85,7 @@ export default function Index() {
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-500 dark:text-white" />
           <Input
-            placeholder="O que você procura hoje?"
+            placeholder="Pesquise por um brinde"
             className="pl-11 h-12 text-lg rounded-xl bg-white dark:bg-black/20 border-slate-200 dark:border-white/10 focus-visible:border-[#00CA7E] dark:focus-visible:border-primary/50 focus-visible:ring-[#00CA7E]/50 dark:focus-visible:ring-primary/50 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
