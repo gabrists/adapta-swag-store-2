@@ -108,10 +108,10 @@ export default function CampaignResponse() {
       <div className="max-w-md w-full glass-panel p-6 sm:p-8 rounded-3xl border-white/10 shadow-2xl animate-fade-in-up">
         <div className="text-center mb-8">
           {campaign.imageUrl ? (
-            <Avatar className="mx-auto w-32 h-32 mb-6 rounded-2xl border border-slate-200 dark:border-white/10 shadow-lg">
+            <Avatar className="mx-auto w-full max-w-[380px] aspect-square mb-6 rounded-2xl border border-slate-200 dark:border-white/10 shadow-lg">
               <AvatarImage src={campaign.imageUrl} className="object-cover" />
               <AvatarFallback className="bg-slate-100 dark:bg-white/5 rounded-2xl">
-                <ImageIcon className="w-12 h-12 text-slate-400" />
+                <ImageIcon className="w-16 h-16 text-slate-400" />
               </AvatarFallback>
             </Avatar>
           ) : (
