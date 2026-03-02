@@ -119,7 +119,7 @@ export default function KitsEvents() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredKits.map((kit) => {
             const maxKits = calculateMaxKits(kit)
             const isCritical = maxKits === 0
@@ -131,18 +131,18 @@ export default function KitsEvents() {
               >
                 <CardHeader className="pb-4 bg-slate-50/50 dark:bg-black/20 border-b border-gray-100 dark:border-white/5">
                   <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 overflow-hidden">
                       <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
                         <Box className="w-5 h-5" />
                       </div>
-                      <CardTitle className="text-lg line-clamp-1">
+                      <CardTitle className="text-lg truncate">
                         {kit.name}
                       </CardTitle>
                     </div>
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 -mr-2 -mt-2"
+                      className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 -mr-2 -mt-2 shrink-0"
                       onClick={() => setDeleteKitData(kit)}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -151,14 +151,14 @@ export default function KitsEvents() {
                 </CardHeader>
                 <CardContent className="flex-1 pt-4 pb-2">
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-sm font-medium text-slate-600 dark:text-slate-300 truncate">
                         Estoque Máximo Possível:
                       </span>
                       <Badge
                         variant={isCritical ? 'destructive' : 'default'}
                         className={cn(
-                          'text-sm px-3 py-0.5',
+                          'text-sm px-3 py-0.5 shrink-0 whitespace-nowrap',
                           !isCritical &&
                             'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border-transparent',
                         )}
@@ -179,15 +179,15 @@ export default function KitsEvents() {
                           return (
                             <li
                               key={ki.id}
-                              className="flex justify-between items-center text-sm"
+                              className="flex justify-between items-center text-sm gap-4"
                             >
-                              <span className="text-slate-800 dark:text-slate-200">
+                              <span className="text-slate-800 dark:text-slate-200 truncate">
                                 {ki.quantity}x{' '}
                                 {product?.name || 'Item Removido'}
                               </span>
                               <span
                                 className={cn(
-                                  'text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10',
+                                  'text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 shrink-0 whitespace-nowrap',
                                   (product?.stock || 0) < ki.quantity &&
                                     'text-red-500 border-red-200 dark:border-red-500/30',
                                 )}
