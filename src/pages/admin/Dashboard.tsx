@@ -563,7 +563,7 @@ export default function Dashboard() {
                 accessibilityLayer
                 layout="vertical"
                 data={finalBudgetData}
-                margin={{ top: 10, right: 30, left: 10, bottom: 5 }}
+                margin={{ top: 10, right: 60, left: 10, bottom: 10 }}
               >
                 <CartesianGrid
                   horizontal={false}
@@ -576,6 +576,7 @@ export default function Dashboard() {
                   className="fill-slate-600 dark:fill-slate-400 text-xs"
                   tickLine={false}
                   axisLine={false}
+                  tickMargin={10}
                 />
                 <YAxis
                   dataKey="name"
@@ -584,7 +585,7 @@ export default function Dashboard() {
                   tickLine={false}
                   tickMargin={10}
                   className="fill-slate-600 dark:fill-slate-400 text-xs font-medium"
-                  width={90}
+                  width={110}
                 />
                 <ChartTooltip
                   cursor={{ fill: 'rgba(148,163,184,0.1)' }}
@@ -688,7 +689,7 @@ export default function Dashboard() {
               <BarChart
                 accessibilityLayer
                 data={departmentCostData}
-                margin={{ top: 20, right: 30, left: 40, bottom: 5 }}
+                margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
               >
                 <CartesianGrid
                   vertical={false}
@@ -706,6 +707,8 @@ export default function Dashboard() {
                 <YAxis
                   tickLine={false}
                   axisLine={false}
+                  tickMargin={10}
+                  width={80}
                   tickFormatter={(value) => formatCurrency(value)}
                   className="fill-slate-600 dark:fill-slate-400 text-xs"
                 />
