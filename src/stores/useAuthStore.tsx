@@ -15,6 +15,7 @@ export interface User {
   email: string
   avatar: string
   role: 'admin' | 'user'
+  createdAt: string
 }
 
 interface AuthContextType {
@@ -156,6 +157,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: employee?.email || sbUser.email || '',
       avatar: avatarToUse,
       role,
+      createdAt:
+        employee?.created_at || sbUser.created_at || new Date().toISOString(),
     }
   }
 

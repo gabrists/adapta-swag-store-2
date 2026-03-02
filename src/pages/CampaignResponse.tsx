@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams } from 'react-router-dom'
 import { CheckCircle, Loader2 } from 'lucide-react'
 
@@ -13,8 +13,13 @@ import { cn } from '@/lib/utils'
 
 export default function CampaignResponse() {
   const { id } = useParams()
-  const { campaigns, campaignResponses, submitCampaignResponse, isLoading } =
-    useSwagStore()
+  const {
+    campaigns,
+    campaignResponses,
+    submitCampaignResponse,
+    isLoading,
+    team,
+  } = useSwagStore()
   const { user } = useAuthStore()
   const { toast } = useToast()
 
@@ -26,6 +31,29 @@ export default function CampaignResponse() {
   const myResponse = campaignResponses.find(
     (r) => r.campaignId === id && r.employeeId === user?.id,
   )
+
+  const isEligible = useMemo(() => {
+    if (!campaign || !user) return false
+
+    const employee = team.find((e) => e.id === user.id)
+
+    if (campaign.targetType === 'departments') {
+      return !!(
+        employee && campaign.targetIds?.includes(employee.departmentId || '')
+      )
+    }
+    if (campaign.targetType === 'employees') {
+      return !!campaign.targetIds?.includes(user.id)
+    }
+
+    const empCreatedAt = employee?.createdAt || user.createdAt
+    const campaignDate = campaign.createdAt
+      ? new Date(campaign.createdAt).getTime()
+      : Date.now()
+    const empDate = empCreatedAt ? new Date(empCreatedAt).getTime() : Date.now()
+
+    return empDate <= campaignDate
+  }, [campaign, user, team])
 
   useEffect(() => {
     if (myResponse && !choice) {
@@ -52,6 +80,21 @@ export default function CampaignResponse() {
         </h2>
         <p className="text-slate-500 mt-2">
           Verifique o link enviado ou contate o RH.
+        </p>
+      </div>
+    )
+  }
+
+  if (!isEligible) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-[#061412] p-4 text-center">
+        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+          Acesso Indisponível
+        </h2>
+        <p className="text-slate-500 mt-2 max-w-md leading-relaxed">
+          Esta campanha não está disponível para o seu perfil. Campanhas para
+          toda a empresa contemplam apenas os colaboradores ativos no momento de
+          sua criação.
         </p>
       </div>
     )

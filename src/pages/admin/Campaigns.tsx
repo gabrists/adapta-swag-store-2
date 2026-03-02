@@ -266,7 +266,14 @@ export default function CampaignsPage() {
     if (campaign.targetType === 'employees') {
       return team.filter((e) => campaign.targetIds?.includes(e.id))
     }
-    return team
+
+    const campaignDate = campaign.createdAt
+      ? new Date(campaign.createdAt).getTime()
+      : Date.now()
+    return team.filter((e) => {
+      const empDate = e.createdAt ? new Date(e.createdAt).getTime() : Date.now()
+      return empDate <= campaignDate
+    })
   }
 
   return (

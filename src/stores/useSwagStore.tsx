@@ -218,6 +218,7 @@ export function SwagProvider({ children }: { children: ReactNode }) {
         role: emp.role || 'Colaborador',
         avatarUrl: emp.avatar_url,
         onboardingKitStatus: emp.onboarding_kit_status || 'Pendente',
+        createdAt: emp.created_at || new Date().toISOString(),
       })) || []
 
     setTeam(mappedTeam)
