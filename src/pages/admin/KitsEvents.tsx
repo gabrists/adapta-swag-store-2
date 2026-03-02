@@ -1,21 +1,11 @@
 import { useState, useMemo } from 'react'
-import {
-  Plus,
-  Search,
-  Layers,
-  Box,
-  Calendar,
-  Trash2,
-  ArrowRight,
-  PackageCheck,
-} from 'lucide-react'
+import { Plus, Search, Layers, Box, Trash2, ArrowRight } from 'lucide-react'
 import useSwagStore from '@/stores/useSwagStore'
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardDescription,
   CardFooter,
 } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -35,6 +25,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { useToast } from '@/hooks/use-toast'
+import { cn } from '@/lib/utils'
 
 export default function KitsEvents() {
   const { kits, products, deleteKit } = useSwagStore()
