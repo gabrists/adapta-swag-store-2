@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { Package2, AlertCircle, Info, Loader2 } from 'lucide-react'
+import { Package2, AlertCircle, Loader2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -86,20 +86,6 @@ export default function Login() {
               </CardDescription>
             </CardHeader>
             <CardContent className="pb-8">
-              <div className="mb-6 flex flex-col items-center justify-center rounded-xl border border-primary/20 bg-primary/10 p-4 text-center relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent"></div>
-                <div className="flex items-center justify-center gap-1.5 mb-1.5">
-                  <Info className="w-3.5 h-3.5 text-primary" />
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-primary">
-                    Acesso Exclusivo
-                  </p>
-                </div>
-                <p className="text-sm text-white/90 font-medium leading-relaxed">
-                  Utilize sua conta do <strong>Slack da Adapta</strong> para
-                  acessar a loja e solicitar seus brindes.
-                </p>
-              </div>
-
               {errorMessage && (
                 <Alert variant="destructive" className="mb-6">
                   <AlertCircle className="h-4 w-4" />
